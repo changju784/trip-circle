@@ -1,23 +1,38 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
 import Dashboard from "./pages/dashboard/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./components/AuthProvider";
+import AuthLayout from "./components/auth/AuthLayout";
+import AuthTabs from "./components/auth/AuthTabs";
+import RootRedirect from "./components/RootDirect";
 
 function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
                 <Routes>
-                    {/* Base route group */}
-                    <Route path="/trip-circle">
-                        <Route path="login" element={<Login />} />
-                        <Route path="register" element={<Register />} />
 
-                        {/* Protected */}
+                    {/* ROOT GROUP: /trip-circle */}
+                    <Route path="/trip-circle">
+
+                        {/* 
+                          /trip-circle  → redirect to /trip-circle/auth OR /trip-circle/dashboard
+                        */}
+                        <Route index element={<RootRedirect />} />
+
+                        {/* AUTH PAGE */}
+                        <Route
+                            path="auth"
+                            element={
+                                <AuthLayout>
+                                    <AuthTabs />
+                                </AuthLayout>
+                            }
+                        />
+
+                        {/* PROTECTED DASHBOARD */}
                         <Route
                             path="dashboard"
                             element={
@@ -28,14 +43,12 @@ function App() {
                         />
                     </Route>
 
-                    {/* Default redirect */}
-                    <Route path="*" element={<Login />} />
+                    {/* Fall back → redirect to /trip-circle */}
+                    <Route path="*" element={<Navigate to="/trip-circle" replace />} />
                 </Routes>
             </AuthProvider>
         </BrowserRouter>
     );
 }
-// function App() {
-//     return <div>App Component</div>;
-// }
+
 export default App;

@@ -1,34 +1,50 @@
-import React, { useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 
-export function Tabs({ defaultValue, children }: any) {
-    const [value, setValue] = useState(defaultValue);
+/* ------------------------------
+   Tabs Context
+--------------------------------- */
+const TabsContext = createContext<any>(null);
+
+export function Tabs({ defaultValue, children, className = "" }: any) {
+    const [active, setActive] = useState(defaultValue);
 
     return (
-        <div className="space-y-4">
-            {React.Children.map(children, (child: any) =>
-                React.cloneElement(child, { value, setValue })
-            )}
-        </div>
+        <TabsContext.Provider value={{ active, setActive }}>
+            <div className={className}>{children}</div>
+        </TabsContext.Provider>
     );
 }
 
-export function TabTrigger({ value, setValue, children, className = "", ...props }: any) {
-    const active = props.value === value;
+export const useTabs = () => useContext(TabsContext);
+
+/* ------------------------------
+   Tabs Trigger
+--------------------------------- */
+export function TabsTrigger({ value, children, className = "" }: any) {
+    const { active, setActive } = useTabs();
+    const isActive = active === value;
+
     return (
         <button
-            onClick={() => setValue(props.value)}
+            onClick={() => setActive(value)}
             className={`
-        text-sm py-2 transition rounded-xl
-        ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground"}
-        ${className}
-      `}
+                w-full py-2 rounded-full text-sm font-medium transition
+                ${isActive ? "bg-white shadow text-primary" : "text-gray-500"}
+                ${className}
+            `}
         >
             {children}
         </button>
     );
 }
 
-export function TabContent({ children, value, setValue, ...props }: any) {
-    if (props.value !== value) return null;
-    return <div>{children}</div>;
+/* ------------------------------
+   Tabs Content
+--------------------------------- */
+export function TabsContent({ value, children, className = "" }: any) {
+    const { active } = useTabs();
+
+    if (value !== active) return null;
+
+    return <div className={className}>{children}</div>;
 }

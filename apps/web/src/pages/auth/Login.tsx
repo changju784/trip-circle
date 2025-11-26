@@ -16,7 +16,6 @@ export default function LoginPage() {
             subtitle="Login to access your travel plans"
         >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
                 <FormField
                     control={control}
                     name="email"
