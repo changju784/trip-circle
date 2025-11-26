@@ -1,70 +1,144 @@
-# Getting Started with Create React App
+# TripCircle - MERN Stack Trip Planning App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack trip planning and sharing application built with MongoDB, Express, React, and Node.js.
 
-## Available Scripts
+## Project Structure
 
-In the project directory, you can run:
+```
+trip-circle/
+├── frontend/          # React frontend application
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── backend/           # Express.js backend API
+│   ├── models/        # MongoDB models
+│   ├── routes/        # API routes
+│   ├── controllers/   # Route controllers
+│   ├── server.js      # Server entry point
+│   └── package.json
+└── package.json       # Root package.json with scripts
+```
 
-### `npm start`
+## Getting Started
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Prerequisites
+- Node.js (v14+)
+- MongoDB (local or MongoDB Atlas)
+- npm or yarn
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Installation
 
-### `npm test`
+1. Clone the repository
+```bash
+git clone <your-repo-url>
+cd trip-circle
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. Install all dependencies (frontend + backend)
+```bash
+npm run install-all
+```
 
-### `npm run build`
+Or install individually:
+```bash
+# Install root dependencies
+npm install
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Install backend dependencies
+cd backend && npm install
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Install frontend dependencies
+cd frontend && npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Environment Variables
 
-### `npm run eject`
+Create a `.env` file in the `backend/` directory:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/tripcircle
+NODE_ENV=development
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Running the Application
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+**Run both frontend and backend concurrently:**
+```bash
+npm start
+# or
+npm run dev
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+**Run individually:**
+```bash
+# Backend only (from root)
+npm run server
 
-## Learn More
+# Frontend only (from root)
+npm run client
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+**Or from their respective directories:**
+```bash
+# Backend
+cd backend && npm run dev
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Frontend
+cd frontend && npm start
+```
 
-### Code Splitting
+### Available Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+From root directory:
+- `npm start` - Run both frontend and backend
+- `npm run dev` - Same as npm start
+- `npm run server` - Run backend only
+- `npm run client` - Run frontend only
+- `npm run install-all` - Install all dependencies
 
-### Analyzing the Bundle Size
+## Tech Stack
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Frontend
+- React 19.2.0
+- React Router DOM
+- Firebase Authentication
+- React Hook Form
+- Testing Library
 
-### Making a Progressive Web App
+### Backend
+- Node.js
+- Express.js 5.1.0
+- MongoDB with Mongoose 9.0.0
+- CORS
+- dotenv
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## API Endpoints
 
-### Advanced Configuration
+Backend runs on: `http://localhost:5000`
+Frontend runs on: `http://localhost:3000`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Base API
+- `GET /api` - API health check
 
-### Deployment
+## Features
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- User authentication (Firebase)
+- Create, edit, and delete trips
+- Public/private trip visibility
+- Explore public trips
+- Trip sharing
+- User profiles
+- Dashboard with trip management
 
-### `npm run build` fails to minify
+## Development
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The app is currently in development. Missing components:
+- Backend API routes and controllers
+- MongoDB models implementation
+- Frontend-Backend integration
+- UI component library
+
+## License
+
+ISC
