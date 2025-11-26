@@ -1,10 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "../auth/firebase";
+import { auth } from "../../auth/firebase";
 
-const AuthContext = createContext<{ user: User | null }>({ user: null });
-
-export const useAuth = () => useContext(AuthContext);
+export const AuthContext = createContext<{ user: User | null, loading: boolean }>({ user: null, loading: true });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
@@ -21,7 +19,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (loading) return <div>Loading...</div>;
 
     return (
-        <AuthContext.Provider value={{ user }}>
+        <AuthContext.Provider value={{ user, loading }}>
             {children}
         </AuthContext.Provider>
     );

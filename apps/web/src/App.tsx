@@ -2,8 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Dashboard from "./pages/dashboard/Dashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./components/AuthProvider";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { AuthProvider } from "./components/auth/AuthProvider";
 import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
 import RootRedirect from "./components/RootDirect";
