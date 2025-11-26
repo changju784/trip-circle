@@ -1,23 +1,75 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ============================================
+# 📦 Root Monorepo Ignores
+# ============================================
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
+node_modules/
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-lock.yaml
+
+# lockfiles (optional for monorepos)
+package-lock.json
+
+# ============================================
+# 🏗 Build Artifacts
+# ============================================
+
+# CRA build
+apps/web/build/
+
+# Express / backend dist
+apps/api/dist/
+
+# Vite / Next builds (future proof)
+apps/**/.next/
+apps/**/out/
+apps/**/dist/
+
+# Turborepo artifacts
+.turbo/
+
+# ============================================
+# 🧪 Testing / Coverage
+# ============================================
+
+coverage/
+**/coverage/
+
+# ============================================
+# 🗂 Environment Variables
+# ============================================
+
+# root env
+.env
+.env.local
+
+# app-specific env files
+apps/**/.env
+apps/**/.env.local
+apps/**/.env.development.local
+apps/**/.env.test.local
+apps/**/.env.production.local
+
+# ============================================
+# 🎨 Misc / Editor / System Files
+# ============================================
+
+.DS_Store
+Thumbs.db
+*.log
+*.tsbuildinfo     # TS incremental builds
+
+# VSCode
+.vscode/
+
+# JetBrains
+.idea/
+
+# ============================================
+# 💀 Temporary / cache files
+# ============================================
+
+.cache/
+.eslintcache
