@@ -6,6 +6,7 @@ import {
     signInWithPopup,
     signOut,
     sendEmailVerification,
+    updateProfile,
     UserCredential as FirebaseUserCredential,
     FacebookAuthProvider,
 } from "firebase/auth";
@@ -22,8 +23,16 @@ export const useAuth = () => {
     }
 
     // Email + password signup
-    const signUp = async (email: string, password: string): Promise<FirebaseUserCredential> => {
+    const signUp = async (email: string, password: string, username?: string): Promise<FirebaseUserCredential> => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+        // Set username as displayName
+        if (username) {
+            await updateProfile(userCredential.user, {
+                displayName: username
+            });
+        }
+
         await sendEmailVerification(userCredential.user);
         return userCredential;
     }

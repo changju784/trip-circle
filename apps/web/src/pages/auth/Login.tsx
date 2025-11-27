@@ -88,8 +88,17 @@ function SignInWithGoogleButton() {
         setLoading(true);
         setError(null);
         try {
-            await signInWithGoogle();
-            navigate("/trip-circle/dashboard");
+            const result = await signInWithGoogle();
+
+            // Only prompt for username if it's a brand new user (first sign in ever)
+            const isNewUser = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+
+            if (isNewUser) {
+                // Navigate to separate username setup page
+                navigate("/trip-circle/setup-username");
+            } else {
+                navigate("/trip-circle/dashboard");
+            }
         } catch (err: any) {
             const errorMessage = err?.message || "Google sign-in failed. Please try again.";
             setError(errorMessage);
