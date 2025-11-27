@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Dashboard from "./pages/dashboard/Dashboard";
+import ProfilePage from "./pages/profile/Profile";
+import NewTripPage from "./pages/trip/NewTrip";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import AuthLayout from "./components/auth/AuthLayout";
@@ -41,6 +43,8 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
+                        <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                        <Route path="trip/new" element={<ProtectedRoute><NewTripPage /></ProtectedRoute>} />
                     </Route>
 
                     {/* Fall back → redirect to /trip-circle */}
