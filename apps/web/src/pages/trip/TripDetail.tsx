@@ -8,6 +8,7 @@ import DayTabs from "../../components/trip/DayTabs";
 import DayStopsPanel from "../../components/trip/DayStopsPanel";
 import RoutePreview from "../../components/trip/RoutePreview";
 import AddStopModal from "../../components/trip/AddStopModal";
+import { Tabs, TabsContent } from "../../components/ui/Tabs";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -86,18 +87,30 @@ export default function TripDetailPage() {
 
                     {/* LEFT PANEL */}
                     <div className="col-span-8">
-                        <DayTabs
-                            days={trip.days}
-                            selectedDay={selectedDay}
-                            onSelectDay={setSelectedDay}
-                            onOpenAdd={() => setOpenAdd(true)}
-                        />
 
-                        <DayStopsPanel
-                            days={trip.days}
-                            selectedDay={selectedDay}
-                            onOpenAdd={() => setOpenAdd(true)}
-                        />
+                        <Tabs
+                            value={`day-${selectedDay}`}
+                            onValueChange={(val) => {
+                                const index = Number(val.replace("day-", ""));
+                                setSelectedDay(index);
+                            }}
+                            className="mb-4"
+                        >
+                            {/* Tab Buttons */}
+                            <DayTabs days={trip.days} />
+
+                            {/* Tab Content */}
+                            {trip.days.map((d, i) => (
+                                <TabsContent key={d.date} value={`day-${i}`}>
+                                    <DayStopsPanel
+                                        days={trip.days}
+                                        selectedDay={i}
+                                        onOpenAdd={() => setOpenAdd(true)}
+                                    />
+                                </TabsContent>
+                            ))}
+                        </Tabs>
+
                     </div>
 
                     {/* RIGHT PANEL */}
