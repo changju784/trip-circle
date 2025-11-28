@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import Modal from "../../components/ui/Modal";
 import { useForm } from "react-hook-form";
+import { geocodeLocation } from "../../lib/geocode";
 
 export default function AddStopModal({ open, onClose, onSubmit }) {
     const { register, handleSubmit, reset } = useForm({
@@ -8,22 +9,42 @@ export default function AddStopModal({ open, onClose, onSubmit }) {
             title: "",
             time: "",
             locationName: "",
-            lat: "",
-            lng: "",
             description: "",
         },
     });
 
-    const submit = (data) => {
+    const [loading, setLoading] = useState(false);
+    const [geoError, setGeoError] = useState("");
+
+    const submit = async (data) => {
+        setLoading(true);
+        setGeoError("");
+
+        let lat = null;
+        let lng = null;
+
+        // Auto-geocode if locationName exists
+        if (data.locationName) {
+            const result = await geocodeLocation(data.locationName);
+
+            if (result) {
+                lat = result.lat;
+                lng = result.lng;
+            } else {
+                setGeoError("Couldn't find this location. Coordinates saved as null.");
+            }
+        }
+
         onSubmit(
             data.title,
             data.time,
             data.locationName,
-            data.lat ? Number(data.lat) : null,
-            data.lng ? Number(data.lng) : null,
+            lat,
+            lng,
             data.description
         );
 
+        setLoading(false);
         reset();
         onClose();
     };
@@ -32,10 +53,11 @@ export default function AddStopModal({ open, onClose, onSubmit }) {
         <Modal open={open} onClose={onClose} title="Add Stop">
             <form onSubmit={handleSubmit(submit)} className="space-y-4">
 
+                {/* Smart Fill */}
                 <div className="p-3 bg-blue-50 rounded">
                     <div className="font-medium">Smart Fill</div>
                     <div className="text-sm text-muted-foreground">
-                        Upload booking/receipt to auto-fill (mock)
+                        Upload a receipt, ticket, or booking confirmation to automatically extract details (mock)
                     </div>
                     <button
                         type="button"
@@ -45,14 +67,17 @@ export default function AddStopModal({ open, onClose, onSubmit }) {
                     </button>
                 </div>
 
+                {/* Title */}
                 <div>
                     <label className="text-sm font-medium">Title *</label>
                     <input
                         {...register("title", { required: true })}
                         className="w-full mt-1 px-3 py-2 rounded-lg border"
+                        placeholder="e.g., Eiffel Tower"
                     />
                 </div>
 
+                {/* Time */}
                 <div>
                     <label className="text-sm font-medium">Time</label>
                     <input
@@ -62,39 +87,30 @@ export default function AddStopModal({ open, onClose, onSubmit }) {
                     />
                 </div>
 
+                {/* Location */}
                 <div>
                     <label className="text-sm font-medium">Location</label>
                     <input
                         {...register("locationName")}
                         className="w-full mt-1 px-3 py-2 rounded-lg border"
+                        placeholder="e.g., Champ de Mars, Paris"
                     />
+                    {geoError && (
+                        <div className="text-red-600 text-xs mt-1">{geoError}</div>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="text-sm font-medium">Latitude</label>
-                        <input
-                            {...register("lat")}
-                            className="w-full mt-1 px-3 py-2 rounded-lg border"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium">Longitude</label>
-                        <input
-                            {...register("lng")}
-                            className="w-full mt-1 px-3 py-2 rounded-lg border"
-                        />
-                    </div>
-                </div>
-
+                {/* Description */}
                 <div>
                     <label className="text-sm font-medium">Description</label>
                     <textarea
                         {...register("description")}
                         className="w-full mt-1 px-3 py-2 rounded-lg border"
+                        placeholder="Notes, activities, or details about this stop..."
                     />
                 </div>
 
+                {/* Buttons */}
                 <div className="flex justify-end gap-3">
                     <button
                         type="button"
@@ -106,9 +122,10 @@ export default function AddStopModal({ open, onClose, onSubmit }) {
 
                     <button
                         type="submit"
-                        className="px-4 py-2 rounded bg-indigo-700 text-white"
+                        disabled={loading}
+                        className="px-4 py-2 rounded bg-indigo-700 text-white disabled:opacity-50"
                     >
-                        Add Stop
+                        {loading ? "Saving..." : "Add Stop"}
                     </button>
                 </div>
             </form>
