@@ -9,6 +9,7 @@ import { AuthProvider } from "./components/auth/AuthProvider";
 import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
 import RootRedirect from "./components/RootDirect";
+import UsernameSetup from "./pages/auth/UsernameSetup";
 
 function App() {
     return (
@@ -31,6 +32,16 @@ function App() {
                                 <AuthLayout>
                                     <AuthTabs />
                                 </AuthLayout>
+                            }
+                        />
+
+                        {/* USERNAME SETUP (for new Google OAuth users) */}
+                        <Route
+                            path="setup-username"
+                            element={
+                                <ProtectedRoute>
+                                    <UsernameSetup />
+                                </ProtectedRoute>
                             }
                         />
 
