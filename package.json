@@ -1,6 +1,5 @@
 {
   "name": "trip-circle",
-  "version": "0.1.0",
   "private": true,
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
