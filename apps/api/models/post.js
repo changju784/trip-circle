@@ -1,9 +1,7 @@
-var mongoose = require('mongoose');
-const trip = require('./trip');
-const user = require('./user');
+import mongoose from 'mongoose';
 
 // Post Schema
-var PostSchema = new mongoose.Schema({
+const PostSchema = new mongoose.Schema({
     tripId: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Trip',
@@ -34,4 +32,4 @@ var PostSchema = new mongoose.Schema({
 // Post Middleware
 
 // Export Model Schema
-module.exports = mongoose.model('Post', PostSchema);
+export default mongoose.model('Post', PostSchema);

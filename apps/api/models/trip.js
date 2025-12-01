@@ -1,7 +1,7 @@
-var mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Trip Schema
-var TripSchema = new mongoose.Schema({
+const TripSchema = new mongoose.Schema({
     editors: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -36,4 +36,4 @@ var TripSchema = new mongoose.Schema({
 // Trip Middleware
 
 // Export Model Schema
-module.exports = mongoose.model('Trip', TripSchema);
+export default mongoose.model('Trip', TripSchema);

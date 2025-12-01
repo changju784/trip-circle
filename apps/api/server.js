@@ -30,10 +30,10 @@ app.get('/api', (req, res) => {
 });
 
 // Import routes (we'll create these next)
-// import tripRoutes from './routes/trips.js';
-// import userRoutes from './routes/users.js';
-// app.use('/api/trips', tripRoutes);
-// app.use('/api/users', userRoutes);
+import tripRoutes from './routes/trips.js';
+import userRoutes from './routes/users.js';
+app.use('/api/trips', tripRoutes);
+app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 5000;
 

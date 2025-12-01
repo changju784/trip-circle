@@ -1,7 +1,7 @@
-var mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // User Schema
-var UserSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
     dateCreated: {
@@ -14,4 +14,4 @@ var UserSchema = new mongoose.Schema({
 // User Middleware
 
 // Export Model Schema
-module.exports = mongoose.model('User', UserSchema);
+export default mongoose.model('User', UserSchema);
