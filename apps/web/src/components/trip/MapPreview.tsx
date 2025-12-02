@@ -22,7 +22,7 @@ export default function MapPreview({ stops = [], height = 420, fallbackCity }: M
     const delta = 0.05;
     const bbox = `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`;
     const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
-
+    // TODO: fix map not showing multiple stops corresponding to different days
     return (
         <div className="w-full bg-white rounded-lg shadow-sm p-3" style={{ height }}>
             <iframe
