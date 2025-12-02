@@ -5,6 +5,7 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import ProfilePage from "./pages/profile/Profile";
 import NewTripPage from "./pages/trip/NewTrip";
 import TripDetailPage from "./pages/trip/TripDetail";
+import EditTripPage from "./pages/trip/EditTrip";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import AuthLayout from "./components/auth/AuthLayout";
@@ -58,6 +59,7 @@ function App() {
                         <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                         <Route path="trip/new" element={<ProtectedRoute><NewTripPage /></ProtectedRoute>} />
                         <Route path="trip/:id" element={<ProtectedRoute><TripDetailPage /></ProtectedRoute>} />
+                        <Route path="trip/:id/edit" element={<ProtectedRoute><EditTripPage /></ProtectedRoute>} />
                     </Route>
 
                     {/* Fall back → redirect to /trip-circle */}

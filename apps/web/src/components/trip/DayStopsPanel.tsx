@@ -1,7 +1,7 @@
 import React from "react";
 import StopItem from "./StopItem";
 
-export default function DayStopsPanel({ days, selectedDay, onOpenAdd }) {
+export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop, onDeleteStop }: any) {
     const day = days[selectedDay];
 
     const dayLabel = (iso: string) => {
@@ -40,7 +40,7 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd }) {
             ) : (
                 <div>
                     {day.stops.map((stop) => (
-                        <StopItem key={stop.id} stop={stop} />
+                        <StopItem key={stop.id} stop={stop} onEdit={() => onEditStop?.(stop.id)} onDelete={() => onDeleteStop?.(stop.id)} />
                     ))}
                 </div>
             )}

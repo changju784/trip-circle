@@ -4,34 +4,52 @@ import FormContainer from "../../components/form/FormContainer";
 import { Button } from "../../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { BackToDashboardButton } from "../dashboard/BackToDashboardButton";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { createTrip } from "../../lib/tripStorage";
+import Select from "../../components/ui/Select";
+import { searchCities } from "../../lib/citySearch";
 
 type FormValues = {
     title: string;
-    city?: string;
+    destinations?: { id: string; label: string }[];
     description?: string;
     startDate: string;
     endDate: string;
     isPublic?: boolean;
+    thumbnail?: string | null;
 };
 
 export default function NewTripPage() {
     const navigate = useNavigate();
-    const { register, handleSubmit } = useForm<FormValues>({
-        defaultValues: { city: "Paris", title: "", description: "", startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), isPublic: false },
+    const { register, handleSubmit, control, formState } = useForm<FormValues>({
+        defaultValues: { destinations: [], title: "", description: "", startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), isPublic: false, thumbnail: null },
     });
 
-    const onSubmit = (data: FormValues) => {
+    const { errors } = formState;
+
+    const onSubmit = async (data: FormValues) => {
+        const thumbnail = (window as any).__trip_thumbnail ?? null;
+        const destinations = data.destinations?.map((d) => d.label) ?? [];
         const trip = createTrip({
             title: data.title || "Untitled Trip",
-            city: data.city,
+            destinations,
             description: data.description,
             startDate: data.startDate,
             endDate: data.endDate,
             isPublic: !!data.isPublic,
+            thumbnail,
         });
         navigate(`/trip-circle/trip/${trip.id}`);
+    };
+
+    const handleFile = async (f?: File | null) => {
+        if (!f) return null;
+        return await new Promise<string | null>((res) => {
+            const reader = new FileReader();
+            reader.onload = () => res(String(reader.result));
+            reader.onerror = () => res(null);
+            reader.readAsDataURL(f);
+        });
     };
 
     return (
@@ -43,17 +61,27 @@ export default function NewTripPage() {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div>
                             <div className="text-sm font-medium mb-1">Trip Title</div>
-                            <input {...register("title")} placeholder="e.g., Summer in Europe" className="w-full px-4 py-2 rounded-lg border" />
+                            <input {...register("title", { required: "This field is required" })} placeholder="e.g., Summer in Europe" className={`w-full px-4 py-2 rounded-lg border ${errors.title ? "border-red-600" : ""}`} />
+                            {errors.title && <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>}
                         </div>
 
                         <div>
-                            <div className="text-sm font-medium mb-1">Destination City</div>
-                            <select {...register("city")} className="w-full px-4 py-2 rounded-lg border bg-white">
-                                <option>Paris</option>
-                                <option>Tokyo</option>
-                                <option>New York</option>
-                                <option>Bangkok</option>
-                            </select>
+                            <div className="text-sm font-medium mb-1">Destinations</div>
+                            <Controller
+                                control={control}
+                                name="destinations"
+                                rules={{ required: "Please add at least one destination" }}
+                                render={({ field }) => (
+                                    <Select
+                                        multiple
+                                        value={field.value ?? []}
+                                        onChange={(v) => field.onChange(v)}
+                                        placeholder="Search cities..."
+                                        fetchOptions={async (q: string) => (await searchCities(q)).slice(0, 10)}
+                                    />
+                                )}
+                            />
+                            {errors.destinations && <div className="text-red-600 text-xs mt-1">{errors.destinations.message}</div>}
                         </div>
 
                         <div>
@@ -64,12 +92,24 @@ export default function NewTripPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <div className="text-sm font-medium mb-1">Start Date</div>
-                                <input {...register("startDate")} type="date" className="w-full px-4 py-2 rounded-lg border" />
+                                <input {...register("startDate", { required: "Start date is required" })} type="date" className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-600" : ""}`} />
+                                {errors.startDate && <div className="text-red-600 text-xs mt-1">{errors.startDate.message}</div>}
                             </div>
                             <div>
                                 <div className="text-sm font-medium mb-1">End Date</div>
-                                <input {...register("endDate")} type="date" className="w-full px-4 py-2 rounded-lg border" />
+                                <input {...register("endDate", { required: "End date is required" })} type="date" className={`w-full px-4 py-2 rounded-lg border ${errors.endDate ? "border-red-600" : ""}`} />
+                                {errors.endDate && <div className="text-red-600 text-xs mt-1">{errors.endDate.message}</div>}
                             </div>
+                        </div>
+
+                        <div>
+                            <div className="text-sm font-medium mb-1">Thumbnail (optional)</div>
+                            <input type="file" accept="image/*" onChange={async (e) => {
+                                const f = e.target.files?.[0];
+                                const data = await handleFile(f ?? undefined);
+                                // set into control value via setValue isn't available here, so use a hidden input via Controller if needed; small workaround: store on window (transient) and attach in onSubmit
+                                (window as any).__trip_thumbnail = data;
+                            }} />
                         </div>
 
                         <div className="flex items-center justify-between">
