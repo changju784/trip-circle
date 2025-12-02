@@ -1,7 +1,7 @@
-import { Tabs, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
+import { Tabs, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import TripCircleLogo from "../TripCircleLogo";
-import LoginPage from "../../pages/auth/Login";
-import SignupPage from "../../pages/auth/Register";
+import LoginPage from "@/pages/auth/Login";
+import SignupPage from "@/pages/auth/Register";
 
 export default function AuthTabs() {
     return (

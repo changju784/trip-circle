@@ -1,5 +1,5 @@
-import { Button } from "../..//components/ui/Button";
-import { Tabs, TabsTrigger, TabsContent } from "../../components/ui/Tabs";
+import { Button } from "@/components/ui/Button";
+import { Tabs, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 
 interface DashboardTabsProps {
     mytrips: React.ReactNode;

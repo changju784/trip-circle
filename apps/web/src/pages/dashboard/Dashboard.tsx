@@ -1,5 +1,5 @@
-import Navbar from "../../components/layout/Navbar";
-import { Button } from "../../components/ui/Button";
+import Navbar from "@/components/layout/Navbar";
+import { Button } from "@/components/ui/Button";
 import DashboardTabs from "./DashboardTabs";
 import { useNavigate } from "react-router-dom";
 

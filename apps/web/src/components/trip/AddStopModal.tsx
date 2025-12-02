@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import Modal from "../../components/ui/Modal";
+import Modal from "@/components/ui/Modal";
 import { useForm } from "react-hook-form";
-import { geocodeLocation } from "../../lib/geocode";
-import { Stop } from "../../lib/tripStorage";
+import { geocodeLocation } from "@/lib/geocode";
+import { Stop } from "@/lib/tripStorage";
 
 type Props = {
     open: boolean;
