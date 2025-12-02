@@ -7,6 +7,7 @@ import { useForm, Controller } from "react-hook-form";
 import { getTripById, updateTrip } from "../../lib/tripStorage";
 import Select from "../../components/ui/Select";
 import { searchCities } from "../../lib/citySearch";
+import { Toggle } from "../../components/ui/Toggle";
 
 export default function EditTripPage() {
     const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function EditTripPage() {
     const trip = id ? getTripById(id) : null;
     const [preview, setPreview] = React.useState<string | null>(trip?.thumbnail ?? null);
 
-    const { register, handleSubmit, control } = useForm<any>({
+    const { register, handleSubmit, control, watch, setValue } = useForm<any>({
         defaultValues: trip
             ? {
                 title: trip.title,
@@ -132,6 +133,23 @@ export default function EditTripPage() {
                                 />
                             </div>
                         )}
+
+                        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-2 font-medium text-gray-800">
+                                    <span className="text-lg">{watch("isPublic") ? "🌍" : "🔒"}</span>
+                                    Make trip public
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                    {watch("isPublic") ? "Anyone can view this trip" : "Only you can view this trip"}
+                                </div>
+                            </div>
+
+                            <Toggle
+                                checked={watch("isPublic") ?? false}
+                                onChange={() => setValue("isPublic", !watch("isPublic"))}
+                            />
+                        </div>
 
                         <div className="flex gap-3 justify-end">
                             <Button variant="muted" onClick={() => navigate(-1)}>
