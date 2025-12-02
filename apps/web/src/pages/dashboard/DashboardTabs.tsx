@@ -15,7 +15,8 @@ export default function DashboardTabs({ mytrips, explore, onNewTrip }: Dashboard
 
                 <div className="grid grid-cols-2 bg-gray-100 rounded-full p-1 w-[260px]">
                     <TabsTrigger value="mytrips">My Trips</TabsTrigger>
-                    <TabsTrigger value="explore">Explore</TabsTrigger>
+                    <TabsTrigger value="explore">🧭 Explore</TabsTrigger>
+
                 </div>
 
                 <Button onClick={onNewTrip}>+ New Trip</Button>
