@@ -1,13 +1,13 @@
 import React from "react";
-import Navbar from "../../components/layout/Navbar";
-import FormContainer from "../../components/form/FormContainer";
-import { Button } from "../../components/ui/Button";
+import Navbar from "@/components/layout/Navbar";
+import FormContainer from "@/components/form/FormContainer";
+import { Button } from "@/components/ui/Button";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
-import { getTripById, updateTrip } from "../../lib/tripStorage";
-import Select from "../../components/ui/Select";
-import { searchCities } from "../../lib/citySearch";
-import { Toggle } from "../../components/ui/Toggle";
+import { getTripById, updateTrip } from "@/lib/tripStorage";
+import Select from "@/components/ui/Select";
+import { searchCities } from "@/lib/citySearch";
+import { Toggle } from "@/components/ui/Toggle";
 
 export default function EditTripPage() {
     const navigate = useNavigate();

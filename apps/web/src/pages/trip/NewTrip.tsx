@@ -1,14 +1,14 @@
 import React from "react";
-import Navbar from "../../components/layout/Navbar";
-import FormContainer from "../../components/form/FormContainer";
-import { Button } from "../../components/ui/Button";
+import Navbar from "@/components/layout/Navbar";
+import FormContainer from "@/components/form/FormContainer";
+import { Button } from "@/components/ui/Button";
 import { useNavigate } from "react-router-dom";
-import { BackToDashboardButton } from "../dashboard/BackToDashboardButton";
+import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import { useForm, Controller } from "react-hook-form";
-import { createTrip } from "../../lib/tripStorage";
-import Select from "../../components/ui/Select";
-import { searchCities } from "../../lib/citySearch";
-import { Toggle } from "../../components/ui/Toggle";
+import { createTrip } from "@/lib/tripStorage";
+import Select from "@/components/ui/Select";
+import { searchCities } from "@/lib/citySearch";
+import { Toggle } from "@/components/ui/Toggle";
 
 type FormValues = {
     title: string;

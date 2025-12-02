@@ -1,3 +1,5 @@
+import { TripAccess } from "./roles";
+
 export type Stop = {
     id: string;
     title: string;
@@ -23,6 +25,7 @@ export type Trip = {
     isPublic?: boolean;
     thumbnail?: string | null;
     ownerId?: string | null;
+    collaborators?: TripAccess[];
     days: Day[];
     createdAt: number;
 };
@@ -171,4 +174,30 @@ export function updateTrip(tripId: string, patch: Partial<Trip>) {
 
 export function getAllTrips(): Trip[] {
     return readAll();
+}
+
+export function addCollaborator(tripId: string, userId: string, email?: string, role: "editor" | "reader" = "editor") {
+    const trip = getTripById(tripId);
+    if (!trip) return null;
+    if (!trip.collaborators) trip.collaborators = [];
+
+    // check if already exists
+    const exists = trip.collaborators.find((c) => c.userId === userId);
+    if (exists) {
+        exists.role = role;
+    } else {
+        trip.collaborators.push({ userId, email, role });
+    }
+    saveTrip(trip);
+    return trip;
+}
+
+export function removeCollaborator(tripId: string, userId: string) {
+    const trip = getTripById(tripId);
+    if (!trip) return null;
+    if (!trip.collaborators) return trip;
+
+    trip.collaborators = trip.collaborators.filter((c) => c.userId !== userId);
+    saveTrip(trip);
+    return trip;
 }
