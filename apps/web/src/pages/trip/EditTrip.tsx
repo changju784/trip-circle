@@ -12,6 +12,7 @@ export default function EditTripPage() {
     const navigate = useNavigate();
     const { id } = useParams();
     const trip = id ? getTripById(id) : null;
+    const [preview, setPreview] = React.useState<string | null>(trip?.thumbnail ?? null);
 
     const { register, handleSubmit, control, formState } = useForm<any>({
         defaultValues: trip ? {
@@ -83,8 +84,20 @@ export default function EditTripPage() {
                                     const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => res(null); r.readAsDataURL(f);
                                 });
                                 (window as any).__trip_thumbnail = data;
+                                setPreview(data);
                             }} />
                         </div>
+
+                        {preview && (
+                            <div className="mt-3">
+                                <div className="text-sm font-medium mb-1">Preview</div>
+                                <img
+                                    src={preview}
+                                    alt="thumbnail preview"
+                                    className="w-40 h-28 object-cover rounded-lg border shadow"
+                                />
+                            </div>
+                        )}
 
                         <div className="flex gap-3 justify-end">
                             <Button variant="muted" onClick={() => navigate(-1)}>Cancel</Button>
