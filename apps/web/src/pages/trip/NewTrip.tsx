@@ -24,6 +24,7 @@ export default function NewTripPage() {
     const { register, handleSubmit, control, formState } = useForm<FormValues>({
         defaultValues: { destinations: [], title: "", description: "", startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), isPublic: false, thumbnail: null },
     });
+    const [preview, setPreview] = React.useState<string | null>(null);
 
     const { errors } = formState;
 
@@ -109,8 +110,20 @@ export default function NewTripPage() {
                                 const data = await handleFile(f ?? undefined);
                                 // set into control value via setValue isn't available here, so use a hidden input via Controller if needed; small workaround: store on window (transient) and attach in onSubmit
                                 (window as any).__trip_thumbnail = data;
+                                setPreview(data);
                             }} />
                         </div>
+
+                        {preview && (
+                            <div className="mt-3">
+                                <div className="text-sm font-medium mb-1">Preview</div>
+                                <img
+                                    src={preview}
+                                    alt="trip thumbnail preview"
+                                    className="w-40 h-28 object-cover rounded-lg border shadow"
+                                />
+                            </div>
+                        )}
 
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
