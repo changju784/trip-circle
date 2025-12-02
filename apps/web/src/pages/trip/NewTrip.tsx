@@ -22,10 +22,18 @@ type FormValues = {
 export default function NewTripPage() {
     const navigate = useNavigate();
     const { register, handleSubmit, control, formState } = useForm<FormValues>({
-        defaultValues: { destinations: [], title: "", description: "", startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), isPublic: false, thumbnail: null },
+        defaultValues: {
+            destinations: [],
+            title: "",
+            description: "",
+            startDate: new Date().toISOString().slice(0, 10),
+            endDate: new Date().toISOString().slice(0, 10),
+            isPublic: false,
+            thumbnail: null,
+        },
     });
-    const [preview, setPreview] = React.useState<string | null>(null);
 
+    const [preview, setPreview] = React.useState<string | null>(null);
     const { errors } = formState;
 
     const onSubmit = async (data: FormValues) => {
@@ -62,8 +70,15 @@ export default function NewTripPage() {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div>
                             <div className="text-sm font-medium mb-1">Trip Title</div>
-                            <input {...register("title", { required: "This field is required" })} placeholder="e.g., Summer in Europe" className={`w-full px-4 py-2 rounded-lg border ${errors.title ? "border-red-600" : ""}`} />
-                            {errors.title && <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>}
+                            <input
+                                {...register("title", { required: "This field is required" })}
+                                placeholder="e.g., Summer in Europe"
+                                className={`w-full px-4 py-2 rounded-lg border ${errors.title ? "border-red-600" : ""
+                                    }`}
+                            />
+                            {errors.title && (
+                                <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>
+                            )}
                         </div>
 
                         <div>
@@ -78,40 +93,63 @@ export default function NewTripPage() {
                                         value={field.value ?? []}
                                         onChange={(v) => field.onChange(v)}
                                         placeholder="Search cities..."
-                                        fetchOptions={async (q: string) => (await searchCities(q)).slice(0, 10)}
+                                        fetchOptions={async (q) => (await searchCities(q)).slice(0, 10)}
                                     />
                                 )}
                             />
-                            {errors.destinations && <div className="text-red-600 text-xs mt-1">{errors.destinations.message}</div>}
+                            {errors.destinations && (
+                                <div className="text-red-600 text-xs mt-1">{errors.destinations.message}</div>
+                            )}
                         </div>
 
                         <div>
                             <div className="text-sm font-medium mb-1">Description (Optional)</div>
-                            <textarea {...register("description")} className="w-full rounded-lg p-3 border" placeholder="Tell others about your trip..."></textarea>
+                            <textarea
+                                {...register("description")}
+                                className="w-full rounded-lg p-3 border"
+                                placeholder="Tell others about your trip..."
+                            ></textarea>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <div className="text-sm font-medium mb-1">Start Date</div>
-                                <input {...register("startDate", { required: "Start date is required" })} type="date" className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-600" : ""}`} />
-                                {errors.startDate && <div className="text-red-600 text-xs mt-1">{errors.startDate.message}</div>}
+                                <input
+                                    {...register("startDate", { required: "Start date is required" })}
+                                    type="date"
+                                    className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-600" : ""
+                                        }`}
+                                />
+                                {errors.startDate && (
+                                    <div className="text-red-600 text-xs mt-1">{errors.startDate.message}</div>
+                                )}
                             </div>
                             <div>
                                 <div className="text-sm font-medium mb-1">End Date</div>
-                                <input {...register("endDate", { required: "End date is required" })} type="date" className={`w-full px-4 py-2 rounded-lg border ${errors.endDate ? "border-red-600" : ""}`} />
-                                {errors.endDate && <div className="text-red-600 text-xs mt-1">{errors.endDate.message}</div>}
+                                <input
+                                    {...register("endDate", { required: "End date is required" })}
+                                    type="date"
+                                    className={`w-full px-4 py-2 rounded-lg border ${errors.endDate ? "border-red-600" : ""
+                                        }`}
+                                />
+                                {errors.endDate && (
+                                    <div className="text-red-600 text-xs mt-1">{errors.endDate.message}</div>
+                                )}
                             </div>
                         </div>
 
                         <div>
                             <div className="text-sm font-medium mb-1">Thumbnail (optional)</div>
-                            <input type="file" accept="image/*" onChange={async (e) => {
-                                const f = e.target.files?.[0];
-                                const data = await handleFile(f ?? undefined);
-                                // set into control value via setValue isn't available here, so use a hidden input via Controller if needed; small workaround: store on window (transient) and attach in onSubmit
-                                (window as any).__trip_thumbnail = data;
-                                setPreview(data);
-                            }} />
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                    const f = e.target.files?.[0];
+                                    const data = await handleFile(f ?? undefined);
+                                    (window as any).__trip_thumbnail = data;
+                                    setPreview(data);
+                                }}
+                            />
                         </div>
 
                         {preview && (
@@ -130,12 +168,18 @@ export default function NewTripPage() {
                                 <input id="public" type="checkbox" {...register("isPublic")} />
                                 <label htmlFor="public">Make trip public</label>
                             </div>
-                            <div className="text-sm text-muted-foreground">Only you can view this trip</div>
+                            <div className="text-sm text-muted-foreground">
+                                Only you can view this trip
+                            </div>
                         </div>
 
                         <div className="flex gap-3 justify-end">
-                            <Button variant="muted" onClick={() => navigate(-1)}>Cancel</Button>
-                            <Button variant="primary" type="submit">Create Trip</Button>
+                            <Button variant="muted" onClick={() => navigate(-1)}>
+                                Cancel
+                            </Button>
+                            <Button variant="primary" type="submit">
+                                Create Trip
+                            </Button>
                         </div>
                     </form>
                 </FormContainer>
