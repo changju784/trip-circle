@@ -10,6 +10,30 @@ type SelectProps = {
     fetchOptions?: (q: string) => Promise<Option[]>;
 };
 
+const TAG_COLORS = [
+    "bg-red-200 text-red-800",
+    "bg-orange-200 text-orange-800",
+    "bg-yellow-200 text-yellow-800",
+    "bg-lime-200 text-lime-800",
+    "bg-green-200 text-green-800",
+    "bg-teal-200 text-teal-800",
+    "bg-cyan-200 text-cyan-800",
+    "bg-blue-200 text-blue-800",
+    "bg-indigo-200 text-indigo-800",
+    "bg-purple-200 text-purple-800",
+    "bg-pink-200 text-pink-800",
+];
+
+function colorForTag(id: string) {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % TAG_COLORS.length;
+    return TAG_COLORS[index];
+}
+
+
 export default function Select({ value, multiple = false, placeholder, onChange, fetchOptions }: SelectProps) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -57,7 +81,10 @@ export default function Select({ value, multiple = false, placeholder, onChange,
                     <div className="flex gap-2 flex-wrap">
                         {Array.isArray(value) && value.length > 0 ? (
                             value.map((v) => (
-                                <span key={v.id} className="bg-gray-100 px-2 py-1 rounded flex items-center gap-2 text-sm">
+                                <span
+                                    key={v.id}
+                                    className={`${colorForTag(v.id)} px-2 py-1 rounded flex items-center gap-2 text-sm`}
+                                >
                                     {v.label}
                                     <button onClick={(e) => { e.stopPropagation(); removeTag(v.id); }} className="text-xs">✕</button>
                                 </span>
