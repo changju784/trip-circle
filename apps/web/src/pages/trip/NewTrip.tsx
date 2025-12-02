@@ -8,6 +8,7 @@ import { useForm, Controller } from "react-hook-form";
 import { createTrip } from "../../lib/tripStorage";
 import Select from "../../components/ui/Select";
 import { searchCities } from "../../lib/citySearch";
+import { Toggle } from "../../components/ui/Toggle";
 
 type FormValues = {
     title: string;
@@ -21,7 +22,7 @@ type FormValues = {
 
 export default function NewTripPage() {
     const navigate = useNavigate();
-    const { register, handleSubmit, control, formState } = useForm<FormValues>({
+    const { register, handleSubmit, control, formState, watch, setValue } = useForm<FormValues>({
         defaultValues: {
             destinations: [],
             title: "",
@@ -163,14 +164,21 @@ export default function NewTripPage() {
                             </div>
                         )}
 
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <input id="public" type="checkbox" {...register("isPublic")} />
-                                <label htmlFor="public">Make trip public</label>
+                        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-2 font-medium text-gray-800">
+                                    <span className="text-lg">{watch("isPublic") ? "🌍" : "🔒"}</span>
+                                    Make trip public
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                    {watch("isPublic") ? "Anyone can view this trip" : "Only you can view this trip"}
+                                </div>
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                                Only you can view this trip
-                            </div>
+
+                            <Toggle
+                                checked={watch("isPublic") ?? false}
+                                onChange={() => setValue("isPublic", !watch("isPublic"))}
+                            />
                         </div>
 
                         <div className="flex gap-3 justify-end">

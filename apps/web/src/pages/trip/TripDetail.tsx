@@ -113,7 +113,16 @@ export default function TripDetailPage() {
                             <div className="flex items-center gap-2">📍 {trip.city}</div>
                             <div>•</div>
                             <div>{trip.startDate} - {trip.endDate}</div>
-                            <div className={`ml-4 px-2 rounded text-sm font-medium`} style={{ background: trip.isPublic ? '#e6ffef' : '#fff3e6' }}>{trip.isPublic ? 'Public' : 'Private'}</div>
+                            <div
+                                className="ml-4 px-2 rounded text-sm font-medium flex items-center gap-1"
+                                style={{ background: trip.isPublic ? "#e6ffef" : "#fff3e6" }}
+                            >
+                                <span className="text-base">
+                                    {trip.isPublic ? "🌍" : "🔒"}
+                                </span>
+                                {trip.isPublic ? "Public" : "Private"}
+                            </div>
+
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">Owned by: {trip.ownerId ? (auth.user?.uid === trip.ownerId ? 'You' : trip.ownerId) : 'Unknown'}</div>
                     </div>
