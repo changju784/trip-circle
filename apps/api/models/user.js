@@ -4,6 +4,13 @@ import mongoose from 'mongoose';
 const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
+    // trips the user has access to
+    trips: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Trip'
+        }
+    ],
     dateCreated: {
         type: Date,
         default: Date.now,
