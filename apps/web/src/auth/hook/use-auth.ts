@@ -11,7 +11,7 @@ import {
     FacebookAuthProvider,
 } from "firebase/auth";
 import { auth } from "../firebase";
-import { AuthContext } from "../../components/auth/AuthProvider";
+import { AuthContext } from "@/components/auth/AuthProvider";
 
 export const useAuth = () => {
     const { user, loading } = useContext(AuthContext);

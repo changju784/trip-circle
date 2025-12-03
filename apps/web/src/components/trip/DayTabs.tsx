@@ -1,5 +1,5 @@
 import React from "react";
-import { TabsTrigger } from "../../components/ui/Tabs";
+import { TabsTrigger } from "@/components/ui/Tabs";
 
 export default function DayTabs({ days }) {
     return (

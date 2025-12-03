@@ -2,84 +2,70 @@ import React from "react";
 import Navbar from "@/components/layout/Navbar";
 import FormContainer from "@/components/form/FormContainer";
 import { Button } from "@/components/ui/Button";
-import { useNavigate } from "react-router-dom";
-import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
+import { useNavigate, useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
-import { createTrip } from "@/lib/tripStorage";
+import { getTripById, updateTrip } from "@/lib/tripStorage";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
 
-type FormValues = {
-    title: string;
-    destinations?: { id: string; label: string }[];
-    description?: string;
-    startDate: string;
-    endDate: string;
-    isPublic?: boolean;
-    thumbnail?: string | null;
-};
-
-export default function NewTripPage() {
+export default function EditTripPage() {
     const navigate = useNavigate();
-    const { register, handleSubmit, control, formState, watch, setValue } = useForm<FormValues>({
-        defaultValues: {
-            destinations: [],
-            title: "",
-            description: "",
-            startDate: new Date().toISOString().slice(0, 10),
-            endDate: new Date().toISOString().slice(0, 10),
-            isPublic: false,
-            thumbnail: null,
-        },
+    const { id } = useParams();
+    const trip = id ? getTripById(id) : null;
+    const [preview, setPreview] = React.useState<string | null>(trip?.thumbnail ?? null);
+
+    const { register, handleSubmit, control, watch, setValue } = useForm<any>({
+        defaultValues: trip
+            ? {
+                title: trip.title,
+                description: trip.description,
+                startDate: trip.startDate,
+                endDate: trip.endDate,
+                isPublic: trip.isPublic,
+                destinations: (trip as any).destinations
+                    ? (trip as any).destinations.map((d: string) => ({ id: d, label: d }))
+                    : trip.city
+                        ? [{ id: trip.city, label: trip.city }]
+                        : [],
+            }
+            : undefined,
     });
 
-    const [preview, setPreview] = React.useState<string | null>(null);
-    const { errors } = formState;
-
-    const onSubmit = async (data: FormValues) => {
-        const thumbnail = (window as any).__trip_thumbnail ?? null;
-        const destinations = data.destinations?.map((d) => d.label) ?? [];
-        const trip = createTrip({
-            title: data.title || "Untitled Trip",
-            destinations,
+    const onSubmit = (data: any) => {
+        if (!id) return;
+        updateTrip(id, {
+            title: data.title,
             description: data.description,
             startDate: data.startDate,
             endDate: data.endDate,
             isPublic: !!data.isPublic,
-            thumbnail,
+            thumbnail: (window as any).__trip_thumbnail ?? trip.thumbnail ?? null,
         });
-        navigate(`/trip-circle/trip/${trip.id}`);
+        navigate(`/trip-circle/trip/${id}`);
     };
 
-    const handleFile = async (f?: File | null) => {
-        if (!f) return null;
-        return await new Promise<string | null>((res) => {
-            const reader = new FileReader();
-            reader.onload = () => res(String(reader.result));
-            reader.onerror = () => res(null);
-            reader.readAsDataURL(f);
-        });
-    };
+    if (!trip)
+        return (
+            <div>
+                <Navbar />
+                <main className="max-w-screen-md mx-auto p-6">Trip not found</main>
+            </div>
+        );
 
     return (
         <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
             <Navbar />
             <main className="max-w-screen-md mx-auto p-6">
-                <BackToDashboardButton />
-                <FormContainer title="Create New Trip" subtitle="Start planning your next adventure">
+                <FormContainer title="Edit Trip" subtitle="Update your trip details">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div>
                             <div className="text-sm font-medium mb-1">Trip Title</div>
                             <input
-                                {...register("title", { required: "This field is required" })}
+                                {...register("title", { required: true })}
                                 placeholder="e.g., Summer in Europe"
-                                className={`w-full px-4 py-2 rounded-lg border ${errors.title ? "border-red-600" : ""
-                                    }`}
+                                className="w-full px-4 py-2 rounded-lg border"
                             />
-                            {errors.title && (
-                                <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>
-                            )}
                         </div>
 
                         <div>
@@ -87,55 +73,33 @@ export default function NewTripPage() {
                             <Controller
                                 control={control}
                                 name="destinations"
-                                rules={{ required: "Please add at least one destination" }}
                                 render={({ field }) => (
                                     <Select
                                         multiple
                                         value={field.value ?? []}
                                         onChange={(v) => field.onChange(v)}
-                                        placeholder="Search cities..."
                                         fetchOptions={async (q) => (await searchCities(q)).slice(0, 10)}
                                     />
                                 )}
                             />
-                            {errors.destinations && (
-                                <div className="text-red-600 text-xs mt-1">{errors.destinations.message}</div>
-                            )}
-                        </div>
-
-                        <div>
-                            <div className="text-sm font-medium mb-1">Description (Optional)</div>
-                            <textarea
-                                {...register("description")}
-                                className="w-full rounded-lg p-3 border"
-                                placeholder="Tell others about your trip..."
-                            ></textarea>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <div className="text-sm font-medium mb-1">Start Date</div>
                                 <input
-                                    {...register("startDate", { required: "Start date is required" })}
+                                    {...register("startDate")}
                                     type="date"
-                                    className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-600" : ""
-                                        }`}
+                                    className="w-full px-4 py-2 rounded-lg border"
                                 />
-                                {errors.startDate && (
-                                    <div className="text-red-600 text-xs mt-1">{errors.startDate.message}</div>
-                                )}
                             </div>
                             <div>
                                 <div className="text-sm font-medium mb-1">End Date</div>
                                 <input
-                                    {...register("endDate", { required: "End date is required" })}
+                                    {...register("endDate")}
                                     type="date"
-                                    className={`w-full px-4 py-2 rounded-lg border ${errors.endDate ? "border-red-600" : ""
-                                        }`}
+                                    className="w-full px-4 py-2 rounded-lg border"
                                 />
-                                {errors.endDate && (
-                                    <div className="text-red-600 text-xs mt-1">{errors.endDate.message}</div>
-                                )}
                             </div>
                         </div>
 
@@ -146,7 +110,13 @@ export default function NewTripPage() {
                                 accept="image/*"
                                 onChange={async (e) => {
                                     const f = e.target.files?.[0];
-                                    const data = await handleFile(f ?? undefined);
+                                    if (!f) return;
+                                    const data = await new Promise<string | null>((res) => {
+                                        const r = new FileReader();
+                                        r.onload = () => res(String(r.result));
+                                        r.onerror = () => res(null);
+                                        r.readAsDataURL(f);
+                                    });
                                     (window as any).__trip_thumbnail = data;
                                     setPreview(data);
                                 }}
@@ -158,7 +128,7 @@ export default function NewTripPage() {
                                 <div className="text-sm font-medium mb-1">Preview</div>
                                 <img
                                     src={preview}
-                                    alt="trip thumbnail preview"
+                                    alt="thumbnail preview"
                                     className="w-40 h-28 object-cover rounded-lg border shadow"
                                 />
                             </div>
@@ -186,7 +156,7 @@ export default function NewTripPage() {
                                 Cancel
                             </Button>
                             <Button variant="primary" type="submit">
-                                Create Trip
+                                Save
                             </Button>
                         </div>
                     </form>

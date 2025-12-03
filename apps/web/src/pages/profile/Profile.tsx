@@ -1,7 +1,7 @@
 import React from "react";
-import { useAuth } from "../../auth/hook/use-auth";
-import Navbar from "../../components/layout/Navbar";
-import { BackToDashboardButton } from "../dashboard/BackToDashboardButton";
+import { useAuth } from "@/auth/hook/use-auth";
+import Navbar from "@/components/layout/Navbar";
+import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 
 export default function ProfilePage() {
     const { user } = useAuth();
