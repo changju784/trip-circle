@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import User from '../models/user.js';
+import Trip from '../models/trip.js';
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
@@ -110,6 +111,21 @@ router.put('/:id', async (req, res) => {
 });
 
 
+router.get('/:id/trips', async (req, res) => {
+  const id = String(req.params.id);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  try {
+    const user = await User.findById(id).populate('trips');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user.trips);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.delete('/:id', async (req, res) => {
   const id = String(req.params.id);
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -119,6 +135,13 @@ router.delete('/:id', async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(id);
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // remove user from all trips' members arrays
+    await Trip.updateMany(
+      { members: id },
+      { $pull: { members: id } }
+    );
+
     res.json({ message: 'User deleted', id: user._id });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
