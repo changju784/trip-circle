@@ -29,7 +29,15 @@ app.get('/api', (req, res) => {
     res.json({ message: 'Welcome to TripCircle API' });
 });
 
-// Import routes (we'll create these next)
+// Import login route
+import loginRoutes from './routes/login.js';
+app.use('/api/login', loginRoutes);
+
+// Authentication middleware
+import authMiddleware from './middleware/auth.js';
+app.use(authMiddleware);
+
+// Import protected routes
 import tripRoutes from './routes/trips.js';
 import userRoutes from './routes/users.js';
 app.use('/api/trips', tripRoutes);
