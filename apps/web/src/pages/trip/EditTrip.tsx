@@ -138,7 +138,10 @@ export default function EditTripPage() {
                             <div className="flex flex-col">
                                 <div className="flex items-center gap-2 font-medium text-gray-800">
                                     <span className="text-lg">{watch("isPublic") ? "🌍" : "🔒"}</span>
-                                    Make trip public
+                                    {
+                                        watch("isPublic") ? "Public Trip" : "Private Trip"
+                                    }
+
                                 </div>
                                 <div className="text-sm text-gray-500">
                                     {watch("isPublic") ? "Anyone can view this trip" : "Only you can view this trip"}
