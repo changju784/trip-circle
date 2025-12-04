@@ -73,9 +73,13 @@ export default function EditTripPage() {
                             <Controller
                                 control={control}
                                 name="destinations"
+                                rules={{
+                                    validate: (v) => (Array.isArray(v) ? (v.length <= 3 && v.length >= 1) : true) || "Please select 1-3 destinations",
+                                }}
                                 render={({ field }) => (
                                     <Select
                                         multiple
+                                        maxSelection={3}
                                         value={field.value ?? []}
                                         onChange={(v) => field.onChange(v)}
                                         fetchOptions={async (q) => (await searchCities(q)).slice(0, 10)}

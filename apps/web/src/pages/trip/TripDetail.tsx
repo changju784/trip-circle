@@ -126,7 +126,18 @@ export default function TripDetailPage() {
                     <div>
                         <h1 className="text-2xl font-semibold">{trip.title}</h1>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
-                            <div className="flex items-center gap-2">📍 {trip.city}</div>
+                            <div className="flex items-center gap-2">
+                                📍 {
+                                    (() => {
+                                        const dests: string[] | undefined = (trip as any).destinations;
+                                        if (dests && dests.length > 0) {
+                                            const visible = dests.slice(0, 3).join(", ");
+                                            return dests.length > 3 ? `${visible} (+${dests.length - 3} more)` : visible;
+                                        }
+                                        return trip.city ?? "Unknown";
+                                    })()
+                                }
+                            </div>
                             <div>•</div>
                             <div>{trip.startDate} - {trip.endDate}</div>
                             <div
