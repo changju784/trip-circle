@@ -1,0 +1,37 @@
+[
+  {
+    "id": "chicago-weekend",
+    "title": "Long weekend in Chicago",
+    "description": "3 days exploring the riverwalk, museums, and neighborhood food spots.",
+    "destinations": [
+      { "id": "chi", "label": "Chicago, IL" }
+    ],
+    "startDate": "2025-06-13",
+    "endDate": "2025-06-16",
+    "thumbnail": "https://images.adsttc.com/media/images/5037/e052/28ba/0d59/9b00/015a/medium_jpg/stringio.jpg?1414052877"
+  },
+  {
+    "id": "southwest-roadtrip",
+    "title": "Southwest national parks road trip",
+    "description": "Zion, Bryce, and the Grand Canyon with scenic drives in between.",
+    "destinations": [
+      { "id": "zion", "label": "Zion National Park" },
+      { "id": "bryce", "label": "Bryce Canyon" },
+      { "id": "gc", "label": "Grand Canyon" }
+    ],
+    "startDate": "2025-08-03",
+    "endDate": "2025-08-10",
+    "thumbnail": null
+  },
+  {
+    "id": "mexico-beach",
+    "title": "Relaxing beach escape in Mexico",
+    "description": "Slow mornings, afternoons by the water, and good food nearby.",
+    "destinations": [
+      { "id": "cancun", "label": "Cancún" }
+    ],
+    "startDate": "2025-02-10",
+    "endDate": "2025-02-15",
+    "thumbnail": null
+  }
+]

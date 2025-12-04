@@ -2,6 +2,7 @@ import Navbar from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/Button";
 import DashboardTabs from "./DashboardTabs";
 import { useNavigate } from "react-router-dom";
+import ExploreSection from "./ExploreSection";
 
 export default function DashboardPage() {
     const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                     <DashboardTabs
                         mytrips={MyTripsSection}
-                        explore={ExploreSection}
+                        explore={<ExploreSection/>}
                         onNewTrip={() => navigate("/trip-circle/trip/new")}
                     />
                 </div>
