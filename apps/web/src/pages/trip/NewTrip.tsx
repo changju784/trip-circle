@@ -87,10 +87,13 @@ export default function NewTripPage() {
                             <Controller
                                 control={control}
                                 name="destinations"
-                                rules={{ required: "Please add at least one destination" }}
+                                rules={{
+                                    validate: (v) => (Array.isArray(v) && v.length >= 1 && v.length <= 3) || "Please select 1-3 destinations",
+                                }}
                                 render={({ field }) => (
                                     <Select
                                         multiple
+                                        maxSelection={3}
                                         value={field.value ?? []}
                                         onChange={(v) => field.onChange(v)}
                                         placeholder="Search cities..."
