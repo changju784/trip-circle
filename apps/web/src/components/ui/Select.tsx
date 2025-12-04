@@ -35,11 +35,7 @@ function colorForTag(id: string) {
 }
 
 
-<<<<<<< HEAD
-export default function Select({ value, multiple = false, placeholder, onChange, fetchOptions }: SelectProps) {
-=======
 export default function Select({ value, multiple = false, placeholder, onChange, fetchOptions, maxSelection }: SelectProps) {
->>>>>>> origin/master
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [options, setOptions] = useState<Option[]>([]);
