@@ -21,6 +21,13 @@ export default function DashboardPage() {
         </div>
     );
 
+    // TODO: Implement Explore section
+    const ExploreSection = (
+        <div className="p-10 text-center text-gray-600">
+            <h2 className="text-xl font-medium">Explore Destinations</h2>
+            <p className="text-muted-foreground mt-2">Coming soon...</p>
+        </div>
+    );
 
     return (
         <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>

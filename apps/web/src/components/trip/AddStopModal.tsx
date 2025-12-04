@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { useForm } from "react-hook-form";
-import { geocodeLocation } from "@/lib/geocode";
+import { geocodeLocation, geocodeSearch } from "@/lib/geocode";
 import { Stop } from "@/lib/tripStorage";
 
 type Props = {
@@ -26,7 +26,7 @@ type FormData = {
 };
 
 export default function AddStopModal({ open, onClose, onSubmit, initialStop = null }: Props) {
-    const { register, handleSubmit, reset, formState, setValue } = useForm<FormData>({
+    const { register, handleSubmit, reset, formState, setValue, watch } = useForm<FormData>({
         defaultValues: {
             title: "",
             time: "",
@@ -38,6 +38,27 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
     const { errors } = formState;
     const [loading, setLoading] = useState(false);
     const [geoError, setGeoError] = useState("");
+    const [suggestions, setSuggestions] = useState<{ lat: number; lng: number; displayName: string }[]>([]);
+    const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number; displayName?: string } | null>(null);
+
+    const locationValue = watch("locationName");
+
+    // fetch suggestions as user types (debounced)
+    useEffect(() => {
+        let mounted = true;
+        if (!locationValue || locationValue.length < 2) {
+            setSuggestions([]);
+            return;
+        }
+        const t = setTimeout(async () => {
+            const res = await geocodeSearch(locationValue);
+            if (mounted) setSuggestions(res);
+        }, 350);
+        return () => {
+            mounted = false;
+            clearTimeout(t);
+        };
+    }, [locationValue]);
 
     useEffect(() => {
         if (initialStop) {
@@ -45,6 +66,11 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
             setValue("time", initialStop.time || "");
             setValue("locationName", initialStop.locationName || "");
             setValue("description", initialStop.description || "");
+            if (initialStop.lat != null && initialStop.lng != null) {
+                setSelectedCoords({ lat: initialStop.lat, lng: initialStop.lng, displayName: initialStop.locationName });
+            } else {
+                setSelectedCoords(null);
+            }
         } else {
             reset();
         }
@@ -57,8 +83,11 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
         let lat = null as number | null;
         let lng = null as number | null;
 
-        // Auto-geocode if locationName exists
-        if (data.locationName) {
+        // Prefer selected suggestion coords
+        if (selectedCoords) {
+            lat = selectedCoords.lat;
+            lng = selectedCoords.lng;
+        } else if (data.locationName) {
             const result = await geocodeLocation(data.locationName);
 
             if (result) {
@@ -114,6 +143,18 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
                     <input {...register("locationName", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border ${errors.locationName ? "border-red-600" : ""}`} placeholder="e.g., Champ de Mars, Paris" />
                     {errors.locationName && <div className="text-red-600 text-xs mt-1">{errors.locationName.message}</div>}
                     {geoError && (<div className="text-red-600 text-xs mt-1">{geoError}</div>)}
+
+                    {suggestions.length > 0 && (
+                        <div className="border rounded bg-white mt-2 max-h-40 overflow-auto">
+                            {suggestions.map((s, i) => (
+                                <div key={`${s.lat}-${s.lng}-${i}`} className="px-3 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => {
+                                    setValue("locationName", s.displayName);
+                                    setSelectedCoords({ lat: s.lat, lng: s.lng, displayName: s.displayName });
+                                    setSuggestions([]);
+                                }}>{s.displayName}</div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Description */}

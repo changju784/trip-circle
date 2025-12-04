@@ -87,10 +87,13 @@ export default function NewTripPage() {
                             <Controller
                                 control={control}
                                 name="destinations"
-                                rules={{ required: "Please add at least one destination" }}
+                                rules={{
+                                    validate: (v) => (Array.isArray(v) && v.length >= 1 && v.length <= 3) || "Please select 1-3 destinations",
+                                }}
                                 render={({ field }) => (
                                     <Select
                                         multiple
+                                        maxSelection={3}
                                         value={field.value ?? []}
                                         onChange={(v) => field.onChange(v)}
                                         placeholder="Search cities..."
@@ -168,7 +171,7 @@ export default function NewTripPage() {
                             <div className="flex flex-col">
                                 <div className="flex items-center gap-2 font-medium text-gray-800">
                                     <span className="text-lg">{watch("isPublic") ? "🌍" : "🔒"}</span>
-                                    Make trip public
+                                    {watch("isPublic") ? "Public Trip" : "Private Trip"}
                                 </div>
                                 <div className="text-sm text-gray-500">
                                     {watch("isPublic") ? "Anyone can view this trip" : "Only you can view this trip"}

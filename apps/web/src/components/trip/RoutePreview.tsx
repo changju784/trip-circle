@@ -12,7 +12,6 @@ export default function RoutePreview({ city, stops }) {
             <MapPreview
                 stops={stops}
                 height={420}
-                fallbackCity={city}
             />
         </div>
     );
