@@ -38,7 +38,8 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                     <DashboardTabs
                         mytrips={MyTripsSection}
-                        explore={<ExploreSection/>}
+                        // explore={<ExploreSection/>} // TODO: fix this
+                        explore={ExploreSection}
                         onNewTrip={() => navigate("/trip-circle/trip/new")}
                     />
                 </div>
