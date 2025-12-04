@@ -1,16 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getTripById, Trip, addStopToTrip, updateStop, deleteStop, addCollaborator } from "@/lib/tripStorage";
+import { getTripById, Trip, addStopToTrip, updateStop, deleteStop } from "@/lib/tripStorage";
 import { useAuth } from "@/auth/hook/use-auth";
-import { getUserRoleForTrip, canEditTrip } from "@/lib/roles";
 
 import Navbar from "@/components/layout/Navbar";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
-import RoutePreview from "@/components/trip/RoutePreview";
 import AddStopModal from "@/components/trip/AddStopModal";
-import ShareTripModal from "@/components/ui/ShareTripModal";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
 
 export default function TripDetailPage() {
@@ -24,18 +21,8 @@ export default function TripDetailPage() {
 
     const [selectedDay, setSelectedDay] = useState(0);
     const [openAdd, setOpenAdd] = useState(false);
-    const [openShare, setOpenShare] = useState(false);
     const [editingStop, setEditingStop] = useState<string | null>(null);
-
-    // const userRole = getUserRoleForTrip(auth.user?.uid, trip?.ownerId, trip?.collaborators);
-    // const canEdit = canEditTrip(auth.user?.uid, userRole);
-    // TODO: replace with actual role 
-    const userRole = "owner"
-    const canEdit = true
-
-    const stopsForSelected = useMemo(() => {
-        return trip?.days?.[selectedDay]?.stops ?? [];
-    }, [trip, selectedDay]);
+    const canEdit = true;
 
     const refresh = () => {
         if (!id) return;
@@ -83,15 +70,6 @@ export default function TripDetailPage() {
         deleteStop(id, stopId);
         refresh();
     };
-
-    const handleShare = (email: string, role: "editor" | "reader") => {
-        if (!id) return;
-        // TODO: In a real app, you'd lookup the user by email first
-        // For now, we'll use the email as a placeholder userId
-        addCollaborator(id, `user_${email}`, email, role);
-        refresh();
-    };
-
     if (!trip) {
         return (
             <div>
@@ -159,9 +137,6 @@ export default function TripDetailPage() {
                         )}
                     </div>
                     <div className="flex gap-2">
-                        {userRole === "owner" && (
-                            <button onClick={() => setOpenShare(true)} className="px-3 py-2 bg-blue-600 text-white rounded">Share</button>
-                        )}
                         {canEdit && (
                             <Link to={`/trip-circle/trip/${trip.id}/edit`} className="px-3 py-2 bg-white border rounded">Edit Trip</Link>
                         )}
@@ -170,8 +145,8 @@ export default function TripDetailPage() {
 
                 <div className="grid grid-cols-12 gap-6">
 
-                    {/* LEFT PANEL */}
-                    <div className="col-span-8">
+                    {/* FULL WIDTH PANEL */}
+                    <div className="col-span-12">
 
                         <Tabs
                             value={`day-${selectedDay}`}
@@ -198,14 +173,6 @@ export default function TripDetailPage() {
                             ))}
                         </Tabs>
 
-                    </div>
-
-                    {/* RIGHT PANEL */}
-                    <div className="col-span-4">
-                        <RoutePreview
-                            city={trip.city}
-                            stops={stopsForSelected}
-                        />
                     </div>
                 </div>
 
