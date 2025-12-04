@@ -1,7 +1,13 @@
 import jwt from "jsonwebtoken";
+import User from "../models/user.js";
 
-const authMiddleware = function (req, res, next) {
+const authMiddleware = async function (req, res, next) {
   const authHeader = req.headers.authorization;
+
+  // Allow registration endpoint to bypass auth
+  if (req.method === "POST" && req.path === "/api/users") {
+    return next();
+  }
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "No token provided" });
@@ -11,9 +17,24 @@ const authMiddleware = function (req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // attach decoded user info to request
+    
+    const user = await User.findById(decoded.userId).select('-password');
+    
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    
+    req.user = {
+      userId: user._id,
+      email: user.email,
+      trips: user.trips
+    };
+    
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: "Token expired" });
+    }
     return res.status(403).json({ message: "Invalid token" });
   }
 };
