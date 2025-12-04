@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import { Resend } from 'resend';
 
 const router = express.Router();
-
+dotenv.config();
 
 router.get('/', async (req, res) => {
   try {
@@ -122,7 +122,7 @@ router.post('/share', async (req, res) => {
       return res.status(404).json({ error: 'User with provided email not found' });
     }
     const trip = await Trip.findByIdAndUpdate(tripId, 
-      { $push: { members: userId } }, 
+      { $addToSet: { members: userId } }, 
       { new: true});
     if (!trip) return res.status(404).json({ error: 'Trip not found' });
     
