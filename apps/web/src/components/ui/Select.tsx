@@ -5,6 +5,7 @@ type Option = { id: string; label: string };
 type SelectProps = {
     value?: Option | Option[] | null;
     multiple?: boolean;
+    maxSelection?: number;
     placeholder?: string;
     onChange?: (v: Option | Option[] | null) => void;
     fetchOptions?: (q: string) => Promise<Option[]>;
@@ -34,7 +35,11 @@ function colorForTag(id: string) {
 }
 
 
+<<<<<<< HEAD
 export default function Select({ value, multiple = false, placeholder, onChange, fetchOptions }: SelectProps) {
+=======
+export default function Select({ value, multiple = false, placeholder, onChange, fetchOptions, maxSelection }: SelectProps) {
+>>>>>>> origin/master
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [options, setOptions] = useState<Option[]>([]);
@@ -58,6 +63,10 @@ export default function Select({ value, multiple = false, placeholder, onChange,
         if (multiple) {
             const cur = Array.isArray(value) ? [...value] : [];
             if (!cur.find((c) => c.id === opt.id)) {
+                if (maxSelection && cur.length >= maxSelection) {
+                    // ignore additional selections when at limit
+                    return;
+                }
                 const next = [...cur, opt];
                 onChange?.(next);
             }
