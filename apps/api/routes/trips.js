@@ -102,7 +102,7 @@ function generateDays(startDate, endDate) {
 
 
 router.post('/', async (req, res) => {
-  const { title, description, destinations, isPublic, thumbnail, startDate, endDate, members } = req.body;
+  const { title, description, destinations, isPublic, thumbnail, days, startDate, endDate, budget, members } = req.body;
 
   if (!title || !startDate || !endDate) {
     return res.status(400).json({ error: 'missing required fields: title, startDate, endDate' });
@@ -157,15 +157,24 @@ router.post('/share', async (req, res) => {
       { new: true });
     if (!trip) return res.status(404).json({ error: 'Trip not found' });
 
+    await User.findByIdAndUpdate(userId,
+      { $addToSet: { trips: tripId } },
+      { new: true });
+
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: "tripcircle <no-reply@resend.dev>",
       to: email,
       subject: "New Trip Shared With You",
       html: `<p>The trip ${trip.title} has been shared with you and you are able to make edits!</p>`
     });
 
-    res.json({ message: 'Trip shared successfully' });
+    if (result.data) {
+      return res.json({ message: 'Trip shared successfully' });
+    }
+    else {
+      return res.status(result.error.statusCode).json({ message: result.error.message });
+    }
   }
   catch (err) {
     return res.status(500).json({ error: 'Server error', details: err.message });
@@ -173,7 +182,8 @@ router.post('/share', async (req, res) => {
 });
 
 router.post('/fork', async (req, res) => {
-  const { tripId, userId } = req.body;
+  const { tripId } = req.body;
+  const userId = req.user.userId;
 
   if (!tripId || !userId) {
     return res.status(400).json({ error: "Missing required fields: tripId, userId" });
@@ -202,6 +212,10 @@ router.post('/fork', async (req, res) => {
     const newTrip = new Trip(tripData);
     await newTrip.save();
 
+    await User.findByIdAndUpdate(userId,
+      { $addToSet: { trips: newTrip._id } },
+      { new: true });
+
     res.status(201).json({
       message: "Trip forked successfully",
       trip: newTrip
@@ -218,7 +232,7 @@ router.put('/:id', async (req, res) => {
     return res.status(400).json({ error: 'Invalid trip id' });
   }
 
-  const allowedUpdates = ['title', 'description', 'destinations', 'isPublic', 'thumbnail', 'days', 'startDate', 'endDate', 'members'];
+  const allowedUpdates = ['title', 'description', 'destinations', 'isPublic', 'thumbnail', 'days', 'startDate', 'endDate', 'budget', 'members'];
   const updates = {};
 
   allowedUpdates.forEach(field => {

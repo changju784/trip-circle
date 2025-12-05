@@ -52,6 +52,7 @@ const TripSchema = new mongoose.Schema({
 
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
+    budget: { type: Number, default: 0 },
 
     dateCreated: {
         type: Date,
@@ -79,6 +80,6 @@ TripSchema.index(
 
 // ADDITIONAL INDEXES
 TripSchema.index({ isPublic: 1, dateCreated: -1 });
-TripSchema.index({ members: 1 });
+TripSchema.index({ 'members': 1 });
 
 export default mongoose.model('Trip', TripSchema);

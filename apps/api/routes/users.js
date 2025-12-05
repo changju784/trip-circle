@@ -42,10 +42,10 @@ router.get('/:id', async (req, res) => {
 
 
 router.post('/', async (req, res) => {
-  const { email, password } = req.body;
+  const { username, email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Missing required fields: email, password' });
+  if (!email || !password || !username) {
+    return res.status(400).json({ error: 'Missing required fields: email, password, username' });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -61,6 +61,7 @@ router.post('/', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     
     const user = new User({ 
+      username,
       email, 
       password: hashedPassword 
     });

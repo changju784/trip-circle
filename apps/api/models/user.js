@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 // User Schema
 const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, unique: true, trim: true },
     password: { type: String, default: null }, // null for OAuth-only users
     name: { type: String, default: null },
@@ -19,8 +20,6 @@ const UserSchema = new mongoose.Schema({
         immutable: true
     }
 });
-
-// User Middleware
 
 // Export Model Schema
 export default mongoose.model('User', UserSchema);
