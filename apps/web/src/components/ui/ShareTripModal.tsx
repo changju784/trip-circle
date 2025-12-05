@@ -1,26 +1,52 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Modal from "./Modal";
+import Select from "@/components/ui/Select";
+import { useUsers } from "@/lib/users/use-users";
+import debounce from "lodash.debounce";
 
 type ShareTripModalProps = {
     open: boolean;
     onClose: () => void;
-    onShare: (email: string, role: "editor" | "reader") => void;
+    onShare: (email: string) => Promise<void>;
 };
 
+
 export default function ShareTripModal({ open, onClose, onShare }: ShareTripModalProps) {
-    const [email, setEmail] = useState("");
-    const [role, setRole] = useState<"editor" | "reader">("editor");
+    const [selectedUser, setSelectedUser] = useState<{ id: string; label: string; email: string } | null>(null);
     const [loading, setLoading] = useState(false);
+
+    const { searchUsers } = useUsers();
+
+    const fetchOptions = useMemo(() => {
+        const debouncedSearch = debounce(async (query: string, callback: (results: any[]) => void) => {
+            const users = await searchUsers(query);
+            callback(
+                users.map((u) => ({
+                    id: u.id!,
+                    label: `${u.username} (${u.email})`,
+                    email: u.email,
+                }))
+            );
+        }, 300);
+
+        return (query: string) =>
+            new Promise<any[]>((resolve) => {
+                debouncedSearch(query, resolve);
+            });
+    }, [searchUsers]);
+
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email.trim()) return;
+        if (!selectedUser) return;
+
         setLoading(true);
-        await new Promise((res) => setTimeout(res, 300)); // simulated async
-        onShare(email.trim(), role);
-        setEmail("");
-        setRole("editor");
+
+        await onShare(selectedUser.email);
+
         setLoading(false);
+        setSelectedUser(null);
         onClose();
     };
 
@@ -28,43 +54,30 @@ export default function ShareTripModal({ open, onClose, onShare }: ShareTripModa
         <Modal open={open} onClose={onClose} title="Share Trip">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="text-sm font-medium">Email Address</label>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="someone@example.com"
-                        className="w-full mt-1 px-3 py-2 rounded-lg border"
-                        required
+                    <label className="text-sm font-medium">Invite User</label>
+                    <Select
+                        placeholder="Search by username or email"
+                        value={selectedUser}
+                        onChange={(val) => setSelectedUser(val as any)}
+                        fetchOptions={fetchOptions}
                     />
-                </div>
-
-                <div>
-                    <label className="text-sm font-medium">Role</label>
-                    <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value as "editor" | "reader")}
-                        className="w-full mt-1 px-3 py-2 rounded-lg border"
-                    >
-                        <option value="editor">Editor (can edit trip)</option>
-                        <option value="reader">Viewer (can only view)</option>
-                    </select>
                 </div>
 
                 <div className="flex justify-end gap-3">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 rounded border"
+                        className="px-4 py-2 border rounded"
                     >
                         Cancel
                     </button>
+
                     <button
                         type="submit"
-                        disabled={loading || !email.trim()}
-                        className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50"
+                        disabled={loading || !selectedUser}
+                        className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
                     >
-                        {loading ? "Inviting..." : "Invite"}
+                        {loading ? "Sharing..." : "Share"}
                     </button>
                 </div>
             </form>

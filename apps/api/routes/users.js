@@ -149,4 +149,24 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+router.get('/search/:query', async (req, res) => {
+  const q = req.params.query.trim();
+
+  if (!q) return res.json([]);
+
+  try {
+    const users = await User.find({
+      $or: [
+        { username: { $regex: q, $options: "i" } },
+        { email: { $regex: q, $options: "i" } }
+      ]
+    }).select("username email");
+
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 export default router;

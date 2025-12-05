@@ -5,6 +5,7 @@ import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
 import AddStopModal from "@/components/trip/AddStopModal";
+import ShareTripModal from "@/components/ui/ShareTripModal";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
 import { useTrips } from "@/lib/trips/use-trips";
 import { useAuth } from "@/auth/hook/use-auth";
@@ -13,7 +14,7 @@ import { useGetUsernameById } from "@/lib/auth/use-get-username-by-id";
 export default function TripDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getTrip, updateTrip, deleteTrip, isLoading } = useTrips();
+    const { getTrip, updateTrip, deleteTrip, shareTrip, isLoading } = useTrips();
     const { user } = useAuth();
 
     const [trip, setTrip] = useState<any | null>(null);
@@ -21,14 +22,14 @@ export default function TripDetailPage() {
     const [openAdd, setOpenAdd] = useState(false);
     const [editingStop, setEditingStop] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [shareOpen, setShareOpen] = useState(false);
 
     const ownerId = trip?.members?.[0];
     const { name: ownerName } = useGetUsernameById(ownerId);
 
-    // DELETE TRIP MODAL
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-    // Load trip
+    // ---------------- LOAD TRIP ----------------
     useEffect(() => {
         if (!id) return;
 
@@ -40,8 +41,9 @@ export default function TripDetailPage() {
                 const data = await getTrip(id);
                 if (!cancelled) setTrip(data);
             } catch (err) {
-                if (!cancelled)
+                if (!cancelled) {
                     setError(err instanceof Error ? err.message : "Failed to load trip");
+                }
             }
         }
 
@@ -51,8 +53,8 @@ export default function TripDetailPage() {
         };
     }, [id, getTrip]);
 
-    // Permission check
-    const canEdit = Boolean(
+    // ---------------- OWNER CHECK ----------------
+    const isOwner = Boolean(
         user &&
         trip?.members &&
         Array.isArray(trip.members) &&
@@ -70,97 +72,66 @@ export default function TripDetailPage() {
 
     const refresh = async () => {
         if (!id) return;
-        try {
-            const updated = await getTrip(id);
-            setTrip(updated);
-        } catch {
-            /* ignore */
-        }
+        const updated = await getTrip(id);
+        setTrip(updated);
     };
 
-    // Add or edit stop
-    const handleAddStop = async (
-        data: {
-            title: string;
-            time?: string;
-            locationName?: string;
-            lat?: number | null;
-            lng?: number | null;
-            description?: string;
-        },
-        stopId?: string | null
-    ) => {
+    // ---------------- ADD / EDIT STOP ----------------
+    const handleAddStop = async (data: any, stopId?: string | null) => {
         if (!id || !trip) return;
 
         const days = JSON.parse(JSON.stringify(trip.days || []));
 
         if (stopId) {
+            // Editing
             for (const d of days) {
                 const idx = (d.stops || []).findIndex((s: any) => s.id === stopId);
                 if (idx >= 0) {
-                    d.stops[idx] = {
-                        ...d.stops[idx],
-                        ...data,
-                        lat: data.lat ?? null,
-                        lng: data.lng ?? null,
-                    };
+                    d.stops[idx] = { ...d.stops[idx], ...data, lat: data.lat ?? null, lng: data.lng ?? null };
                     break;
                 }
             }
         } else {
+            // Adding
             if (!days[selectedDay]) {
                 days[selectedDay] = { date: new Date().toISOString(), stops: [] };
             }
 
-            const newStop = {
+            days[selectedDay].stops.push({
                 id: Math.random().toString(36).slice(2, 9),
                 ...data,
                 lat: data.lat ?? null,
                 lng: data.lng ?? null,
-            };
-
-            days[selectedDay].stops.push(newStop);
+            });
         }
 
-        try {
-            await updateTrip(id, { days });
-            await refresh();
-            setEditingStop(null);
-            setOpenAdd(false);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to save stop");
-        }
+        await updateTrip(id, { days });
+        await refresh();
+        setEditingStop(null);
+        setOpenAdd(false);
     };
 
+    // ---------------- DELETE STOP ----------------
     const handleDeleteStop = async (stopId: string) => {
         if (!id || !trip) return;
-
-        const days = JSON.parse(JSON.stringify(trip.days || []));
-        for (const d of days) {
-            d.stops = (d.stops || []).filter((s: any) => s.id !== stopId);
-        }
-
-        try {
-            await updateTrip(id, { days });
-            await refresh();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to delete stop");
-        }
+        const days = trip.days.map((d: any) => ({
+            ...d,
+            stops: d.stops.filter((s: any) => s.id !== stopId),
+        }));
+        await updateTrip(id, { days });
+        refresh();
     };
 
-    // Delete trip
+    // ---------------- DELETE TRIP ----------------
     const confirmDeleteTrip = async () => {
-        try {
-            await deleteTrip(trip._id);
-            navigate("/trip-circle/dashboard");
-        } catch {
-            alert("Failed to delete trip.");
-        }
+        await deleteTrip(trip._id);
+        navigate("/trip-circle/dashboard");
     };
 
+    // ---------------- RENDER ----------------
     if (isLoading) {
         return (
-            <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
+            <div className="min-h-screen bg-[#eaf6ff]">
                 <Navbar />
                 <main className="max-w-screen-lg mx-auto p-6 text-center">Loading trip...</main>
             </div>
@@ -169,7 +140,7 @@ export default function TripDetailPage() {
 
     if (error || !trip) {
         return (
-            <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
+            <div className="min-h-screen bg-[#eaf6ff]">
                 <Navbar />
                 <main className="max-w-screen-lg mx-auto p-6 text-center text-red-600">
                     {error ? `Error: ${error}` : "Trip not found"} —{" "}
@@ -179,22 +150,20 @@ export default function TripDetailPage() {
         );
     }
 
-    const destinationLabels =
-        trip.destinations?.map((d: any) => d.label).slice(0, 3).join(", ") || "Unknown";
-
+    const destinationLabels = trip.destinations?.map((d: any) => d.label).slice(0, 3).join(", ") || "Unknown";
     const hasMoreDestinations =
         trip.destinations && trip.destinations.length > 3
             ? `(+${trip.destinations.length - 3} more)`
             : "";
 
     return (
-        <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
+        <div className="min-h-screen bg-[#eaf6ff]">
             <Navbar />
 
             <main className="max-w-screen-lg mx-auto p-6">
                 <BackToDashboardButton />
 
-                {/* HEADER */}
+                {/* ---------------- HEADER ---------------- */}
                 <header className="mb-6 flex items-start justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold">{trip.title}</h1>
@@ -203,6 +172,7 @@ export default function TripDetailPage() {
                             <div className="flex items-center gap-2">
                                 📍 {destinationLabels} {hasMoreDestinations}
                             </div>
+
                             <div>•</div>
 
                             <div>
@@ -220,20 +190,23 @@ export default function TripDetailPage() {
                         </div>
 
                         {trip.description && (
-                            <p className="text-sm text-muted-foreground mt-2">
-                                {trip.description}
-                            </p>
+                            <p className="text-sm text-muted-foreground mt-2">{trip.description}</p>
                         )}
-                        {
-                            <p className="text-sm text-gray-600 mt-1">
-                                Owned by <span className="font-medium">{ownerName}</span>
-                            </p>
-                        }
+
+                        <p className="text-sm text-gray-600 mt-1">
+                            Owned by <span className="font-medium">{ownerName}</span>
+                        </p>
                     </div>
 
-                    {canEdit && (
+                    {isOwner && (
                         <div className="flex gap-2">
-                            {/* EDIT */}
+                            <button
+                                onClick={() => setShareOpen(true)}
+                                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+                            >
+                                Share
+                            </button>
+
                             <Link
                                 to={`/trip-circle/trip/${trip._id}/edit`}
                                 className="px-3 py-2 bg-white border rounded hover:bg-gray-50"
@@ -241,7 +214,6 @@ export default function TripDetailPage() {
                                 Edit Trip
                             </Link>
 
-                            {/* DELETE */}
                             <button
                                 onClick={() => setOpenDeleteModal(true)}
                                 className="px-3 py-2 border border-red-500 text-red-500 bg-white rounded hover:bg-red-50"
@@ -252,43 +224,34 @@ export default function TripDetailPage() {
                     )}
                 </header>
 
-                {/* DAYS + STOPS */}
-                <div className="grid grid-cols-12 gap-6">
-                    <div className="col-span-12">
-                        <Tabs
-                            value={`day-${selectedDay}`}
-                            onValueChange={(v) => {
-                                const index = Number(v.replace("day-", ""));
-                                setSelectedDay(index);
-                            }}
-                            className="mb-4"
-                        >
-                            <DayTabs days={trip.days} />
+                {/* ---------------- TABS / DAYS ---------------- */}
+                <Tabs
+                    value={`day-${selectedDay}`}
+                    onValueChange={(v) => setSelectedDay(Number(v.replace("day-", "")))}
+                    className="mb-4"
+                >
+                    <DayTabs days={trip.days} />
 
-                            {trip.days.map((d: any, i: number) => (
-                                <TabsContent key={d.date} value={`day-${i}`}>
-                                    <DayStopsPanel
-                                        days={trip.days}
-                                        selectedDay={i}
-                                        onOpenAdd={() => {
-                                            setEditingStop(null);
-                                            setOpenAdd(true);
-                                        }}
-                                        onEditStop={(sId: string) => {
-                                            setEditingStop(sId);
-                                            setOpenAdd(true);
-                                        }}
-                                        onDeleteStop={(sId: string) =>
-                                            handleDeleteStop(sId)
-                                        }
-                                    />
-                                </TabsContent>
-                            ))}
-                        </Tabs>
-                    </div>
-                </div>
+                    {trip.days.map((d: any, i: number) => (
+                        <TabsContent key={d.date} value={`day-${i}`}>
+                            <DayStopsPanel
+                                days={trip.days}
+                                selectedDay={i}
+                                onOpenAdd={() => {
+                                    setEditingStop(null);
+                                    setOpenAdd(true);
+                                }}
+                                onEditStop={(sId: string) => {
+                                    setEditingStop(sId);
+                                    setOpenAdd(true);
+                                }}
+                                onDeleteStop={handleDeleteStop}
+                            />
+                        </TabsContent>
+                    ))}
+                </Tabs>
 
-                {/* ADD / EDIT STOP MODAL */}
+                {/* ---------------- ADD / EDIT STOP MODAL ---------------- */}
                 <AddStopModal
                     open={openAdd}
                     onClose={() => {
@@ -299,7 +262,7 @@ export default function TripDetailPage() {
                     initialStop={initialStop}
                 />
 
-                {/* DELETE TRIP CONFIRM MODAL */}
+                {/* ---------------- DELETE TRIP MODAL ---------------- */}
                 {openDeleteModal && (
                     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
                         <div className="bg-white p-6 rounded-xl shadow-lg w-[320px]">
@@ -325,6 +288,17 @@ export default function TripDetailPage() {
                         </div>
                     </div>
                 )}
+
+                {/* ---------------- SHARE TRIP MODAL ---------------- */}
+                <ShareTripModal
+                    open={shareOpen}
+                    onClose={() => setShareOpen(false)}
+                    onShare={async (email: string) => {
+                        await shareTrip(trip._id, email);
+                        setShareOpen(false);
+                        refresh();
+                    }}
+                />
             </main>
         </div>
     );
