@@ -8,6 +8,7 @@ import AddStopModal from "@/components/trip/AddStopModal";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
 import { useTrips } from "@/lib/trips/use-trips";
 import { useAuth } from "@/auth/hook/use-auth";
+import { useGetUsernameById } from "@/lib/auth/use-get-username-by-id";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -20,6 +21,9 @@ export default function TripDetailPage() {
     const [openAdd, setOpenAdd] = useState(false);
     const [editingStop, setEditingStop] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const ownerId = trip?.members?.[0];
+    const { name: ownerName } = useGetUsernameById(ownerId);
 
     // DELETE TRIP MODAL
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -220,6 +224,11 @@ export default function TripDetailPage() {
                                 {trip.description}
                             </p>
                         )}
+                        {
+                            <p className="text-sm text-gray-600 mt-1">
+                                Owned by <span className="font-medium">{ownerName}</span>
+                            </p>
+                        }
                     </div>
 
                     {canEdit && (
