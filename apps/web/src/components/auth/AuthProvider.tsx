@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useState } from "react";
-import { restoreBackendAuthState, BackendUser, saveAuthState } from "@/lib/auth/useBackendAuth";
-import { getTokenFromCallback } from "@/lib/auth/authApi";
+import { restoreBackendAuthState, BackendUser, saveAuthState } from "@/lib/auth/use-backend-auth";
+import { getTokenFromCallback } from "@/lib/auth/auth-api";
 import axios from "axios";
 
 export const AuthContext = createContext<{

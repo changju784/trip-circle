@@ -4,7 +4,7 @@ import FormContainer from "@/components/form/FormContainer";
 import { Button } from "@/components/ui/Button";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
-import { useTrips } from "@/lib/trips/useTrips";
+import { useTrips } from "@/lib/trips/use-trips";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";

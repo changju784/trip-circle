@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
-import { useTrips } from "@/lib/trips/useTrips";
-import { Trip } from "@/lib/trips/tripsApi";
+import { useTrips } from "@/lib/trips/use-trips";
+import { Trip } from "@/lib/trips/trips-api";
 import { fetchSplashImage } from "@/lib/splashClient";
 
 

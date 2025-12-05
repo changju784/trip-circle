@@ -4,8 +4,8 @@
  */
 
 import { useCallback, useState } from "react";
-import { getUser as getUserApi, getUserTrips as getUserTripsApi, User } from "@/lib/users/usersApi";
-import { Trip } from "@/lib/trips/tripsApi";
+import { getUser as getUserApi, getUserTrips as getUserTripsApi, User } from "@/lib/users/users-api";
+import { Trip } from "@/lib/trips/trips-api";
 
 interface UseUsersState {
     user: User | null;

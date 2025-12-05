@@ -15,7 +15,7 @@ import {
     shareTrip as shareTripApi,
     Trip,
     CreateTripInput,
-} from "@/lib/trips/tripsApi";
+} from "@/lib/trips/trips-api";
 
 interface UseTripState {
     trips: Map<string, Trip>;

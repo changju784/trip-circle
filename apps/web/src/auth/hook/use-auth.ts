@@ -10,12 +10,12 @@ import {
     registerUser,
     loginUser,
     loginWithGoogle,
-} from "@/lib/auth/authApi";
+} from "@/lib/auth/auth-api";
 import {
     saveAuthState,
     clearBackendAuthState,
     BackendUser,
-} from "@/lib/auth/useBackendAuth";
+} from "@/lib/auth/use-backend-auth";
 
 export const useAuth = () => {
     const { user, loading, error, setLoading, setUser, setError } = useContext(AuthContext);

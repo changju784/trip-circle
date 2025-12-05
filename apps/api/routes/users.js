@@ -1,8 +1,8 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import User from '../models/user.js';
-import Trip from '../models/trip.js';
+import User from '../schema/UserSchema.js';
+import Trip from '../schema/TripSchema.js';
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
@@ -59,15 +59,15 @@ router.post('/', async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    
-    const user = new User({ 
+
+    const user = new User({
       username,
-      email, 
-      password: hashedPassword 
+      email,
+      password: hashedPassword
     });
-    
+
     await user.save();
-    
+
     res.status(201).json(sanitizeUser(user));
   } catch (err) {
     if (err.code === 11000) {
@@ -85,7 +85,7 @@ router.put('/:id', async (req, res) => {
 
   const allowedUpdates = ['email'];
   const updates = {};
-  
+
   allowedUpdates.forEach(field => {
     if (req.body[field] !== undefined) {
       updates[field] = req.body[field];

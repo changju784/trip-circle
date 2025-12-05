@@ -2,7 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import axios from "axios";
-import User from "../models/user.js";
+import User from "../schema/UserSchema.js";
 import logger from "../config/logger.js";
 
 const router = express.Router();

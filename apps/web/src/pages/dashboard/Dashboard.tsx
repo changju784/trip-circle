@@ -6,8 +6,8 @@ import DashboardTabs from "./DashboardTabs";
 import { useNavigate } from "react-router-dom";
 import ExploreSection from "./ExploreSection";
 import { useAuth } from "@/auth/hook/use-auth";
-import { useUsers } from "@/lib/users/useUsers";
-import { Trip } from "@/lib/trips/tripsApi";
+import { useUsers } from "@/lib/users/use-users";
+import { Trip } from "@/lib/trips/trips-api";
 
 
 function formatDateRange(startDate: string, endDate: string): string {

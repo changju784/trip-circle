@@ -4,7 +4,7 @@
  */
 
 import { apiGet } from "../api";
-import { Trip } from "../trips/tripsApi";
+import { Trip } from "../trips/trips-api";
 
 export interface User {
     _id: string;

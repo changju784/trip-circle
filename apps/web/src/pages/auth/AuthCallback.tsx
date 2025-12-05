@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getTokenFromCallback } from "@/lib/auth/authApi";
-import { saveAuthState, BackendUser } from "@/lib/auth/useBackendAuth";
+import { getTokenFromCallback } from "@/lib/auth/auth-api";
+import { saveAuthState, BackendUser } from "@/lib/auth/use-backend-auth";
 
 export default function AuthCallbackPage() {
     const navigate = useNavigate();

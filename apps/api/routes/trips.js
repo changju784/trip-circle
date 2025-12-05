@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import Trip from '../models/trip.js';
-import User from '../models/user.js';
+import Trip from '../schema/TripSchema.js';
+import User from '../schema/UserSchema.js';
 import dotenv from 'dotenv';
 import { Resend } from 'resend';
 

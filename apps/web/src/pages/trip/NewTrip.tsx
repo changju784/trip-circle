@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import { useForm, Controller } from "react-hook-form";
-import { useTrips } from "@/lib/trips/useTrips";
+import { useTrips } from "@/lib/trips/use-trips";
 import { useAuth } from "@/auth/hook/use-auth";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";

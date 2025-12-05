@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.js";
+import User from "../schema/UserSchema.js";
 
 const authMiddleware = async function (req, res, next) {
   const authHeader = req.headers.authorization;
@@ -17,19 +17,19 @@ const authMiddleware = async function (req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     const user = await User.findById(decoded.userId).select('-password');
-    
+
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
-    
+
     req.user = {
       userId: user._id,
       email: user.email,
       trips: user.trips
     };
-    
+
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

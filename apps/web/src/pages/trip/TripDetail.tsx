@@ -6,7 +6,7 @@ import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
 import AddStopModal from "@/components/trip/AddStopModal";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
-import { useTrips } from "@/lib/trips/useTrips";
+import { useTrips } from "@/lib/trips/use-trips";
 import { useAuth } from "@/auth/hook/use-auth";
 
 export default function TripDetailPage() {
