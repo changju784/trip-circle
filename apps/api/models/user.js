@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 // User Schema
 const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true, trim: true },
     email: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
     // trips the user has access to
@@ -17,8 +18,6 @@ const UserSchema = new mongoose.Schema({
         immutable: true
     }
 });
-
-// User Middleware
 
 // Export Model Schema
 export default mongoose.model('User', UserSchema);

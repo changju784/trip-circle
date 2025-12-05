@@ -29,7 +29,5 @@ const PostSchema = new mongoose.Schema({
     }
 });
 
-// Post Middleware
-
 // Export Model Schema
 export default mongoose.model('Post', PostSchema);
