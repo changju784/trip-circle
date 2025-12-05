@@ -15,7 +15,7 @@ router.post("/register", async (req, res) => {
     const { email, password, name } = req.body;
 
     // Validate required fields
-    if (!email || !password) {
+    if (!email || !password || !name) {
         return res.status(400).json({ message: "Email and password are required" });
     }
 
@@ -34,7 +34,7 @@ router.post("/register", async (req, res) => {
         user = new User({
             email,
             password: hashedPassword,
-            name: name || null,
+            username: name,
         });
 
         await user.save();
