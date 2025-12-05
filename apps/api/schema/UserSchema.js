@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, trim: true },
     password: { type: String, default: null }, // null for OAuth-only users
     name: { type: String, default: null },
-    googleId: { type: String, default: null, sparse: true, unique: true },
+    googleId: { type: String, sparse: true, required: false },
     // trips the user has access to
     trips: [
         {
