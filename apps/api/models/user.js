@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 // User Schema
 const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, trim: true },
-    password: { type: String, required: true },
+    password: { type: String, default: null }, // null for OAuth-only users
+    name: { type: String, default: null },
+    googleId: { type: String, default: null, sparse: true, unique: true },
     // trips the user has access to
     trips: [
         {

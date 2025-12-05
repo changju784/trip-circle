@@ -6,7 +6,18 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
     const day = days[selectedDay];
 
     const dayLabel = (iso: string) => {
-        const d = new Date(`${iso}T00:00:00`);
+        // accept either full ISO (with time) or date-only (YYYY-MM-DD)
+        let d: Date;
+        try {
+            if (String(iso).includes("T")) {
+                d = new Date(iso);
+            } else {
+                d = new Date(`${iso}T00:00:00`);
+            }
+        } catch {
+            d = new Date(iso);
+        }
+
         return d.toLocaleDateString(undefined, {
             weekday: "short",
             month: "short",

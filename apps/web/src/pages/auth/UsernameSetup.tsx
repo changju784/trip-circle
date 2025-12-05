@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { updateProfile } from "firebase/auth";
 import { useAuth } from "./../../auth/hook/use-auth";
 import { FormField } from "./../../components/form/FormField";
 import { Button } from "./../../components/ui/Button";
+import { apiPut } from "@/lib/api";
 
 export default function UsernameSetup() {
     const { user } = useAuth();
@@ -15,9 +15,10 @@ export default function UsernameSetup() {
     const onSubmit = async (data: any) => {
         setError(null);
         try {
-            if (user) {
-                await updateProfile(user, {
-                    displayName: data.username
+            if (user && user.id) {
+                // Update user name on backend
+                await apiPut(`/api/users/${user.id}`, {
+                    name: data.username
                 });
                 navigate("/trip-circle/dashboard");
             } else {
@@ -76,3 +77,4 @@ export default function UsernameSetup() {
         </div>
     );
 }
+

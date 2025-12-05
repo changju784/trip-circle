@@ -1,8 +1,30 @@
 import mongoose from 'mongoose';
 
-// Trip Schema
+// --- STOP SUBSCHEMA ---
+const StopSchema = new mongoose.Schema(
+    {
+        id: { type: String, trim: true },              // frontend-generated id
+        title: { type: String, trim: true },           // ← no longer required
+        time: { type: String },
+        locationName: { type: String },
+        lat: { type: Number },
+        lng: { type: Number },
+        description: { type: String }
+    },
+    { _id: false } // prevents _id for each stop (cleaner)
+);
+
+// --- DAY SUBSCHEMA ---
+const DaySchema = new mongoose.Schema(
+    {
+        date: { type: Date, required: true },          // must exist
+        stops: { type: [StopSchema], default: [] }     // can be empty
+    },
+    { _id: false }
+);
+
+// --- TRIP SCHEMA ---
 const TripSchema = new mongoose.Schema({
-    // users who can access and edit this trip
     members: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -13,7 +35,6 @@ const TripSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
 
-    // multiple destinations supported
     destinations: [
         {
             id: { type: String, trim: true },
@@ -21,29 +42,13 @@ const TripSchema = new mongoose.Schema({
         }
     ],
 
-    // public/private flag
     isPublic: { type: Boolean, default: false, index: true },
-
-    // optional thumbnail
     thumbnail: { type: String, default: null },
 
-    // trip days with stops
-    days: [
-        {
-            date: { type: Date, required: true },
-            stops: [
-                {
-                    id: { type: String, trim: true },
-                    title: { type: String, required: true },
-                    time: { type: String },
-                    locationName: { type: String },
-                    lat: { type: Number },
-                    lng: { type: Number },
-                    description: { type: String }
-                }
-            ]
-        }
-    ],
+    days: {
+        type: [DaySchema],
+        default: []
+    },
 
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
@@ -55,7 +60,7 @@ const TripSchema = new mongoose.Schema({
     }
 });
 
-// text index for fast search
+// TEXT INDEX FOR SEARCH
 TripSchema.index(
     {
         title: 'text',
@@ -72,11 +77,8 @@ TripSchema.index(
     }
 );
 
-// additional indexes for filtering and access
+// ADDITIONAL INDEXES
 TripSchema.index({ isPublic: 1, dateCreated: -1 });
-TripSchema.index({ 'members': 1 });
+TripSchema.index({ members: 1 });
 
-// Trip Middleware
-
-// Export Model Schema
 export default mongoose.model('Trip', TripSchema);

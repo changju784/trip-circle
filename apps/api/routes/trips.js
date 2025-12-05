@@ -83,20 +83,50 @@ router.get('/search/autocomplete', async (req, res) => {
   }
 });
 
+function generateDays(startDate, endDate) {
+  const s = new Date(startDate);
+  const e = new Date(endDate);
+  const days = [];
+
+  const current = new Date(s);
+  while (current <= e) {
+    days.push({
+      date: current.toISOString(),
+      stops: []
+    });
+    current.setDate(current.getDate() + 1);
+  }
+
+  return days;
+}
+
 
 router.post('/', async (req, res) => {
-  const { title, description, destinations, isPublic, thumbnail, days, startDate, endDate, members } = req.body;
+  const { title, description, destinations, isPublic, thumbnail, startDate, endDate, members } = req.body;
 
   if (!title || !startDate || !endDate) {
     return res.status(400).json({ error: 'missing required fields: title, startDate, endDate' });
   }
 
   try {
-    const trip = new Trip({ title, location, description, days, startDate, endDate, members });
+    const days = generateDays(startDate, endDate);
+
+    const trip = new Trip({
+      title,
+      description: description || "",
+      destinations: destinations || [],
+      isPublic: isPublic ?? false,
+      thumbnail: thumbnail || null,
+      days,
+      startDate,
+      endDate,
+      members
+    });
+
     await trip.save();
 
-    // add trip to each member's trips array
-    if (members && Array.isArray(members) && members.length > 0) {
+    // sync members
+    if (members?.length > 0) {
       await User.updateMany(
         { _id: { $in: members } },
         { $addToSet: { trips: trip._id } }
@@ -108,6 +138,7 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
+
 
 router.post('/share', async (req, res) => {
   const { tripId, email } = req.body;
@@ -121,11 +152,11 @@ router.post('/share', async (req, res) => {
     if (!userId) {
       return res.status(404).json({ error: 'User with provided email not found' });
     }
-    const trip = await Trip.findByIdAndUpdate(tripId, 
-      { $addToSet: { members: userId } }, 
-      { new: true});
+    const trip = await Trip.findByIdAndUpdate(tripId,
+      { $addToSet: { members: userId } },
+      { new: true });
     if (!trip) return res.status(404).json({ error: 'Trip not found' });
-    
+
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from: "tripcircle <no-reply@resend.dev>",
@@ -157,7 +188,7 @@ router.post('/fork', async (req, res) => {
 
     // Create a plain JS object clone
     const tripData = originalTrip.toObject();
-    
+
     // Remove the original _id so MongoDB generates a new one
     delete tripData._id;
 

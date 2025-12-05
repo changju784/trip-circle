@@ -36,11 +36,15 @@ app.get('/api', (req, res) => {
     res.json({ message: 'Welcome to TripCircle API' });
 });
 
-// Import login route
+// Auth routes (public, no middleware required)
+import authRoutes from './routes/auth.js';
+app.use('/api/auth', authRoutes);
+
+// Legacy login route (deprecated, redirects to /api/auth)
 import loginRoutes from './routes/login.js';
 app.use('/api/login', loginRoutes);
 
-// Authentication middleware
+// Authentication middleware - protects all routes below this
 import authMiddleware from './middleware/auth.js';
 app.use(authMiddleware);
 

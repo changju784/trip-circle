@@ -1,68 +1,104 @@
+/**
+ * useAuth Hook
+ * Backend-based authentication (no Firebase)
+ * Provides login, signup, logout, and OAuth functions
+ */
+
 import { useContext } from "react";
-import {
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signOut,
-    sendEmailVerification,
-    updateProfile,
-    UserCredential as FirebaseUserCredential,
-    FacebookAuthProvider,
-} from "firebase/auth";
-import { auth } from "../firebase";
 import { AuthContext } from "@/components/auth/AuthProvider";
+import {
+    registerUser,
+    loginUser,
+    loginWithGoogle,
+} from "@/lib/auth/authApi";
+import {
+    saveAuthState,
+    clearBackendAuthState,
+    BackendUser,
+} from "@/lib/auth/useBackendAuth";
 
 export const useAuth = () => {
-    const { user, loading } = useContext(AuthContext);
+    const { user, loading, error, setLoading, setUser, setError } = useContext(AuthContext);
 
-    // Email + password login
-    const signIn = async (email: string, password: string): Promise<FirebaseUserCredential> => {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        return userCredential;
-    }
-
-    // Email + password signup
-    const signUp = async (email: string, password: string, username?: string): Promise<FirebaseUserCredential> => {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-        // Set username as displayName
-        if (username) {
-            await updateProfile(userCredential.user, {
-                displayName: username
-            });
+    /**
+     * Register new user with email and password
+     */
+    const signUp = async (
+        email: string,
+        password: string,
+        name?: string
+    ): Promise<BackendUser> => {
+        try {
+            setError(null);
+            setLoading(true);
+            const response = await registerUser(email, password, name);
+            saveAuthState(response.token, response.user);
+            setUser(response.user);
+            return response.user;
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Registration failed";
+            setError(message);
+            throw err;
+        } finally {
+            setLoading(false);
         }
+    };
 
-        await sendEmailVerification(userCredential.user);
-        return userCredential;
-    }
+    /**
+     * Login with email and password
+     */
+    const signIn = async (email: string, password: string): Promise<BackendUser> => {
+        try {
+            setError(null);
+            setLoading(true);
+            const response = await loginUser(email, password);
+            saveAuthState(response.token, response.user);
+            setUser(response.user);
+            return response.user;
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Login failed";
+            setError(message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    // Google OAuth login
-    const signInWithGoogle = async (): Promise<FirebaseUserCredential> => {
-        const provider = new GoogleAuthProvider();
-        const userCredential = await signInWithPopup(auth, provider);
-        return userCredential;
-    }
+    /**
+     * Login with Google OAuth
+     * Backend will redirect to auth/callback?token=<jwt>
+     */
+    const signInWithGoogle = (): void => {
+        try {
+            setError(null);
+            loginWithGoogle();
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Google login failed";
+            setError(message);
+        }
+    };
 
-    // Facebook OAuth login
-    const signInWithFacebook = async (): Promise<FirebaseUserCredential> => {
-        const provider = new FacebookAuthProvider();
-        const userCredential = await signInWithPopup(auth, provider);
-        return userCredential;
-    }
-
-    // Sign out
-    const logOut = async () => {
-        return signOut(auth);
+    /**
+     * Logout and clear session
+     */
+    const logOut = async (): Promise<void> => {
+        try {
+            setError(null);
+            clearBackendAuthState();
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Logout failed";
+            setError(message);
+        }
     };
 
     return {
         user,
         loading,
+        error,
         signIn,
         signUp,
         signInWithGoogle,
-        signInWithFacebook,
         logOut,
     };
 };
+
