@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
@@ -11,7 +11,8 @@ import { useAuth } from "@/auth/hook/use-auth";
 
 export default function TripDetailPage() {
     const { id } = useParams();
-    const { getTrip, updateTrip, isLoading } = useTrips();
+    const navigate = useNavigate();
+    const { getTrip, updateTrip, deleteTrip, isLoading } = useTrips();
     const { user } = useAuth();
 
     const [trip, setTrip] = useState<any | null>(null);
@@ -19,6 +20,9 @@ export default function TripDetailPage() {
     const [openAdd, setOpenAdd] = useState(false);
     const [editingStop, setEditingStop] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // DELETE TRIP MODAL
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
     // Load trip
     useEffect(() => {
@@ -51,7 +55,6 @@ export default function TripDetailPage() {
         trip.members.some((m: any) => String(m) === String(user.id))
     );
 
-    // Find stop for editing
     const initialStop = useMemo(() => {
         if (!editingStop || !trip) return null;
         for (const d of trip.days || []) {
@@ -61,7 +64,6 @@ export default function TripDetailPage() {
         return null;
     }, [editingStop, trip]);
 
-    // Refresh trip data
     const refresh = async () => {
         if (!id) return;
         try {
@@ -72,7 +74,7 @@ export default function TripDetailPage() {
         }
     };
 
-    // Add or Edit stop
+    // Add or edit stop
     const handleAddStop = async (
         data: {
             title: string;
@@ -89,39 +91,30 @@ export default function TripDetailPage() {
         const days = JSON.parse(JSON.stringify(trip.days || []));
 
         if (stopId) {
-            // UPDATE existing stop
             for (const d of days) {
                 const idx = (d.stops || []).findIndex((s: any) => s.id === stopId);
                 if (idx >= 0) {
                     d.stops[idx] = {
                         ...d.stops[idx],
-                        title: data.title,
-                        time: data.time,
-                        locationName: data.locationName,
+                        ...data,
                         lat: data.lat ?? null,
                         lng: data.lng ?? null,
-                        description: data.description,
                     };
                     break;
                 }
             }
         } else {
-            // ADD new stop
             if (!days[selectedDay]) {
                 days[selectedDay] = { date: new Date().toISOString(), stops: [] };
             }
 
             const newStop = {
                 id: Math.random().toString(36).slice(2, 9),
-                title: data.title,
-                time: data.time,
-                locationName: data.locationName,
+                ...data,
                 lat: data.lat ?? null,
                 lng: data.lng ?? null,
-                description: data.description,
             };
 
-            days[selectedDay].stops = days[selectedDay].stops || [];
             days[selectedDay].stops.push(newStop);
         }
 
@@ -135,7 +128,6 @@ export default function TripDetailPage() {
         }
     };
 
-    // Delete stop
     const handleDeleteStop = async (stopId: string) => {
         if (!id || !trip) return;
 
@@ -152,19 +144,25 @@ export default function TripDetailPage() {
         }
     };
 
-    // LOADING STATE
+    // Delete trip
+    const confirmDeleteTrip = async () => {
+        try {
+            await deleteTrip(trip._id);
+            navigate("/trip-circle/dashboard");
+        } catch {
+            alert("Failed to delete trip.");
+        }
+    };
+
     if (isLoading) {
         return (
             <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
                 <Navbar />
-                <main className="max-w-screen-lg mx-auto p-6 text-center">
-                    Loading trip...
-                </main>
+                <main className="max-w-screen-lg mx-auto p-6 text-center">Loading trip...</main>
             </div>
         );
     }
 
-    // ERROR OR NO TRIP
     if (error || !trip) {
         return (
             <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
@@ -177,9 +175,9 @@ export default function TripDetailPage() {
         );
     }
 
-    // Destinations
     const destinationLabels =
         trip.destinations?.map((d: any) => d.label).slice(0, 3).join(", ") || "Unknown";
+
     const hasMoreDestinations =
         trip.destinations && trip.destinations.length > 3
             ? `(+${trip.destinations.length - 3} more)`
@@ -225,12 +223,23 @@ export default function TripDetailPage() {
                     </div>
 
                     {canEdit && (
-                        <Link
-                            to={`/trip-circle/trip/${trip._id}/edit`}
-                            className="px-3 py-2 bg-white border rounded"
-                        >
-                            Edit Trip
-                        </Link>
+                        <div className="flex gap-2">
+                            {/* EDIT */}
+                            <Link
+                                to={`/trip-circle/trip/${trip._id}/edit`}
+                                className="px-3 py-2 bg-white border rounded hover:bg-gray-50"
+                            >
+                                Edit Trip
+                            </Link>
+
+                            {/* DELETE */}
+                            <button
+                                onClick={() => setOpenDeleteModal(true)}
+                                className="px-3 py-2 border border-red-500 text-red-500 bg-white rounded hover:bg-red-50"
+                            >
+                                Delete
+                            </button>
+                        </div>
                     )}
                 </header>
 
@@ -280,6 +289,33 @@ export default function TripDetailPage() {
                     onSubmit={handleAddStop}
                     initialStop={initialStop}
                 />
+
+                {/* DELETE TRIP CONFIRM MODAL */}
+                {openDeleteModal && (
+                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-xl shadow-lg w-[320px]">
+                            <h2 className="text-lg font-semibold mb-3">Delete Trip?</h2>
+                            <p className="text-sm text-gray-600 mb-6">
+                                This action cannot be undone. Are you sure you want to delete this trip?
+                            </p>
+
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    className="px-4 py-2 rounded border hover:bg-gray-50"
+                                    onClick={() => setOpenDeleteModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                                    onClick={confirmDeleteTrip}
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
