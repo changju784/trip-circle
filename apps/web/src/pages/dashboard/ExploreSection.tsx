@@ -5,23 +5,13 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 
-import tripData from "./tmp-assets/exampleTrips.json";
+// TODO
+// replace when hooking up backend routes for Posts
+import { getAllTrips, Trip as StoredTrip } from "@/lib/tripStorage";
 
-type TripDestination = {
-    id: string;
-    label: string;
-};
+// replace null imaging for desintaitons
+import { fetchSplashImage } from "@/lib/splashClient"
 
-type Trip = {
-    id: string; // local ID for explore/mock purposes
-    title: string;
-    destinations?: TripDestination[];
-    description?: string;
-    startDate: string;
-    endDate: string;
-    thumbnail?: string | null;
-    // isPublic?: boolean; // handled by backend, not needed on the card right now
-};
 
 function formatDateRange(startDate: string, endDate: string): string {
     const start = new Date(startDate);
@@ -48,38 +38,107 @@ function formatDateRange(startDate: string, endDate: string): string {
     return `${startStr} – ${endStr}`;
 }
 
-function buildDestinationSummary(destinations?: TripDestination[]): string {
-    if (!destinations || destinations.length === 0) return "Flexible destination";
-    return destinations.map((d) => d.label).join(" • ");
+function buildDestinationSummary(trip: StoredTrip): string {
+    // `city` is a single string
+    const pieces: string[] = [];
+
+    if (trip.city) {
+        pieces.push(trip.city);
+    }
+
+    // `destinations` is attached as a string[] via `createTrip`
+    const asAny = trip as any;
+    if (Array.isArray(asAny.destinations) && asAny.destinations.length > 0) {
+        // avoid duplicating city if it's the same as first destination
+        const dests = asAny.destinations as string[];
+        for (const d of dests) {
+            if (!pieces.includes(d)) {
+                pieces.push(d);
+            }
+        }
+    }
+
+    if (pieces.length === 0) return "Flexible destination";
+    return pieces.join(" • ");
 }
+
+// Splash helper
+// Pick the best text query to send to Splash for a given trip
+function buildSplashQuery(trip: StoredTrip): string | null {
+    const asAny = trip as any;
+    const destinations: string[] = Array.isArray(asAny.destinations)
+        ? asAny.destinations
+        : [];
+
+    if (trip.city) return trip.city;
+    if (destinations.length > 0) return destinations[0];
+    if (trip.title) return trip.title;
+
+    return null;
+}
+
 
 export default function ExploreSection() {
     const navigate = useNavigate();
 
     const [query, setQuery] = useState("");
-    const [trips, setTrips] = useState<Trip[]>([]);
+    const [trips, setTrips] = useState<StoredTrip[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Splash-generated thumbnails: trip.id -> image URL
+    const [thumbnails, setThumbnails] = useState<Record<string, string>>({});   
 
     // Simulate fetching from an API using mock JSON
     useEffect(() => {
-        let cancelled = false;
-
         // TODO
-        // In the future, this becomes:
+        // In the future, this becomes something like:
         // fetch("/api/explore")
         //   .then((res) => res.json())
         //   .then(setTrips)
-        setTimeout(() => {
-            if (!cancelled) {
-                setTrips(tripData as Trip[]);
-                setIsLoading(false);
+        
+        const all = getAllTrips();
+        // Simulate only retrieving public trips by definition of GET Posts
+        const publicTrips = all.filter((t) => t.isPublic);
+        setTrips(publicTrips);
+        setIsLoading(false);
+    }, []);
+
+    // Fetch Splash thumbnails for trips that have no explicit thumbnail
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadMissingThumbnails() {
+            const missing = trips.filter((trip) => {
+                const hasOwnThumb = !!trip.thumbnail;
+                const hasGeneratedThumb = !!thumbnails[trip.id];
+                return !hasOwnThumb && !hasGeneratedThumb;
+            });
+
+            if (missing.length === 0) return;
+
+            for (const trip of missing) {
+                const q = buildSplashQuery(trip);
+                if (!q) continue;
+
+                const url = await fetchSplashImage(q);
+                if (cancelled || !url) continue;
+
+                setThumbnails((prev) => {
+                    // avoid overwriting if something else wrote it meanwhile
+                    if (prev[trip.id]) return prev;
+                    return { ...prev, [trip.id]: url };
+                });
             }
-        }, 400); // small delay to mimic network
+        }
+
+        if (trips.length > 0) {
+            loadMissingThumbnails();
+        }
 
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [trips, thumbnails]);
 
     const filteredTrips = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -88,12 +147,20 @@ export default function ExploreSection() {
         return trips.filter((trip) => {
             const inTitle = trip.title.toLowerCase().includes(q);
             const inDesc = (trip.description ?? "").toLowerCase().includes(q);
-            const inDestinations = (trip.destinations ?? []).some((d) =>
-                d.label.toLowerCase().includes(q)
-            );
-            return inTitle || inDesc || inDestinations;
+            const inCity = (trip.city ?? "").toLowerCase().includes(q);
+            
+
+            const asAny = trip as any;
+            const destinations: string[] = Array.isArray(asAny.destinations)
+                ? asAny.destinations
+                : [];
+            const inDestinations = destinations.some((d) => d.toLowerCase().includes(q));
+
+            return inTitle || inDesc || inCity || inDestinations;
         });
     }, [query, trips]);
+
+    
 
     return (
         <div className="space-y-6">
@@ -115,6 +182,8 @@ export default function ExploreSection() {
                     />
                 </div>
             </div>
+            
+
 
             {/* Loading state */}
             {isLoading && (
@@ -128,7 +197,12 @@ export default function ExploreSection() {
                 <div className="grid gap-4 md:grid-cols-3">
                     {filteredTrips.map((trip) => {
                         const dateRange = formatDateRange(trip.startDate, trip.endDate);
-                        const destinationSummary = buildDestinationSummary(trip.destinations);
+                        const destinationSummary = buildDestinationSummary(trip);
+        
+
+                        const splashThumb = thumbnails[trip.id];
+                        const explicitThumb = trip.thumbnail ?? null;
+                        const thumbnailUrl = explicitThumb || splashThumb || null;
 
                         return (
                             <Card
@@ -136,11 +210,11 @@ export default function ExploreSection() {
                                 className="flex flex-col overflow-hidden hover:shadow-md transition-shadow"
                             >
                                 {/* Thumbnail / header */}
-                                {trip.thumbnail ? (
+                                {thumbnailUrl ? (
                                     <div className="h-32 w-full bg-gray-100">
                                         <div
                                             className="h-full w-full bg-cover bg-center"
-                                            style={{ backgroundImage: `url(${trip.thumbnail})` }}
+                                            style={{ backgroundImage: `url(${thumbnailUrl})` }}
                                         />
                                     </div>
                                 ) : (
@@ -173,17 +247,10 @@ export default function ExploreSection() {
                                     <Button
                                         className="mt-4 self-start"
                                         onClick={() => {
-                                            // TODO
-                                            // For now, just go to the new-trip page.
-                                            // Later, you could pass this trip as a template:
-                                            // navigate(`/trip-circle/trip/new?templateId=${trip.id}`)
-                                            // -
-                                            // Or you could use a button vist a trip specific page with
-                                            // a use template button that navigates as described above
-                                            navigate("/trip-circle/trip/new");
+                                            navigate(`/trip-circle/trip/${trip.id}`);
                                         }}
                                     >
-                                        Use this trip
+                                        View this trip
                                     </Button>
                                 </div>
                             </Card>
@@ -208,9 +275,7 @@ export default function ExploreSection() {
             Developer page context 
             */}
             <p className="text-xs text-muted-foreground text-left">
-                These trips are currently loaded from a local JSON file that mirrors how trips are
-                initialized. In the future, this section will call the Trip Circle API and only show
-                trips marked as public.
+                These trips are currently loaded from a local frontend storage.
             </p>
         </div>
     );

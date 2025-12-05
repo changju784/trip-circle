@@ -4,6 +4,7 @@ import DashboardTabs from "./DashboardTabs";
 import { useNavigate } from "react-router-dom";
 import ExploreSection from "./ExploreSection";
 
+
 export default function DashboardPage() {
     const navigate = useNavigate();
 
@@ -21,13 +22,6 @@ export default function DashboardPage() {
         </div>
     );
 
-    // TODO: Implement Explore section
-    const ExploreSection = (
-        <div className="p-10 text-center text-gray-600">
-            <h2 className="text-xl font-medium">Explore Destinations</h2>
-            <p className="text-muted-foreground mt-2">Coming soon...</p>
-        </div>
-    );
 
     return (
         <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
@@ -38,8 +32,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                     <DashboardTabs
                         mytrips={MyTripsSection}
-                        // explore={<ExploreSection/>} // TODO: fix this
-                        explore={ExploreSection}
+                        explore={<ExploreSection/>}
                         onNewTrip={() => navigate("/trip-circle/trip/new")}
                     />
                 </div>

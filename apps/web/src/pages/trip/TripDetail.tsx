@@ -21,6 +21,7 @@ export default function TripDetailPage() {
 
     const [selectedDay, setSelectedDay] = useState(0);
     const [openAdd, setOpenAdd] = useState(false);
+    const [openShare, setOpenShare] = useState(false);
     const [editingStop, setEditingStop] = useState<string | null>(null);
     const canEdit = true;
 
