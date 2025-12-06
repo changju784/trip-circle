@@ -20,7 +20,7 @@ export default function ProfilePage() {
                     <div className="space-y-3">
                         <div>
                             <div className="text-xs text-muted-foreground">Name</div>
-                            <div className="font-medium">{user.displayName || "-"}</div>
+                            <div className="font-medium">{user.name || "-"}</div>
                         </div>
 
                         <div>
@@ -29,8 +29,8 @@ export default function ProfilePage() {
                         </div>
 
                         <div>
-                            <div className="text-xs text-muted-foreground">UID</div>
-                            <div className="font-medium break-all">{user.uid}</div>
+                            <div className="text-xs text-muted-foreground">User ID</div>
+                            <div className="font-medium break-all">{user.id}</div>
                         </div>
                     </div>
                 </div>

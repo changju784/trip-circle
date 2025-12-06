@@ -12,6 +12,7 @@ import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
 import RootRedirect from "./components/RootDirect";
 import UsernameSetup from "./pages/auth/UsernameSetup";
+import AuthCallbackPage from "./pages/auth/AuthCallback";
 
 function App() {
     return (
@@ -36,6 +37,9 @@ function App() {
                                 </AuthLayout>
                             }
                         />
+
+                        {/* AUTH CALLBACK (for OAuth redirects) */}
+                        <Route path="auth/callback" element={<AuthCallbackPage />} />
 
                         {/* USERNAME SETUP (for new Google OAuth users) */}
                         <Route

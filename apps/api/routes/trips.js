@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import Trip from '../models/trip.js';
-import User from '../models/user.js';
+import Trip from '../schema/TripSchema.js';
+import User from '../schema/UserSchema.js';
 import dotenv from 'dotenv';
 import { Resend } from 'resend';
 
@@ -83,6 +83,23 @@ router.get('/search/autocomplete', async (req, res) => {
   }
 });
 
+function generateDays(startDate, endDate) {
+  const s = new Date(startDate);
+  const e = new Date(endDate);
+  const days = [];
+
+  const current = new Date(s);
+  while (current <= e) {
+    days.push({
+      date: current.toISOString(),
+      stops: []
+    });
+    current.setDate(current.getDate() + 1);
+  }
+
+  return days;
+}
+
 
 router.post('/', async (req, res) => {
   const { title, description, destinations, isPublic, thumbnail, days, startDate, endDate, budget, members } = req.body;
@@ -92,11 +109,24 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const trip = new Trip({ title, destinations, description, days, startDate, endDate, budget, members });
+    const days = generateDays(startDate, endDate);
+
+    const trip = new Trip({
+      title,
+      description: description || "",
+      destinations: destinations || [],
+      isPublic: isPublic ?? false,
+      thumbnail: thumbnail || null,
+      days,
+      startDate,
+      endDate,
+      members
+    });
+
     await trip.save();
 
-    // add trip to each member's trips array
-    if (members && Array.isArray(members) && members.length > 0) {
+    // sync members
+    if (members?.length > 0) {
       await User.updateMany(
         { _id: { $in: members } },
         { $addToSet: { trips: trip._id } }
@@ -108,6 +138,7 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
+
 
 router.post('/share', async (req, res) => {
   const { tripId, email } = req.body;
@@ -121,14 +152,14 @@ router.post('/share', async (req, res) => {
     if (!userId) {
       return res.status(404).json({ error: 'User with provided email not found' });
     }
-    const trip = await Trip.findByIdAndUpdate(tripId, 
-      { $addToSet: { members: userId } }, 
-      { new: true});
+    const trip = await Trip.findByIdAndUpdate(tripId,
+      { $addToSet: { members: userId } },
+      { new: true });
     if (!trip) return res.status(404).json({ error: 'Trip not found' });
-    
-    await User.findByIdAndUpdate(userId, 
-      { $addToSet: { trips: tripId } }, 
-      { new: true});
+
+    await User.findByIdAndUpdate(userId,
+      { $addToSet: { trips: tripId } },
+      { new: true });
 
     const resend = new Resend(process.env.RESEND_API_KEY);
     const result = await resend.emails.send({
@@ -167,7 +198,7 @@ router.post('/fork', async (req, res) => {
 
     // Create a plain JS object clone
     const tripData = originalTrip.toObject();
-    
+
     // Remove the original _id so MongoDB generates a new one
     delete tripData._id;
 
@@ -181,9 +212,9 @@ router.post('/fork', async (req, res) => {
     const newTrip = new Trip(tripData);
     await newTrip.save();
 
-    await User.findByIdAndUpdate(userId, 
-      { $addToSet: { trips: newTrip._id } }, 
-      { new: true});
+    await User.findByIdAndUpdate(userId,
+      { $addToSet: { trips: newTrip._id } },
+      { new: true });
 
     res.status(201).json({
       message: "Trip forked successfully",

@@ -80,25 +80,15 @@ export default function LoginPage() {
 
 function SignInWithGoogleButton() {
     const { signInWithGoogle } = useAuth();
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleGoogleSignIn = async () => {
+    const handleGoogleSignIn = () => {
         setLoading(true);
         setError(null);
         try {
-            const result = await signInWithGoogle();
-
-            // Only prompt for username if it's a brand new user (first sign in ever)
-            const isNewUser = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-
-            if (isNewUser) {
-                // Navigate to separate username setup page
-                navigate("/trip-circle/setup-username");
-            } else {
-                navigate("/trip-circle/dashboard");
-            }
+            // This redirects to backend, which will handle OAuth and redirect back with token
+            signInWithGoogle();
         } catch (err: any) {
             const errorMessage = err?.message || "Google sign-in failed. Please try again.";
             setError(errorMessage);

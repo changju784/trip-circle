@@ -5,10 +5,9 @@ import { useAuth } from "../../auth/hook/use-auth";
 
 export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
     const navigate = useNavigate();
-    const { user } = useAuth();
-    const { logOut } = useAuth();
+    const { user, logOut } = useAuth();
 
-    const displayName = user?.displayName || user?.email || "Traveler";
+    const displayName = user?.name || user?.email || "Traveler";
 
     const handleLogout = async () => {
         try {

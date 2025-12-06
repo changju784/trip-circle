@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import FormContainer from "@/components/form/FormContainer";
 import { Button } from "@/components/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import { useForm, Controller } from "react-hook-form";
-import { createTrip } from "@/lib/tripStorage";
+import { useTrips } from "@/lib/trips/use-trips";
+import { useAuth } from "@/auth/hook/use-auth";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
@@ -22,6 +23,8 @@ type FormValues = {
 
 export default function NewTripPage() {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const { createTrip: createTripApi, isLoading } = useTrips();
     const { register, handleSubmit, control, formState, watch, setValue } = useForm<FormValues>({
         defaultValues: {
             destinations: [],
@@ -35,21 +38,40 @@ export default function NewTripPage() {
     });
 
     const [preview, setPreview] = React.useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const { errors } = formState;
 
     const onSubmit = async (data: FormValues) => {
-        const thumbnail = (window as any).__trip_thumbnail ?? null;
-        const destinations = data.destinations?.map((d) => d.label) ?? [];
-        const trip = createTrip({
-            title: data.title || "Untitled Trip",
-            destinations,
-            description: data.description,
-            startDate: data.startDate,
-            endDate: data.endDate,
-            isPublic: !!data.isPublic,
-            thumbnail,
-        });
-        navigate(`/trip-circle/trip/${trip.id}`);
+        try {
+            setError(null);
+
+            if (!user?.id) {
+                setError("You must be logged in to create a trip");
+                return;
+            }
+
+            const thumbnail = (window as any).__trip_thumbnail ?? null;
+            const destinations = data.destinations?.map((d) => ({
+                id: d.id,
+                label: d.label,
+            })) ?? [];
+
+            const trip = await createTripApi({
+                title: data.title || "Untitled Trip",
+                destinations,
+                description: data.description,
+                startDate: data.startDate,
+                endDate: data.endDate,
+                isPublic: !!data.isPublic,
+                thumbnail,
+                members: [user.id],
+            });
+
+            navigate(`/trip-circle/trip/${trip._id}`);
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : "Failed to create trip";
+            setError(errorMsg);
+        }
     };
 
     const handleFile = async (f?: File | null) => {
@@ -69,6 +91,12 @@ export default function NewTripPage() {
                 <BackToDashboardButton />
                 <FormContainer title="Create New Trip" subtitle="Start planning your next adventure">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        {error && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                                {error}
+                            </div>
+                        )}
+
                         <div>
                             <div className="text-sm font-medium mb-1">Trip Title</div>
                             <input
@@ -188,8 +216,8 @@ export default function NewTripPage() {
                             <Button variant="muted" onClick={() => navigate(-1)}>
                                 Cancel
                             </Button>
-                            <Button variant="primary" type="submit">
-                                Create Trip
+                            <Button variant="primary" type="submit" disabled={isLoading}>
+                                {isLoading ? "Creating..." : "Create Trip"}
                             </Button>
                         </div>
                     </form>
