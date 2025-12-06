@@ -14,7 +14,7 @@ import { useGetUsernameById } from "@/lib/auth/use-get-username-by-id";
 export default function TripDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getTrip, updateTrip, deleteTrip, shareTrip, isLoading } = useTrips();
+    const { getTrip, updateTrip, deleteTrip, shareTrip, forkTrip, isLoading } = useTrips();
     const { user } = useAuth();
 
     const [trip, setTrip] = useState<any | null>(null);
@@ -198,30 +198,51 @@ export default function TripDetailPage() {
                         </p>
                     </div>
 
-                    {isOwner && (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setShareOpen(true)}
-                                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
-                            >
-                                Share
-                            </button>
+                    {/* --- OWNER vs VIEWER BUTTONS --- */}
+                    <div className="flex gap-2">
+                        {isOwner ? (
+                            <>
+                                <button
+                                    onClick={() => setShareOpen(true)}
+                                    className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+                                >
+                                    Share
+                                </button>
 
-                            <Link
-                                to={`/trip-circle/trip/${trip._id}/edit`}
-                                className="px-3 py-2 bg-white border rounded hover:bg-gray-50"
-                            >
-                                Edit Trip
-                            </Link>
+                                <Link
+                                    to={`/trip-circle/trip/${trip._id}/edit`}
+                                    className="px-3 py-2 bg-white border rounded hover:bg-gray-50"
+                                >
+                                    Edit Trip
+                                </Link>
 
-                            <button
-                                onClick={() => setOpenDeleteModal(true)}
-                                className="px-3 py-2 border border-red-500 text-red-500 bg-white rounded hover:bg-red-50"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    )}
+                                <button
+                                    onClick={() => setOpenDeleteModal(true)}
+                                    className="px-3 py-2 border border-red-500 text-red-500 bg-white rounded hover:bg-red-50"
+                                >
+                                    Delete
+                                </button>
+                            </>
+                        ) : (
+                            trip.isPublic && user && (
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const newTrip = await forkTrip(trip._id, user.id);
+                                            navigate(`/trip-circle/trip/${newTrip._id}`);
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert("Failed to copy trip.");
+                                        }
+                                    }}
+                                    className="px-4 py-2 rounded border border-black bg-black text-white hover:bg-gray-900"
+                                >
+                                    Copy Trip
+                                </button>
+                            )
+                        )}
+                    </div>
+
                 </header>
 
                 {/* ---------------- TABS / DAYS ---------------- */}
