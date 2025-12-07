@@ -204,26 +204,44 @@ export default function EditTripPage() {
                             <div>
                                 <div className="text-sm font-medium mb-1">Start Date</div>
                                 <input
-                                    {...register("startDate", { required: "Start date is required" })}
+                                    {...register("startDate", {
+                                        required: "Start date is required",
+                                        validate: (value) => {
+                                            const end = watch("endDate");
+                                            if (end && value > end) return "Start date cannot be after end date";
+                                            return true;
+                                        },
+                                    })}
                                     type="date"
-                                    className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-600" : ""}`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-600" : ""
+                                        }`}
                                 />
                                 {errors.startDate && (
                                     <div className="text-red-600 text-xs mt-1">{errors.startDate.message}</div>
                                 )}
                             </div>
+
                             <div>
                                 <div className="text-sm font-medium mb-1">End Date</div>
                                 <input
-                                    {...register("endDate", { required: "End date is required" })}
+                                    {...register("endDate", {
+                                        required: "End date is required",
+                                        validate: (value) => {
+                                            const start = watch("startDate");
+                                            if (start && value < start) return "End date cannot be before start date";
+                                            return true;
+                                        },
+                                    })}
                                     type="date"
-                                    className={`w-full px-4 py-2 rounded-lg border ${errors.endDate ? "border-red-600" : ""}`}
+                                    className={`w-full px-4 py-2 rounded-lg border ${errors.endDate ? "border-red-600" : ""
+                                        }`}
                                 />
                                 {errors.endDate && (
                                     <div className="text-red-600 text-xs mt-1">{errors.endDate.message}</div>
                                 )}
                             </div>
                         </div>
+
 
                         <div>
                             <div className="text-sm font-medium mb-1">Thumbnail (optional)</div>
