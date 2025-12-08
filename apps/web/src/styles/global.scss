@@ -192,9 +192,19 @@
         outline-offset: 2px;
     }
 
-    body {
-        @apply bg-background text-foreground;
+    @layer base {
+        body {
+            @apply text-foreground;
+
+            /* Travel wallpaper */
+            background-color: #cae5e9;
+            background-image: url("/assets/airplane-trails.svg");
+            background-repeat: repeat;
+            background-size: 120px 120px; // tweak for density
+            background-attachment: fixed; // nice subtle parallax feel
+        }
     }
+
 }
 
 /* --------------------------------------------- */

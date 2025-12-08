@@ -19,7 +19,7 @@ export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
     };
 
     return (
-        <nav style={{ background: "#e6f5ff" }} className="w-full border-b border-border">
+        <nav className="w-full border-b border-border">
             <div className="max-w-screen-xl mx-auto px-6 py-4 flex justify-between items-center">
 
                 <div className="flex items-center gap-2">

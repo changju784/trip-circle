@@ -9,7 +9,7 @@ export default function ProfilePage() {
     if (!user) return null;
 
     return (
-        <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
+        <div className="min-h-screen">
             <Navbar />
             <main className="max-w-screen-md mx-auto p-6">
                 <BackToDashboardButton />

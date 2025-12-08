@@ -157,7 +157,7 @@ export default function TripDetailPage() {
             : "";
 
     return (
-        <div className="min-h-screen bg-[#eaf6ff]">
+        <div className="min-h-screen">
             <Navbar />
 
             <main className="max-w-screen-lg mx-auto p-6">

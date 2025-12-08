@@ -8,7 +8,7 @@ export default function DashboardPage() {
     const navigate = useNavigate();
 
     return (
-        <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
+        <div className="min-h-screen">
             <Navbar />
 
             <div className="max-w-screen-xl mx-auto px-6 py-10 space-y-6">
