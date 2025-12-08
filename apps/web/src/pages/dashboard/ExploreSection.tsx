@@ -192,10 +192,6 @@ export default function ExploreSection() {
                     <span className="font-medium text-gray-900">“{query}”</span>. Try another search term.
                 </div>
             )}
-
-            <p className="text-xs text-muted-foreground text-left">
-                These trips are currently loaded from a local frontend storage.
-            </p>
         </div>
     );
 }
