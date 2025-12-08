@@ -9,6 +9,7 @@ import { useAuth } from "@/auth/hook/use-auth";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
+import { Upload } from "@/components/ui/Upload";
 
 type FormValues = {
     title: string;
@@ -184,19 +185,15 @@ export default function NewTripPage() {
                         </div>
 
 
-                        <div>
-                            <div className="text-sm font-medium mb-1">Thumbnail (optional)</div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={async (e) => {
-                                    const f = e.target.files?.[0];
-                                    const data = await handleFile(f ?? undefined);
-                                    (window as any).__trip_thumbnail = data;
-                                    setPreview(data);
-                                }}
-                            />
-                        </div>
+                        <Upload
+                            label="Upload Trip Thumbnail (Optional)"
+                            accept="image/*"
+                            onFileSelect={(data) => {
+                                (window as any).__trip_thumbnail = data;
+                                setPreview(data);
+                            }}
+                        />
+
 
                         {preview && (
                             <div className="mt-3">

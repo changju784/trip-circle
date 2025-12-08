@@ -7,6 +7,9 @@ import { useTrips } from "@/lib/trips/use-trips";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/Input";
+import { Upload } from "@/components/ui/Upload";
 
 type FormValues = {
     title: string;
@@ -239,25 +242,14 @@ export default function EditTripPage() {
                         </div>
 
 
-                        <div>
-                            <div className="text-sm font-medium mb-1">Thumbnail (optional)</div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={async (e) => {
-                                    const f = e.target.files?.[0];
-                                    if (!f) return;
-                                    const data = await new Promise<string | null>((res) => {
-                                        const r = new FileReader();
-                                        r.onload = () => res(String(r.result));
-                                        r.onerror = () => res(null);
-                                        r.readAsDataURL(f);
-                                    });
-                                    (window as any).__trip_thumbnail = data;
-                                    setPreview(data);
-                                }}
-                            />
-                        </div>
+                        <Upload
+                            label="Upload Trip Thumbnail (Optional)"
+                            accept="image/*"
+                            onFileSelect={(data) => {
+                                (window as any).__trip_thumbnail = data;
+                                setPreview(data);
+                            }}
+                        />
 
                         {preview && (
                             <div className="mt-3">
