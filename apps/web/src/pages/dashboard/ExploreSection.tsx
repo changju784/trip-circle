@@ -6,17 +6,13 @@ import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { useTrips } from "@/lib/trips/use-trips";
 import { Trip } from "@/lib/trips/trips-api";
-import { fetchSplashImage } from "@/lib/splashClient";
-
+import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 
 function formatDateRange(startDate: string, endDate: string): string {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Fallback in case of invalid dates
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return "";
-    }
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return "";
 
     const sameYear = start.getFullYear() === end.getFullYear();
 
@@ -25,6 +21,7 @@ function formatDateRange(startDate: string, endDate: string): string {
         day: "numeric",
         ...(sameYear ? {} : { year: "numeric" }),
     });
+
     const endStr = end.toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
@@ -37,7 +34,6 @@ function formatDateRange(startDate: string, endDate: string): string {
 function buildDestinationSummary(trip: Trip): string {
     const pieces: string[] = [];
 
-    // Get destination labels from the destinations array
     if (Array.isArray(trip.destinations) && trip.destinations.length > 0) {
         trip.destinations.forEach((dest) => {
             if (dest.label) {
@@ -50,20 +46,6 @@ function buildDestinationSummary(trip: Trip): string {
     return pieces.join(" • ");
 }
 
-// Splash helper
-// Pick the best text query to send to Splash for a given trip
-function buildSplashQuery(trip: Trip): string | null {
-    const destinations = trip.destinations || [];
-
-    if (destinations.length > 0 && destinations[0]?.label) {
-        return destinations[0].label;
-    }
-    if (trip.title) return trip.title;
-
-    return null;
-}
-
-
 export default function ExploreSection() {
     const navigate = useNavigate();
     const { exploreTrips } = useTrips();
@@ -71,11 +53,7 @@ export default function ExploreSection() {
     const [query, setQuery] = useState("");
     const [trips, setTrips] = useState<Trip[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [error, setError] = useState<string | null>(null);
-
-    // Splash-generated thumbnails: trip._id -> image URL
-    const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
 
     // Fetch trips from backend on mount and when query changes
     useEffect(() => {
@@ -91,8 +69,9 @@ export default function ExploreSection() {
                 }
             } catch (err) {
                 if (!cancelled) {
-                    const errorMsg = err instanceof Error ? err.message : "Failed to load trips";
-                    setError(errorMsg);
+                    const msg =
+                        err instanceof Error ? err.message : "Failed to load trips";
+                    setError(msg);
                     setTrips([]);
                 }
             } finally {
@@ -103,55 +82,15 @@ export default function ExploreSection() {
         }
 
         loadTrips();
-
         return () => {
             cancelled = true;
         };
     }, [query, exploreTrips]);
 
-    // Fetch Splash thumbnails for trips that have no explicit thumbnail
-    useEffect(() => {
-        let cancelled = false;
+    // Thumbnail generation via reusable hook
+    const thumbnails = useSplashThumbnails(trips);
 
-        async function loadMissingThumbnails() {
-            const missing = trips.filter((trip) => {
-                const hasOwnThumb = !!trip.thumbnail;
-                const hasGeneratedThumb = !!thumbnails[trip._id];
-                return !hasOwnThumb && !hasGeneratedThumb;
-            });
-
-            if (missing.length === 0) return;
-
-            for (const trip of missing) {
-                const q = buildSplashQuery(trip);
-                if (!q) continue;
-
-                const url = await fetchSplashImage(q);
-                if (cancelled || !url) continue;
-
-                setThumbnails((prev) => {
-                    // avoid overwriting if something else wrote it meanwhile
-                    if (prev[trip._id]) return prev;
-                    return { ...prev, [trip._id]: url };
-                });
-            }
-        }
-
-        if (trips.length > 0) {
-            loadMissingThumbnails();
-        }
-
-        return () => {
-            cancelled = true;
-        };
-    }, [trips, thumbnails]);
-
-    const filteredTrips = useMemo(() => {
-        // Backend already filters by query, so we don't need client-side filtering
-        return trips;
-    }, [trips]);
-
-
+    const filteredTrips = useMemo(() => trips, [trips]);
 
     return (
         <div className="space-y-6">
@@ -174,9 +113,7 @@ export default function ExploreSection() {
                 </div>
             </div>
 
-
-
-            {/* Loading state */}
+            {/* Loading */}
             {isLoading && (
                 <div className="p-8 text-center text-muted-foreground bg-white rounded-xl border shadow-sm">
                     Loading trips...
@@ -190,16 +127,15 @@ export default function ExploreSection() {
                         const dateRange = formatDateRange(trip.startDate, trip.endDate);
                         const destinationSummary = buildDestinationSummary(trip);
 
-                        const splashThumb = thumbnails[trip._id];
                         const explicitThumb = trip.thumbnail ?? null;
-                        const thumbnailUrl = explicitThumb || splashThumb || null;
+                        const generatedThumb = thumbnails[trip._id] ?? null;
+                        const thumbnailUrl = explicitThumb || generatedThumb || null;
 
                         return (
                             <Card
                                 key={trip._id}
                                 className="flex flex-col overflow-hidden hover:shadow-md transition-shadow"
                             >
-                                {/* Thumbnail / header */}
                                 {thumbnailUrl ? (
                                     <div className="h-32 w-full bg-gray-100">
                                         <div
@@ -249,21 +185,14 @@ export default function ExploreSection() {
                 </div>
             )}
 
-            {/* Empty state when search has no matches */}
+            {/* Empty state */}
             {!isLoading && filteredTrips.length === 0 && (
                 <div className="p-8 text-center text-muted-foreground bg-white rounded-xl border shadow-sm">
                     No trips match{" "}
-                    <span className="font-medium text-gray-900">“{query}”</span>. Try another search
-                    term or clear your search.
+                    <span className="font-medium text-gray-900">“{query}”</span>. Try another search term.
                 </div>
             )}
 
-
-
-            {/* 
-            TODO: get rid of this for end product
-            Developer page context 
-            */}
             <p className="text-xs text-muted-foreground text-left">
                 These trips are currently loaded from a local frontend storage.
             </p>
