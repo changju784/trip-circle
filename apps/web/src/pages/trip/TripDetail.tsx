@@ -169,15 +169,25 @@ export default function TripDetailPage() {
                         <h1 className="text-2xl font-semibold">{trip.title}</h1>
 
                         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
-                            <div className="flex items-center gap-2">
-                                📍 {destinationLabels} {hasMoreDestinations}
+                            {/* Destinations list */}
+                            <div className="flex flex-col gap-1">
+                                {trip.destinations?.map((d: any) => (
+                                    <div key={d.id} className="flex items-center gap-1">
+                                        <span>📍</span>
+                                        <span>{d.label}</span>
+                                    </div>
+                                ))}
+
+                                {hasMoreDestinations && (
+                                    <div className="flex items-center gap-1 text-gray-500">
+                                        <span>+ {trip.destinations.length - 3} more…</span>
+                                    </div>
+                                )}
                             </div>
 
-                            <div>•</div>
-
-                            <div>
-                                {new Date(trip.startDate).toLocaleDateString()} —{" "}
-                                {new Date(trip.endDate).toLocaleDateString()}
+                            {/* Date Range */}
+                            <div className="mt-2 flex items-center gap-2">
+                                {new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}
                             </div>
 
                             <div
@@ -258,11 +268,13 @@ export default function TripDetailPage() {
                             <DayStopsPanel
                                 days={trip.days}
                                 selectedDay={i}
-                                onOpenAdd={() => {
+                                onOpenAdd={(dayIndex) => {
+                                    setSelectedDay(dayIndex);
                                     setEditingStop(null);
                                     setOpenAdd(true);
                                 }}
                                 onEditStop={(sId: string) => {
+                                    setSelectedDay(i);
                                     setEditingStop(sId);
                                     setOpenAdd(true);
                                 }}

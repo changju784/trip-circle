@@ -45,7 +45,7 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
                     </div>
 
                     <button
-                        onClick={onOpenAdd}
+                        onClick={() => onOpenAdd(selectedDay)}
                         className="bg-black text-white px-3 py-2 rounded-lg"
                     >
                         + Add Stop
