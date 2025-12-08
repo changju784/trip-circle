@@ -9,7 +9,8 @@ import ShareTripModal from "@/components/ui/ShareTripModal";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
 import { useTrips } from "@/lib/trips/use-trips";
 import { useAuth } from "@/auth/hook/use-auth";
-import { useGetUsernameById } from "@/lib/auth/use-get-username-by-id";
+import { getUser } from "@/lib/users/users-api"
+
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -23,9 +24,9 @@ export default function TripDetailPage() {
     const [editingStop, setEditingStop] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [shareOpen, setShareOpen] = useState(false);
+    const [ownerName, setOwnerName] = useState<string | null>(null);
 
-    const ownerId = trip?.members?.[0];
-    const { name: ownerName } = useGetUsernameById(ownerId);
+    
 
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
@@ -52,6 +53,37 @@ export default function TripDetailPage() {
             cancelled = true;
         };
     }, [id, getTrip]);
+    
+    // ---------------- LOAD TRIP OWNER USERNAME ----------------
+    useEffect(() => {
+        // Wait for trip to be loaded
+        if (!trip || !trip.members || !trip.members.length) {
+            setOwnerName(null);
+            return;
+        }
+
+        const ownerId = trip?.members?.[0];
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const user = await getUser(ownerId);
+                if (!cancelled) {
+                    setOwnerName(user.username);
+                }
+            } catch (err) {
+                console.error("Failed to load owner", err);
+                if (!cancelled) {
+                    setOwnerName(null);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [trip]);
+
 
     // ---------------- OWNER CHECK ----------------
     const isOwner = Boolean(
