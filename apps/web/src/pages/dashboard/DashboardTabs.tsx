@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import { Tabs, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
 interface DashboardTabsProps {
     mytrips: React.ReactNode;
@@ -13,11 +13,10 @@ export default function DashboardTabs({ mytrips, explore, onNewTrip }: Dashboard
 
             <div className="flex items-center justify-between mb-8 w-full">
 
-                <div className="grid grid-cols-2 bg-gray-100 rounded-full p-1 w-[260px]">
+                <TabsList className="w-[260px] grid grid-cols-2">
                     <TabsTrigger value="mytrips">My Trips</TabsTrigger>
                     <TabsTrigger value="explore">🧭 Explore</TabsTrigger>
-
-                </div>
+                </TabsList>
 
                 <Button variant={"dark"} onClick={onNewTrip}>+ New Trip</Button>
             </div>
