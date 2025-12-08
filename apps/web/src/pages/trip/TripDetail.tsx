@@ -258,11 +258,13 @@ export default function TripDetailPage() {
                             <DayStopsPanel
                                 days={trip.days}
                                 selectedDay={i}
-                                onOpenAdd={() => {
+                                onOpenAdd={(dayIndex) => {
+                                    setSelectedDay(dayIndex);
                                     setEditingStop(null);
                                     setOpenAdd(true);
                                 }}
                                 onEditStop={(sId: string) => {
+                                    setSelectedDay(i);
                                     setEditingStop(sId);
                                     setOpenAdd(true);
                                 }}
