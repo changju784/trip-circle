@@ -10,6 +10,8 @@ import { useAuth } from "@/auth/hook/use-auth";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
+import { fetchSplashImage } from "@/lib/splashClient";
+
 
 type FormValues = {
     title: string;
@@ -20,6 +22,19 @@ type FormValues = {
     isPublic?: boolean;
     thumbnail?: string | null;
 };
+
+
+function buildSplashQuery(data: FormValues): string | null {
+    const destinations = data.destinations || [];
+
+    if (destinations.length > 0 && destinations[0]?.label) {
+        return destinations[0].label;
+    }
+    if (data.title) return data.title;
+
+    return null;
+}
+
 
 export default function NewTripPage() {
     const navigate = useNavigate();
@@ -50,7 +65,15 @@ export default function NewTripPage() {
                 return;
             }
 
-            const thumbnail = (window as any).__trip_thumbnail ?? null;
+            let thumbnail = (window as any).__trip_thumbnail ?? null;
+
+            // Add splash if trip thumbnail is null
+            if (!thumbnail) {
+                const splashQuery = buildSplashQuery(data);
+                thumbnail = await fetchSplashImage(splashQuery);
+            }
+            
+
             const destinations = data.destinations?.map((d) => ({
                 id: d.id,
                 label: d.label,

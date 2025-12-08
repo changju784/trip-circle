@@ -1,4 +1,3 @@
-// src/lib/splashClient.ts
 const SPLASH_ACCESS_KEY = process.env.REACT_APP_SPLASH_ACCESS_KEY;
 
 export async function fetchSplashImage(query: string): Promise<string | null> {

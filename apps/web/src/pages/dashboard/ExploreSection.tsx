@@ -6,7 +6,6 @@ import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { useTrips } from "@/lib/trips/use-trips";
 import { Trip } from "@/lib/trips/trips-api";
-import { fetchSplashImage } from "@/lib/splashClient";
 
 
 function formatDateRange(startDate: string, endDate: string): string {
@@ -50,18 +49,6 @@ function buildDestinationSummary(trip: Trip): string {
     return pieces.join(" • ");
 }
 
-// Splash helper
-// Pick the best text query to send to Splash for a given trip
-function buildSplashQuery(trip: Trip): string | null {
-    const destinations = trip.destinations || [];
-
-    if (destinations.length > 0 && destinations[0]?.label) {
-        return destinations[0].label;
-    }
-    if (trip.title) return trip.title;
-
-    return null;
-}
 
 
 export default function ExploreSection() {
@@ -74,8 +61,6 @@ export default function ExploreSection() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [error, setError] = useState<string | null>(null);
 
-    // Splash-generated thumbnails: trip._id -> image URL
-    const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
 
     // Fetch trips from backend on mount and when query changes
     useEffect(() => {
@@ -109,42 +94,7 @@ export default function ExploreSection() {
         };
     }, [query, exploreTrips]);
 
-    // Fetch Splash thumbnails for trips that have no explicit thumbnail
-    useEffect(() => {
-        let cancelled = false;
 
-        async function loadMissingThumbnails() {
-            const missing = trips.filter((trip) => {
-                const hasOwnThumb = !!trip.thumbnail;
-                const hasGeneratedThumb = !!thumbnails[trip._id];
-                return !hasOwnThumb && !hasGeneratedThumb;
-            });
-
-            if (missing.length === 0) return;
-
-            for (const trip of missing) {
-                const q = buildSplashQuery(trip);
-                if (!q) continue;
-
-                const url = await fetchSplashImage(q);
-                if (cancelled || !url) continue;
-
-                setThumbnails((prev) => {
-                    // avoid overwriting if something else wrote it meanwhile
-                    if (prev[trip._id]) return prev;
-                    return { ...prev, [trip._id]: url };
-                });
-            }
-        }
-
-        if (trips.length > 0) {
-            loadMissingThumbnails();
-        }
-
-        return () => {
-            cancelled = true;
-        };
-    }, [trips, thumbnails]);
 
     const filteredTrips = useMemo(() => {
         // Backend already filters by query, so we don't need client-side filtering
@@ -190,9 +140,6 @@ export default function ExploreSection() {
                         const dateRange = formatDateRange(trip.startDate, trip.endDate);
                         const destinationSummary = buildDestinationSummary(trip);
 
-                        const splashThumb = thumbnails[trip._id];
-                        const explicitThumb = trip.thumbnail ?? null;
-                        const thumbnailUrl = explicitThumb || splashThumb || null;
 
                         return (
                             <Card
@@ -200,11 +147,11 @@ export default function ExploreSection() {
                                 className="flex flex-col overflow-hidden hover:shadow-md transition-shadow"
                             >
                                 {/* Thumbnail / header */}
-                                {thumbnailUrl ? (
+                                {trip.thumbnail ? (
                                     <div className="h-32 w-full bg-gray-100">
                                         <div
                                             className="h-full w-full bg-cover bg-center"
-                                            style={{ backgroundImage: `url(${thumbnailUrl})` }}
+                                            style={{ backgroundImage: `url(${trip.thumbnail})` }}
                                         />
                                     </div>
                                 ) : (
