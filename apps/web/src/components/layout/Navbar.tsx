@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import TripCircleLogo from "../TripCircleLogo";
-import { Button } from "../ui/Button";
 import { useAuth } from "../../auth/hook/use-auth";
+import { Button } from "../ui/Button";
 
 export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
     const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
     };
 
     return (
-        <nav className="w-full border-b border-border">
+        <nav className="w-full border-b border-slate-400">
             <div className="max-w-screen-xl mx-auto px-6 py-4 flex justify-between items-center">
 
                 <div className="flex items-center gap-2">
@@ -34,11 +34,11 @@ export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
 
                 {showLinks && (
                     <div className="flex items-center gap-4">
-                        <Button onClick={() => navigate("/trip-circle/profile")}>
+                        <Button variant="outline" onClick={() => navigate("/trip-circle/profile")}>
                             👤 Profile
                         </Button>
 
-                        <Button onClick={handleLogout}>
+                        <Button variant="outline" onClick={handleLogout}>
                             🚪 Logout
                         </Button>
                     </div>
