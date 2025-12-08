@@ -4,7 +4,7 @@ import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
 import AddStopModal from "@/components/trip/AddStopModal";
-import ShareTripModal from "@/components/ui/ShareTripModal";
+import ShareTripModal from "@/components/trip/ShareTripModal";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
 import { useTrips } from "@/lib/trips/use-trips";
 import { useAuth } from "@/auth/hook/use-auth";
