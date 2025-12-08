@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import Navbar from "@/components/layout/Navbar";
+import { useEffect, useState } from "react";
 import FormContainer from "@/components/form/FormContainer";
 import { Button } from "@/components/ui/Button";
 import { useNavigate, useParams } from "react-router-dom";
@@ -120,7 +119,6 @@ export default function EditTripPage() {
     if (initialLoading) {
         return (
             <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
-                <Navbar />
                 <main className="max-w-screen-md mx-auto p-6">
                     <div className="text-center">Loading trip...</div>
                 </main>
@@ -131,7 +129,6 @@ export default function EditTripPage() {
     if (error && !trip) {
         return (
             <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
-                <Navbar />
                 <main className="max-w-screen-md mx-auto p-6">
                     <div className="text-center text-red-600">
                         Error: {error} — <a href="/trip-circle/dashboard" className="underline">Back</a>
@@ -143,7 +140,6 @@ export default function EditTripPage() {
 
     return (
         <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
-            <Navbar />
             <main className="max-w-screen-md mx-auto p-6">
                 <FormContainer title="Edit Trip" subtitle="Update your trip details">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

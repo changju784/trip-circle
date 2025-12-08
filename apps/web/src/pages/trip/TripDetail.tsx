@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import Navbar from "@/components/layout/Navbar";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
@@ -132,7 +131,6 @@ export default function TripDetailPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-[#eaf6ff]">
-                <Navbar />
                 <main className="max-w-screen-lg mx-auto p-6 text-center">Loading trip...</main>
             </div>
         );
@@ -141,7 +139,6 @@ export default function TripDetailPage() {
     if (error || !trip) {
         return (
             <div className="min-h-screen bg-[#eaf6ff]">
-                <Navbar />
                 <main className="max-w-screen-lg mx-auto p-6 text-center text-red-600">
                     {error ? `Error: ${error}` : "Trip not found"} —{" "}
                     <Link to="/trip-circle/dashboard">Back</Link>
@@ -158,7 +155,6 @@ export default function TripDetailPage() {
 
     return (
         <div className="min-h-screen">
-            <Navbar />
 
             <main className="max-w-screen-lg mx-auto p-6">
                 <BackToDashboardButton />

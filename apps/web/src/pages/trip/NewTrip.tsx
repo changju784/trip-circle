@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Navbar from "@/components/layout/Navbar";
 import FormContainer from "@/components/form/FormContainer";
 import { Button } from "@/components/ui/Button";
 import { useNavigate } from "react-router-dom";
@@ -86,7 +85,6 @@ export default function NewTripPage() {
 
     return (
         <div className="min-h-screen">
-            <Navbar />
             <main className="max-w-screen-md mx-auto p-6">
                 <BackToDashboardButton />
                 <FormContainer title="Create New Trip" subtitle="Start planning your next adventure">

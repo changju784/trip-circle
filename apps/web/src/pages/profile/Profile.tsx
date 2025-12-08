@@ -1,6 +1,4 @@
-import React from "react";
 import { useAuth } from "@/auth/hook/use-auth";
-import Navbar from "@/components/layout/Navbar";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 
 export default function ProfilePage() {
@@ -10,7 +8,6 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen">
-            <Navbar />
             <main className="max-w-screen-md mx-auto p-6">
                 <BackToDashboardButton />
                 <div className="bg-card p-6 rounded-lg shadow-sm border">
