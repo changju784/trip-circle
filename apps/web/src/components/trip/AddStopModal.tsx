@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Modal from "@/components/ui/Modal";
+// Ensure this path matches where you saved the new Modal wrapper
+import { Modal } from "@/components/ui/Modal";
 import { useForm } from "react-hook-form";
 import { geocodeLocation, geocodeSearch } from "@/lib/geocode";
 import { Stop } from "@/lib/tripStorage";
+import { Button } from "../ui/Button";
 
 type Props = {
     open: boolean;
@@ -113,14 +115,18 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
     };
 
     return (
-        <Modal open={open} onClose={onClose} title={initialStop ? "Edit Stop" : "Add Stop"}>
+        <Modal
+            isOpen={open}
+            onClose={onClose}
+            title={initialStop ? "Edit Stop" : "Add Stop"}
+        >
             <form onSubmit={handleSubmit(submit)} className="space-y-4">
 
                 {/* Smart Fill */}
                 <div className="p-3 bg-blue-50 rounded">
                     <div className="font-medium">Smart Fill</div>
                     <div className="text-sm text-muted-foreground">Upload a receipt, ticket, or booking confirmation to automatically extract details (mock)</div>
-                    <button type="button" className="mt-3 bg-white px-3 py-2 rounded border">Upload Image/PDF</button>
+                    <Button variant="primary" size="sm" className="mt-2">Upload Image / PDF</Button>
                 </div>
 
                 {/* Title */}
@@ -165,8 +171,17 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
 
                 {/* Buttons */}
                 <div className="flex justify-end gap-3">
-                    <button type="button" onClick={onClose} className="px-4 py-2 rounded border">Cancel</button>
-                    <button type="submit" disabled={loading} className="px-4 py-2 rounded bg-indigo-700 text-white disabled:opacity-50">{loading ? "Saving..." : initialStop ? "Save" : "Add Stop"}</button>
+
+                    <Button variant="outline" type="button" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={loading}
+                    >
+                        {loading ? "Saving..." : initialStop ? "Save" : "Add Stop"}
+                    </Button>
                 </div>
             </form>
         </Modal>

@@ -19,7 +19,7 @@ export default function DashboardTabs({ mytrips, explore, onNewTrip }: Dashboard
 
                 </div>
 
-                <Button onClick={onNewTrip}>+ New Trip</Button>
+                <Button variant={"dark"} onClick={onNewTrip}>+ New Trip</Button>
             </div>
 
             <TabsContent value="mytrips">
