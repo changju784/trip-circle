@@ -4,6 +4,10 @@ module.exports = {
 
     theme: {
         extend: {
+            fontFamily: {
+                sans: ["Nunito", "sans-serif"],
+            },
+
             colors: {
                 background: "var(--background)",
                 foreground: "var(--foreground)",

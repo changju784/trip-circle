@@ -1,21 +1,15 @@
-/* --------------------------------------------- */
-/* Tailwind Base Layers                          */
-/* --------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* --------------------------------------------- */
-/* Dark Mode Variant (OK — Tailwind supports it) */
-/* --------------------------------------------- */
 @custom-variant dark (&:is(.dark *));
 
-/* --------------------------------------------- */
-/* CSS Variables — Light Mode                    */
-/* --------------------------------------------- */
 :root {
     --font-size: 16px;
 
+    /* Base Colors */
     --background: #cae5e9;
     --foreground: oklch(0.145 0 0);
 
@@ -45,19 +39,22 @@
     --input-background: #f3f3f5;
     --switch-background: #cbced4;
 
-    --font-weight-medium: 500;
+    /* Typography */
+    --font-weight-medium: 600;
+    /* Bumped slightly for Nunito */
     --font-weight-normal: 400;
 
     --ring: oklch(0.708 0 0);
+    --radius: 0.625rem;
 
+    /* Charts */
     --chart-1: oklch(0.646 0.222 41.116);
     --chart-2: oklch(0.6 0.118 184.704);
     --chart-3: oklch(0.398 0.07 227.392);
     --chart-4: oklch(0.828 0.189 84.429);
     --chart-5: oklch(0.769 0.188 70.08);
 
-    --radius: 0.625rem;
-
+    /* Sidebar */
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: #030213;
@@ -68,9 +65,6 @@
     --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* --------------------------------------------- */
-/* Dark Mode Variables                           */
-/* --------------------------------------------- */
 .dark {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
@@ -100,9 +94,6 @@
     --input: oklch(0.269 0 0);
     --ring: oklch(0.439 0 0);
 
-    --font-weight-medium: 500;
-    --font-weight-normal: 400;
-
     --chart-1: oklch(0.488 0.243 264.376);
     --chart-2: oklch(0.696 0.17 162.48);
     --chart-3: oklch(0.769 0.188 70.08);
@@ -119,55 +110,37 @@
     --sidebar-ring: oklch(0.439 0 0);
 }
 
-/* --------------------------------------------- */
-/* Tailwind Theme Variables (Needed for utilities)
-   This is supported because you are using 
-   the tailwindcss-theme-variants plugin.        */
-/* --------------------------------------------- */
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
-
     --color-popover: var(--popover);
     --color-popover-foreground: var(--popover-foreground);
-
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
-
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
-
     --color-muted: var(--muted);
     --color-muted-foreground: var(--muted-foreground);
-
     --color-accent: var(--accent);
     --color-accent-foreground: var(--accent-foreground);
-
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
-
     --color-border: var(--border);
-
     --color-input: var(--input);
     --color-input-background: var(--input-background);
     --color-switch-background: var(--switch-background);
-
     --color-ring: var(--ring);
-
     --color-chart-1: var(--chart-1);
     --color-chart-2: var(--chart-2);
     --color-chart-3: var(--chart-3);
     --color-chart-4: var(--chart-4);
     --color-chart-5: var(--chart-5);
-
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
-
     --color-sidebar: var(--sidebar);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
@@ -178,12 +151,8 @@
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* --------------------------------------------- */
-/* Base Layer — Safe, Valid Tailwind Utilities   */
-/* --------------------------------------------- */
 @layer base {
     * {
-        /* border-border is safe (you added in tailwind.config.js) */
         @apply border-border;
     }
 
@@ -192,62 +161,55 @@
         outline-offset: 2px;
     }
 
-    @layer base {
-        body {
-            @apply text-foreground;
+    body {
+        @apply text-foreground;
+        font-family: 'Nunito', sans-serif;
 
-            /* Travel wallpaper */
-            background-color: #cae5e9;
-            background-image: url("/assets/airplane-trails.svg");
-            background-repeat: repeat;
-            background-size: 120px 120px; // tweak for density
-            background-attachment: fixed; // nice subtle parallax feel
-        }
+        background-color: #cae5e9;
+        background-image: url("/assets/airplane-trails.svg");
+        background-repeat: repeat;
+        background-size: 120px 120px;
+        background-attachment: fixed;
     }
 
-}
-
-/* --------------------------------------------- */
-/* Typography Overrides                          */
-/* --------------------------------------------- */
-@layer base {
     :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
-        h1 {
-            font-size: var(--text-2xl);
+
+        h1,
+        h2,
+        h3,
+        h4,
+        label,
+        button,
+        input {
             font-weight: var(--font-weight-medium);
             line-height: 1.5;
+        }
+
+        h1 {
+            font-size: var(--text-2xl);
         }
 
         h2 {
             font-size: var(--text-xl);
-            font-weight: var(--font-weight-medium);
-            line-height: 1.5;
         }
 
         h3 {
             font-size: var(--text-lg);
-            font-weight: var(--font-weight-medium);
-            line-height: 1.5;
         }
 
         h4 {
             font-size: var(--text-base);
-            font-weight: var(--font-weight-medium);
-            line-height: 1.5;
         }
 
-        p {
-            font-size: var(--text-base);
-            font-weight: var(--font-weight-normal);
-            line-height: 1.5;
-        }
-
+        p,
         label,
         button,
         input {
             font-size: var(--text-base);
-            font-weight: var(--font-weight-medium);
-            line-height: 1.5;
+        }
+
+        p {
+            font-weight: var(--font-weight-normal);
         }
     }
 }
