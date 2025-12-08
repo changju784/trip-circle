@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import Navbar from "@/components/layout/Navbar";
+import { useEffect, useState } from "react";
 import FormContainer from "@/components/form/FormContainer";
 import { Button } from "@/components/ui/Button";
 import { useNavigate, useParams } from "react-router-dom";
@@ -8,6 +7,10 @@ import { useTrips } from "@/lib/trips/use-trips";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/Input";
+import { Upload } from "@/components/ui/Upload";
+import { DatePicker } from "@/components/ui/DatePicker";
 
 type FormValues = {
     title: string;
@@ -120,7 +123,6 @@ export default function EditTripPage() {
     if (initialLoading) {
         return (
             <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
-                <Navbar />
                 <main className="max-w-screen-md mx-auto p-6">
                     <div className="text-center">Loading trip...</div>
                 </main>
@@ -131,7 +133,6 @@ export default function EditTripPage() {
     if (error && !trip) {
         return (
             <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
-                <Navbar />
                 <main className="max-w-screen-md mx-auto p-6">
                     <div className="text-center text-red-600">
                         Error: {error} — <a href="/trip-circle/dashboard" className="underline">Back</a>
@@ -143,7 +144,6 @@ export default function EditTripPage() {
 
     return (
         <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
-            <Navbar />
             <main className="max-w-screen-md mx-auto p-6">
                 <FormContainer title="Edit Trip" subtitle="Update your trip details">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -201,67 +201,82 @@ export default function EditTripPage() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
+
+                            {/* START DATE */}
                             <div>
                                 <div className="text-sm font-medium mb-1">Start Date</div>
-                                <input
-                                    {...register("startDate", {
+                                <Controller
+                                    control={control}
+                                    name="startDate"
+                                    rules={{
                                         required: "Start date is required",
                                         validate: (value) => {
                                             const end = watch("endDate");
-                                            if (end && value > end) return "Start date cannot be after end date";
+                                            // Compare dates safely by converting strings to Date objects
+                                            if (end && new Date(value) > new Date(end)) {
+                                                return "Start cannot be after end date";
+                                            }
                                             return true;
-                                        },
-                                    })}
-                                    type="date"
-                                    className={`w-full px-4 py-2 rounded-lg border ${errors.startDate ? "border-red-600" : ""
-                                        }`}
+                                        }
+                                    }}
+                                    render={({ field }) => (
+                                        <DatePicker
+                                            // 1. Convert form string -> Date object for the UI
+                                            value={field.value ? new Date(field.value) : undefined}
+                                            // 2. Pass the Date object directly to form state (or .toISOString() if you prefer strings)
+                                            onChange={field.onChange}
+                                            placeholder="Select start date"
+                                        />
+                                    )}
                                 />
                                 {errors.startDate && (
                                     <div className="text-red-600 text-xs mt-1">{errors.startDate.message}</div>
                                 )}
                             </div>
 
+                            {/* END DATE */}
                             <div>
                                 <div className="text-sm font-medium mb-1">End Date</div>
-                                <input
-                                    {...register("endDate", {
+                                <Controller
+                                    control={control}
+                                    name="endDate"
+                                    rules={{
                                         required: "End date is required",
                                         validate: (value) => {
                                             const start = watch("startDate");
-                                            if (start && value < start) return "End date cannot be before start date";
+                                            if (start && new Date(value) < new Date(start)) {
+                                                return "End cannot be before start date";
+                                            }
                                             return true;
-                                        },
-                                    })}
-                                    type="date"
-                                    className={`w-full px-4 py-2 rounded-lg border ${errors.endDate ? "border-red-600" : ""
-                                        }`}
+                                        }
+                                    }}
+                                    render={({ field }) => (
+                                        <DatePicker
+                                            // 1. Convert form string -> Date object
+                                            value={field.value ? new Date(field.value) : undefined}
+                                            onChange={field.onChange}
+                                            placeholder="Select end date"
+                                            // 2. Prevent picking a date before the Start Date in the UI
+                                            minDate={watch("startDate") ? new Date(watch("startDate")) : undefined}
+                                        />
+                                    )}
                                 />
                                 {errors.endDate && (
                                     <div className="text-red-600 text-xs mt-1">{errors.endDate.message}</div>
                                 )}
                             </div>
+
                         </div>
 
 
-                        <div>
-                            <div className="text-sm font-medium mb-1">Thumbnail (optional)</div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={async (e) => {
-                                    const f = e.target.files?.[0];
-                                    if (!f) return;
-                                    const data = await new Promise<string | null>((res) => {
-                                        const r = new FileReader();
-                                        r.onload = () => res(String(r.result));
-                                        r.onerror = () => res(null);
-                                        r.readAsDataURL(f);
-                                    });
-                                    (window as any).__trip_thumbnail = data;
-                                    setPreview(data);
-                                }}
-                            />
-                        </div>
+                        <Upload
+                            label="Upload Trip Thumbnail (Optional)"
+                            accept="image/*"
+                            onFileSelect={(data) => {
+                                (window as any).__trip_thumbnail = data;
+                                setPreview(data);
+                            }}
+                        />
 
                         {preview && (
                             <div className="mt-3">

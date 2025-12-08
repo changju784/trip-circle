@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import Modal from "./Modal";
+import { Modal } from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import { useUsers } from "@/lib/users/use-users";
 import debounce from "lodash.debounce";
@@ -51,7 +51,11 @@ export default function ShareTripModal({ open, onClose, onShare }: ShareTripModa
     };
 
     return (
-        <Modal open={open} onClose={onClose} title="Share Trip">
+        <Modal
+            isOpen={open}
+            onClose={onClose}
+            title="Share Trip"
+        >
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="text-sm font-medium">Invite User</label>

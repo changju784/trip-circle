@@ -1,72 +1,63 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+// Pages
 import Dashboard from "./pages/dashboard/Dashboard";
 import ProfilePage from "./pages/profile/Profile";
 import NewTripPage from "./pages/trip/NewTrip";
 import TripDetailPage from "./pages/trip/TripDetail";
 import EditTripPage from "./pages/trip/EditTrip";
+
+// Auth & Setup
+import UsernameSetup from "./pages/auth/UsernameSetup";
+import AuthCallbackPage from "./pages/auth/AuthCallback";
+
+// Components
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
 import RootRedirect from "./components/RootDirect";
-import UsernameSetup from "./pages/auth/UsernameSetup";
-import AuthCallbackPage from "./pages/auth/AuthCallback";
+import MainLayout from "./MainLayout";
 
 function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
                 <Routes>
-
-                    {/* ROOT GROUP: /trip-circle */}
                     <Route path="/trip-circle">
 
-                        {/* 
-                          /trip-circle  → redirect to /trip-circle/auth OR /trip-circle/dashboard
-                        */}
+                        {/* --- PUBLIC ROUTES --- */}
                         <Route index element={<RootRedirect />} />
 
-                        {/* AUTH PAGE */}
-                        <Route
-                            path="auth"
-                            element={
-                                <AuthLayout>
-                                    <AuthTabs />
-                                </AuthLayout>
-                            }
-                        />
+                        <Route path="auth" element={
+                            <AuthLayout>
+                                <AuthTabs />
+                            </AuthLayout>
+                        } />
 
-                        {/* AUTH CALLBACK (for OAuth redirects) */}
                         <Route path="auth/callback" element={<AuthCallbackPage />} />
 
-                        {/* USERNAME SETUP (for new Google OAuth users) */}
-                        <Route
-                            path="setup-username"
-                            element={
-                                <ProtectedRoute>
-                                    <UsernameSetup />
-                                </ProtectedRoute>
-                            }
-                        />
+                        {/* --- PROTECTED APP ROUTES (With Navbar & Footer) --- */}
+                        {/* We wrap these routes in ProtectedRoute AND MainLayout.
+                            This applies the Navbar/Footer to all of them automatically.
+                        */}
+                        <Route element={
+                            <ProtectedRoute>
+                                <MainLayout />
+                            </ProtectedRoute>
+                        }>
+                            <Route path="dashboard" element={<Dashboard />} />
+                            <Route path="profile" element={<ProfilePage />} />
+                            <Route path="trip/new" element={<NewTripPage />} />
+                            <Route path="trip/:id" element={<TripDetailPage />} />
+                            <Route path="trip/:id/edit" element={<EditTripPage />} />
+                            <Route path="setup-username" element={<UsernameSetup />} />
+                        </Route>
 
-                        {/* PROTECTED DASHBOARD */}
-                        <Route
-                            path="dashboard"
-                            element={
-                                <ProtectedRoute>
-                                    <Dashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-                        <Route path="trip/new" element={<ProtectedRoute><NewTripPage /></ProtectedRoute>} />
-                        <Route path="trip/:id" element={<ProtectedRoute><TripDetailPage /></ProtectedRoute>} />
-                        <Route path="trip/:id/edit" element={<ProtectedRoute><EditTripPage /></ProtectedRoute>} />
                     </Route>
 
-                    {/* Fall back → redirect to /trip-circle */}
+                    {/* Fallback */}
                     <Route path="*" element={<Navigate to="/trip-circle" replace />} />
                 </Routes>
             </AuthProvider>

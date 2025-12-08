@@ -17,5 +17,8 @@
   "resolutions": {
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0"
+  },
+  "dependencies": {
+    "lucide-react": "^0.556.0"
   }
 }

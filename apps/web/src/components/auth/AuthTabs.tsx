@@ -1,7 +1,7 @@
-import { Tabs, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import TripCircleLogo from "../TripCircleLogo";
 import LoginPage from "@/pages/auth/Login";
 import SignupPage from "@/pages/auth/Register";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/Tabs";
 
 export default function AuthTabs() {
     return (
@@ -13,10 +13,10 @@ export default function AuthTabs() {
                     <h1 className="text-2xl font-semibold mt-2">TripCircle</h1>
                 </div>
 
-                <div className="grid grid-cols-2 bg-gray-100 rounded-full p-1 mb-8">
+                <TabsList className="grid w-full grid-cols-2 mb-8">
                     <TabsTrigger value="login">Login</TabsTrigger>
                     <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                </div>
+                </TabsList>
 
                 <TabsContent value="login">
                     <LoginPage />
@@ -29,4 +29,3 @@ export default function AuthTabs() {
         </div>
     );
 }
-

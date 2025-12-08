@@ -1,18 +1,18 @@
 import React from "react";
-import { TabsTrigger } from "@/components/ui/Tabs";
+import { TabsList, TabsTrigger } from "../ui/Tabs";
 
-export default function DayTabs({ days }) {
+export default function DayTabs({ days }: { days: any[] }) {
     return (
-        <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-full">
+        <TabsList className="flex w-full justify-start overflow-x-auto h-auto p-1 bg-gray-100 rounded-md">
             {days.map((d, i) => (
                 <TabsTrigger
-                    key={d.date}
+                    key={d.date || i}
                     value={`day-${i}`}
-                    className="px-3"
+                    className="px-4 py-2"
                 >
                     Day {i + 1}
                 </TabsTrigger>
             ))}
-        </div>
+        </TabsList>
     );
 }
