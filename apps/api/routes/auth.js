@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import axios from "axios";
+import { OAuth2Client } from "google-auth-library";
 import User from "../schema/UserSchema.js";
 import logger from "../config/logger.js";
 
@@ -44,6 +45,7 @@ router.post("/register", async (req, res) => {
             {
                 userId: user._id,
                 email: user.email,
+                username: user.username
             },
             process.env.JWT_SECRET,
             { expiresIn: "24h" }
@@ -100,6 +102,7 @@ router.post("/login", async (req, res) => {
             {
                 userId: user._id,
                 email: user.email,
+                username: user.username
             },
             process.env.JWT_SECRET,
             { expiresIn: "24h" }
@@ -183,17 +186,29 @@ router.get("/google/callback", async (req, res) => {
 
         const { id_token } = tokenResponse.data;
 
-        // Decode JWT to get user info (in production, verify the signature)
-        const decoded = jwt.decode(id_token);
-        if (!decoded || typeof decoded === 'string') {
-            throw new Error("Invalid Google ID token");
-        }
+        // Verify the Google ID token and get user info
+        const client = new OAuth2Client(googleClientId);
+        const ticket = await client.verifyIdToken({
+            idToken: id_token,
+            audience: googleClientId,
+        });
 
-        const googleUserInfo = decoded;
-        const { sub: googleId, email, name, picture } = googleUserInfo;
+        const payload = ticket.getPayload();
+        const googleId = payload.sub;
+        const email = payload.email;
+        const name = payload.name || null;
 
         // Find or create user
-        let user = await User.findOne({ $or: [{ googleId }, { email }] });
+        let user = await User.findOne({ email });
+
+        // Block: email exists but NOT a Google account
+        if (user && !user.googleId) {
+            return res.redirect(
+                `${frontendUrl}/auth/login?error=google_account_exists`
+            );
+        }
+
+        console.log("Google OAuth payload:", user);
 
         if (!user) {
             // Create new user from Google profile
@@ -201,6 +216,7 @@ router.get("/google/callback", async (req, res) => {
                 email,
                 name: name || null,
                 googleId,
+                username: null,
                 password: null, // OAuth users have no password
             });
             await user.save();
@@ -217,6 +233,7 @@ router.get("/google/callback", async (req, res) => {
             {
                 userId: user._id,
                 email: user.email,
+                username: user.username,
             },
             process.env.JWT_SECRET,
             { expiresIn: "24h" }
@@ -225,7 +242,7 @@ router.get("/google/callback", async (req, res) => {
         logger.info(`User logged in via Google: ${email}`);
 
         // Redirect to frontend with token
-        res.redirect(`${frontendUrl}/auth/callback?token=${encodeURIComponent(token)}`);
+        res.redirect(`${frontendUrl}/trip-circle/auth/callback?token=${encodeURIComponent(token)}`);
     } catch (error) {
         logger.error("Google OAuth callback error:", error);
         res.redirect(`${frontendUrl}/auth/login?error=auth_failed`);

@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./../../auth/hook/use-auth";
 import { FormField } from "./../../components/form/FormField";
 import { Button } from "./../../components/ui/Button";
 import { apiPut } from "@/lib/api";
+import { saveAuthState } from "@/lib/auth/use-backend-auth";
+import { AuthContext } from "@/components/auth/AuthProvider";
 
 export default function UsernameSetup() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { setUser } = useContext(AuthContext);
     const { control, handleSubmit, formState } = useForm();
     const [error, setError] = useState<string | null>(null);
 
@@ -16,10 +19,25 @@ export default function UsernameSetup() {
         setError(null);
         try {
             if (user && user.id) {
-                // Update user name on backend
-                await apiPut(`/api/users/${user.id}`, {
-                    name: data.username
+                // Update user name on backend. The endpoint returns { user, token }
+                // when username is changed so the client can immediately use the refreshed JWT.
+                const resp: any = await apiPut(`/api/users/${user.id}`, {
+                    username: data.username
                 });
+
+                // Normalize response: endpoint may return user directly or { user, token }
+                const returnedUser = resp?.user || resp;
+                const token = resp?.token || null;
+
+                if (token) {
+                    saveAuthState(token, returnedUser);
+                    setUser && setUser(returnedUser);
+                } else {
+                    // No token returned — update context with returned user. Token (if any) remains unchanged.
+                    setUser && setUser(returnedUser);
+                }
+
+                // Redirect to dashboard
                 navigate("/trip-circle/dashboard");
             } else {
                 setError("No user found. Please sign in again.");

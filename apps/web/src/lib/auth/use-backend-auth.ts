@@ -9,6 +9,7 @@ export interface BackendUser {
     id: string;
     email: string;
     name?: string;
+    username?: string;
     dateCreated?: string;
 }
 
