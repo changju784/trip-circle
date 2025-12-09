@@ -30,6 +30,7 @@ export default function TripDetailPage() {
     const [shareOpen, setShareOpen] = useState(false);
     const [ownerName, setOwnerName] = useState<string | null>(null);
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
+    const [loadingTrip, setLoadingTrip] = useState(true);
 
     // ---------------- LOAD TRIP ----------------
     useEffect(() => {
@@ -37,6 +38,7 @@ export default function TripDetailPage() {
         let cancelled = false;
         async function load() {
             try {
+                setLoadingTrip(true);
                 setError(null);
                 const data = await getTrip(id);
                 if (!cancelled) setTrip(data);
@@ -44,6 +46,8 @@ export default function TripDetailPage() {
                 if (!cancelled) {
                     setError(err instanceof Error ? err.message : "Failed to load trip");
                 }
+            } finally {
+                if (!cancelled) setLoadingTrip(false);
             }
         }
         load();
@@ -160,7 +164,7 @@ export default function TripDetailPage() {
     };
 
     // ---------------- LOADING / ERROR STATE ----------------
-    if (isLoading && !trip) {
+    if (loadingTrip) {
         return <div className="min-h-screen p-10 text-center text-muted-foreground">Loading trip...</div>;
     }
     if (error || !trip) {
