@@ -19,30 +19,126 @@ router.get('/', async (req, res) => {
 
 
 // GET /api/trips/explore?q=searchterm
+// uses atlas search for autocomplete + weighted relevance scoring
 router.get('/explore', async (req, res) => {
   try {
     const { q, limit = 20, skip = 0 } = req.query;
-    const baseQuery = { isPublic: true };
+    const limitNum = parseInt(String(limit));
+    const skipNum = parseInt(String(skip));
 
-    if (q && String(q).trim()) {
-      const trips = await Trip.find(
-        { ...baseQuery, $text: { $search: String(q) } },
-        { score: { $meta: 'textScore' } }
-      )
-        .sort({ score: { $meta: 'textScore' }, dateCreated: -1 })
-        .limit(parseInt(String(limit)))
-        .skip(parseInt(String(skip)))
-        .select('title description destinations startDate endDate thumbnail dateCreated')
+    // no query - return recent public trips
+    if (!q || !String(q).trim()) {
+      const trips = await Trip.find({ isPublic: true })
+        .sort({ dateCreated: -1 })
+        .limit(limitNum)
+        .skip(skipNum)
+        .select('title description destinations startDate endDate thumbnail dateCreated members')
         .lean();
       return res.json(trips);
     }
 
-    const trips = await Trip.find(baseQuery)
-      .sort({ dateCreated: -1 })
-      .limit(parseInt(String(limit)))
-      .skip(parseInt(String(skip)))
-      .select('title description destinations startDate endDate thumbnail dateCreated')
-      .lean();
+    const searchQuery = String(q).trim();
+
+    // dynamic score threshold: lower for short queries, higher for long ones
+    // short queries (1-3 chars) are often partial matches with lower scores
+    const minScore = searchQuery.length <= 3 ? 0.5 : 1;
+
+    // atlas search with autocomplete + fuzzy matching for typo tolerance
+    const trips = await Trip.aggregate([
+      {
+        $search: {
+          index: 'trip_search', // name of your atlas search index
+          compound: {
+            should: [
+              // autocomplete for prefix matching (search-as-you-type)
+              {
+                autocomplete: {
+                  query: searchQuery,
+                  path: 'title',
+                  score: { boost: { value: 10 } }, // title weight: 10x
+                  fuzzy: { maxEdits: 1 } // allow 1 character typo
+                }
+              },
+              {
+                autocomplete: {
+                  query: searchQuery,
+                  path: 'destinations.label',
+                  score: { boost: { value: 5 } }, // destinations weight: 5x
+                  fuzzy: { maxEdits: 1 }
+                }
+              },
+              {
+                autocomplete: {
+                  query: searchQuery,
+                  path: 'description',
+                  score: { boost: { value: 1 } }, // description weight: 1x
+                  fuzzy: { maxEdits: 1 }
+                }
+              },
+              // text search for whole word matching (better for typos in complete words)
+              {
+                text: {
+                  query: searchQuery,
+                  path: 'title',
+                  score: { boost: { value: 8 } },
+                  fuzzy: { maxEdits: 2 } // allow up to 2 character typos for text search
+                }
+              },
+              {
+                text: {
+                  query: searchQuery,
+                  path: 'destinations.label',
+                  score: { boost: { value: 4 } },
+                  fuzzy: { maxEdits: 2 }
+                }
+              },
+              {
+                text: {
+                  query: searchQuery,
+                  path: 'description',
+                  score: { boost: { value: 0.5 } },
+                  fuzzy: { maxEdits: 2 }
+                }
+              }
+            ],
+            filter: [
+              { equals: { path: 'isPublic', value: true } }
+            ],
+            minimumShouldMatch: 1 // require at least one should clause to match
+          }
+        }
+      },
+      {
+        $addFields: {
+          score: { $meta: 'searchScore' }
+        }
+      },
+      {
+        $match: {
+          score: { $gte: minScore } // dynamic threshold based on query length
+        }
+      },
+      {
+        $limit: limitNum + skipNum // get enough to support skip
+      },
+      {
+        $skip: skipNum
+      },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          destinations: 1,
+          startDate: 1,
+          endDate: 1,
+          thumbnail: 1,
+          dateCreated: 1,
+          members: 1,
+          score: 1
+        }
+      }
+    ]);
+
     res.json(trips);
   } catch (err) {
     res.status(500).json({ error: 'Server error', details: err.message });

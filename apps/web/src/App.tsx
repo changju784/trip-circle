@@ -15,6 +15,7 @@ import AuthCallbackPage from "./pages/auth/AuthCallback";
 // Components
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./components/auth/AuthProvider";
+import { TripsProvider } from "./contexts/TripsContext";
 import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
 import RootRedirect from "./components/RootDirect";
@@ -24,7 +25,8 @@ function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
-                <Routes>
+                <TripsProvider>
+                    <Routes>
                     <Route path="/trip-circle">
 
                         {/* --- PUBLIC ROUTES --- */}
@@ -60,6 +62,7 @@ function App() {
                     {/* Fallback */}
                     <Route path="*" element={<Navigate to="/trip-circle" replace />} />
                 </Routes>
+                </TripsProvider>
             </AuthProvider>
         </BrowserRouter>
     );
