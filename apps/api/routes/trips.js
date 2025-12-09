@@ -333,6 +333,8 @@ router.post('/fork', async (req, res) => {
 
     // Create a plain JS object clone
     const tripData = originalTrip.toObject();
+    tripData.isPublic = false;
+    tripData.receipts = [];
 
     // Remove the original _id so MongoDB generates a new one
     delete tripData._id;
