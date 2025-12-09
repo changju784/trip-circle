@@ -386,6 +386,33 @@ router.put('/:id', async (req, res) => {
       }
     }
 
+    // If startDate or endDate changed, regenerate days array
+    if (updates.startDate || updates.endDate) {
+      const newStart = new Date(updates.startDate || oldTrip.startDate);
+      const newEnd = new Date(updates.endDate || oldTrip.endDate);
+
+      // generate list of dates between start and end
+      const days = [];
+      let d = new Date(newStart);
+
+      while (d <= newEnd) {
+        // if the day exists in oldTrip.days, keep its stops
+        const existing = oldTrip.days.find(day =>
+          new Date(day.date).toDateString() === d.toDateString()
+        );
+
+        days.push({
+          date: new Date(d),
+          stops: existing ? existing.stops : []
+        });
+
+        d.setDate(d.getDate() + 1);
+      }
+
+      updates.days = days;
+    }
+
+
     const trip = await Trip.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
     res.json(trip);
   } catch (err) {

@@ -7,8 +7,6 @@ import { useTrips } from "@/lib/trips/use-trips";
 import Select from "@/components/ui/Select";
 import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/Input";
 import { Upload } from "@/components/ui/Upload";
 import { DatePicker } from "@/components/ui/DatePicker";
 

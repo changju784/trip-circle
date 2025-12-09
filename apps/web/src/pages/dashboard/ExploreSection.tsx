@@ -55,7 +55,7 @@ export default function ExploreSection() {
     const [debouncedQuery, setDebouncedQuery] = useState("");
     const [trips, setTrips] = useState<Trip[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [, setError] = useState<string | null>(null);
 
     // debounced search (300ms delay after user stops typing)
     const debouncedSearch = useCallback(
