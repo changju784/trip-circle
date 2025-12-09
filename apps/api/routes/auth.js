@@ -218,7 +218,6 @@ router.get("/google/callback", async (req, res) => {
                 email,
                 name: name || null,
                 googleId,
-                username: null,
                 password: null, // OAuth users have no password
             });
             await user.save();
