@@ -26,7 +26,7 @@ Built with:
 ## 📁 Project Structure
 
 High-level layout:
-
+'''
 trip-circle/
 │
 ├── apps/
@@ -66,7 +66,7 @@ trip-circle/
 │
 ├── package.json                      # Root (optional workspaces / scripts)
 └── README.md                         # You are here
-
+'''
 ---
 
 ## 🗄️ Backend Overview (apps/server)
