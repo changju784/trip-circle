@@ -352,7 +352,7 @@ Under base path (example): /trip-circle
 - Save button triggers POST/PUT to trip endpoints.
 
 ### Forking a Trip
-<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/61fdb53c-1286-4d80-ae75-be14c04bb7a4" />
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/61fdb53c-1286-4d80-ae75-be14c04bb7a4" />
 
 - On a public trip’s detail page, a “Fork Trip” button calls:
   - POST /api/trips/:id/fork
