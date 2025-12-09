@@ -24,9 +24,8 @@ Built with:
 - Prototype: https://www.figma.com/make/Pmpb5O72zFjbVOmr0zHHpd/Collaborative-Travel-Planner?node-id=0-1&p=f&t=vg61q3YmHQyS0ZzC-0&fullscreen=1
 
 ## 📁 Project Structure
-
 High-level layout:
-'''
+```bash
 trip-circle/
 │
 ├── apps/
@@ -66,7 +65,7 @@ trip-circle/
 │
 ├── package.json                      # Root (optional workspaces / scripts)
 └── README.md                         # You are here
-'''
+```
 ---
 
 ## 🗄️ Backend Overview (apps/server)
