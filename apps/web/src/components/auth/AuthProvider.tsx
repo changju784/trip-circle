@@ -1,7 +1,6 @@
 import React, { createContext, useEffect, useState } from "react";
 import { restoreBackendAuthState, BackendUser, saveAuthState } from "@/lib/auth/use-backend-auth";
 import { getTokenFromCallback } from "@/lib/auth/auth-api";
-import axios from "axios";
 
 export const AuthContext = createContext<{
     user: BackendUser | null;
@@ -34,6 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 id: payload.userId,
                 email: payload.email,
                 name: payload.name || null,
+                username: payload.username ?? null,
             };
 
             saveAuthState(token, backendUser);

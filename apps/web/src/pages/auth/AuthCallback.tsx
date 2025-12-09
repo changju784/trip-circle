@@ -14,7 +14,7 @@ export default function AuthCallbackPage() {
 
                 if (!token) {
                     setError("No authentication token received");
-                    setTimeout(() => navigate("/auth/login"), 2000);
+                    navigate("/auth/login");
                     return;
                 }
 
@@ -22,7 +22,7 @@ export default function AuthCallbackPage() {
                 const parts = token.split(".");
                 if (parts.length !== 3) {
                     setError("Invalid token format");
-                    setTimeout(() => navigate("/auth/login"), 2000);
+                    navigate("/auth/login");
                     return;
                 }
 
@@ -32,6 +32,7 @@ export default function AuthCallbackPage() {
                 const user: BackendUser = {
                     id: payload.userId,
                     email: payload.email,
+                    username: payload.username
                 };
 
                 // Save to localStorage and set API token
@@ -40,13 +41,20 @@ export default function AuthCallbackPage() {
                 // Clear the token from URL
                 window.history.replaceState({}, document.title, window.location.pathname);
 
+                // If username is null or undefined (not set), send user to username setup
+                if (!user.username) {
+                    console.log("Redirecting to username setup");
+                    navigate("/trip-circle/setup-username");
+                    return;
+                }
+
                 // Redirect to dashboard
                 navigate("/trip-circle/dashboard");
             } catch (err) {
                 const message = err instanceof Error ? err.message : "Authentication failed";
                 setError(message);
                 console.error("OAuth callback error:", err);
-                setTimeout(() => navigate("/auth/login"), 2000);
+                navigate("/auth/login");
             }
         };
 
