@@ -251,7 +251,7 @@ export default function NewTripPage() {
                         </div>
 
                         <div className="flex gap-3 justify-end">
-                            <Button variant="muted" onClick={() => navigate(-1)}>
+                            <Button variant="muted" onClick={() => navigate("/dashboard")}>
                                 Cancel
                             </Button>
                             <Button variant="primary" type="submit" disabled={isLoading}>

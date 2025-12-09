@@ -234,7 +234,7 @@ router.get("/google/callback", async (req, res) => {
             {
                 userId: user._id,
                 email: user.email,
-                username: user.username,
+                username: user.username || null,
             },
             process.env.JWT_SECRET,
             { expiresIn: "24h" }
