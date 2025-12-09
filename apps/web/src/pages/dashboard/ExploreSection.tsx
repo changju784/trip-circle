@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import debounce from "lodash.debounce";
 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -51,11 +52,27 @@ export default function ExploreSection() {
     const { exploreTrips } = useTrips();
 
     const [query, setQuery] = useState("");
+    const [debouncedQuery, setDebouncedQuery] = useState("");
     const [trips, setTrips] = useState<Trip[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch trips from backend on mount and when query changes
+    // debounced search (300ms delay after user stops typing)
+    const debouncedSearch = useCallback(
+        debounce((value: string) => {
+            setDebouncedQuery(value);
+        }, 300),
+        []
+    );
+
+    // update query and trigger debounced search
+    const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setQuery(value);
+        debouncedSearch(value);
+    };
+
+    // fetch trips from backend when debounced query changes
     useEffect(() => {
         let cancelled = false;
 
@@ -63,7 +80,7 @@ export default function ExploreSection() {
             try {
                 setIsLoading(true);
                 setError(null);
-                const result = await exploreTrips(query || undefined);
+                const result = await exploreTrips(debouncedQuery || undefined);
                 if (!cancelled) {
                     setTrips(result);
                 }
@@ -85,7 +102,7 @@ export default function ExploreSection() {
         return () => {
             cancelled = true;
         };
-    }, [query, exploreTrips]);
+    }, [debouncedQuery, exploreTrips]);
 
     // Thumbnail generation via reusable hook
     const thumbnails = useSplashThumbnails(trips);
@@ -108,7 +125,7 @@ export default function ExploreSection() {
                         placeholder="Search by city, destination, or trip title"
                         className="md:w-80"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={handleQueryChange}
                     />
                 </div>
             </div>
