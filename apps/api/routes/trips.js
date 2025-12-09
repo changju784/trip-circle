@@ -353,6 +353,37 @@ router.post('/fork', async (req, res) => {
       { $addToSet: { trips: newTrip._id } },
       { new: true });
 
+    // If the original trip was public, keep the fork public and create its post
+    if (newTrip.isPublic && newTrip.members?.length > 0) {
+      try {
+        const existingPost = await Post.findOne({ tripId: newTrip._id });
+        if (!existingPost) {
+          const post = new Post({
+            tripId: newTrip._id,
+            userId: newTrip.members[0],
+            likes: [],
+            comments: [],
+            forkCount: 0,
+            likeCount: 0,
+            commentCount: 0
+          });
+          await post.save();
+        }
+      } catch (postErr) {
+        console.error('Failed to create post for forked trip:', postErr);
+      }
+    }
+
+    // Track fork count on the original trip's post (if it exists)
+    try {
+      await Post.findOneAndUpdate(
+        { tripId },
+        { $inc: { forkCount: 1 } }
+      );
+    } catch (err) {
+      console.error('Failed to increment fork count:', err);
+    }
+
     res.status(201).json({
       message: "Trip forked successfully",
       trip: newTrip
