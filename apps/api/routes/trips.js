@@ -387,7 +387,7 @@ router.put('/:id', async (req, res) => {
           stops: existing ? existing.stops : []
         });
 
-        d.setDate(d.getDate() + 1);
+        d.setDate(d.getDate());
       }
 
       updates.days = days;
