@@ -30,42 +30,42 @@ High-level layout:
 trip-circle/
 │
 ├── apps/
-│   ├── web/                      # Frontend (React + TypeScript)
+│   ├── web/                          # Frontend (React + TypeScript)
 │   │   ├── src/
-│   │   │   ├── components/       # Reusable UI: Navbar, Cards, Buttons, MapPreview, etc.
-│   │   │   ├── pages/            # Route-level pages
-│   │   │   │   ├── dashboard/    # Dashboard page (My trips, Explore snippet, etc.)
-│   │   │   │   ├── profile/      # Profile page
-│   │   │   │   ├── trip/         # NewTrip, TripDetail, EditTrip pages
-│   │   │   │   └── auth/         # Auth layouts, login/register, OAuth callback, username setup
+│   │   │   ├── components/           # Reusable UI: Navbar, Cards, Buttons, MapPreview, etc.
+│   │   │   ├── pages/                # Route-level pages
+│   │   │   │   ├── dashboard/        # Dashboard page (My trips, Explore snippet, etc.)
+│   │   │   │   ├── profile/          # Profile page
+│   │   │   │   ├── trip/             # NewTrip, TripDetail, EditTrip pages
+│   │   │   │   └── auth/             # Auth layouts, login/register, OAuth callback, username setup
 │   │   │   ├── lib/
-│   │   │   │   ├── trips/        # Trip API client (get/create/update/delete/fork/explore)
-│   │   │   │   ├── users/        # User API client (get user, user trips)
-│   │   │   │   └── splashClient/ # Thumbnail/splash image helper
-│   │   │   ├── auth/             # AuthProvider, useAuth hook, ProtectedRoute
-│   │   │   ├── MainLayout.tsx    # Main shell layout (navbar, container)
-│   │   │   ├── App.tsx           # Route configuration
-│   │   │   └── index.tsx         # React entrypoint
-│   │   ├── public/               # Static assets
-│   │   ├── index.css             # Global styles (gradient background, Tailwind base)
+│   │   │   │   ├── trips/            # Trip API client (get/create/update/delete/fork/explore)
+│   │   │   │   ├── users/            # User API client (get user, user trips)
+│   │   │   │   └── splashClient/     # Thumbnail/splash image helper
+│   │   │   ├── auth/                 # AuthProvider, useAuth hook, ProtectedRoute
+│   │   │   ├── MainLayout.tsx        # Main shell layout (navbar, container)
+│   │   │   ├── App.tsx               # Route configuration
+│   │   │   └── index.tsx             # React entrypoint
+│   │   ├── public/                   # Static assets
+│   │   ├── index.css                 # Global styles (gradient background, Tailwind base)
 │   │   └── package.json
 │   │
-│   └── server/                   # Backend (Express + MongoDB)
-│       ├── server.js             # Express app entrypoint
+│   └── server/                       # Backend (Express + MongoDB)
+│       ├── server.js                 # Express app entrypoint
 │       ├── routes/
-│       │   ├── auth.js           # Auth routes (OAuth callbacks, login, etc.)
-│       │   ├── trips.js          # Trip CRUD, explore, fork
-│       │   └── users.js          # User profile + user trips
+│       │   ├── auth.js               # Auth routes (OAuth callbacks, login, etc.)
+│       │   ├── trips.js              # Trip CRUD, explore, fork
+│       │   └── users.js              # User profile + user trips
 │       ├── schema/
-│       │   ├── TripSchema.js     # Trip model (members, days, stops, etc.)
-│       │   └── UserSchema.js     # User model (name, email, auth provider, etc.)
+│       │   ├── TripSchema.js         # Trip model (members, days, stops, etc.)
+│       │   └── UserSchema.js         # User model (name, email, auth provider, etc.)
 │       ├── config/
-│       │   └── logger.js         # Logger configuration (winston or similar)
-│       ├── .env.example          # Example backend environment variables
+│       │   └── logger.js             # Logger configuration (winston or similar)
+│       ├── .env.example              # Example backend environment variables
 │       └── package.json
 │
-├── package.json                  # Root (optional workspaces / scripts)
-└── README.md                     # You are here
+├── package.json                      # Root (optional workspaces / scripts)
+└── README.md                         # You are here
 
 ---
 
