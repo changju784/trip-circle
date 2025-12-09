@@ -55,7 +55,7 @@ export default function ExploreSection() {
     const [debouncedQuery, setDebouncedQuery] = useState("");
     const [trips, setTrips] = useState<Trip[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     // debounced search (300ms delay after user stops typing)
     const debouncedSearch = useCallback(
@@ -123,7 +123,7 @@ export default function ExploreSection() {
                 <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                     <Input
                         placeholder="Search by city, destination, or trip title"
-                        className="md:w-80"
+                        className="md:w-80 bg-white"
                         value={query}
                         onChange={handleQueryChange}
                     />

@@ -34,11 +34,11 @@ export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
 
                 {showLinks && (
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" onClick={() => navigate("/trip-circle/profile")}>
+                        <Button variant="secondary" onClick={() => navigate("/trip-circle/profile")}>
                             👤 Profile
                         </Button>
 
-                        <Button variant="outline" onClick={handleLogout}>
+                        <Button variant="secondary" onClick={handleLogout}>
                             🚪 Logout
                         </Button>
                     </div>
