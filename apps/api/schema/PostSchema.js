@@ -2,18 +2,26 @@ import mongoose from 'mongoose';
 
 // Post Schema
 const PostSchema = new mongoose.Schema({
-    tripId: { 
+    tripId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Trip',
-        required: true
+        required: true,
+        unique: true  // One post per trip
     },
-    userId: { 
+    userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
+    likes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
     comments: [
         {
+            _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
             userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
             commentText: { type: String, required: true },
             dateCreated: { type: Date, default: Date.now }
@@ -28,6 +36,10 @@ const PostSchema = new mongoose.Schema({
         immutable: true
     }
 });
+
+// Index for faster queries
+PostSchema.index({ dateCreated: -1 });
+PostSchema.index({ tripId: 1 });
 
 // Export Model Schema
 export default mongoose.model('Post', PostSchema);

@@ -53,8 +53,10 @@ app.use(authMiddleware);
 // Import protected routes
 import tripRoutes from './routes/trips.js';
 import userRoutes from './routes/users.js';
+import postRoutes from './routes/posts.js';
 app.use('/api/trips', tripRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
 
 const PORT = process.env.PORT || 5001;
 

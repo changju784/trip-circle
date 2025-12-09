@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { Heart, MessageCircle } from "lucide-react";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
@@ -13,6 +14,8 @@ import { useAuth } from "@/auth/hook/use-auth";
 import { getUser } from "@/lib/users/users-api";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { Card } from "@/components/ui/Card";
+import { addComment, getPostByTrip, toggleLike, type Post } from "@/lib/posts/posts-api";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -31,6 +34,11 @@ export default function TripDetailPage() {
     const [ownerName, setOwnerName] = useState<string | null>(null);
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
     const [loadingTrip, setLoadingTrip] = useState(true);
+    const [post, setPost] = useState<Post | null>(null);
+    const [loadingPost, setLoadingPost] = useState(false);
+    const [postError, setPostError] = useState<string | null>(null);
+    const [commentText, setCommentText] = useState("");
+    const [commentSubmitting, setCommentSubmitting] = useState(false);
 
     // ---------------- LOAD TRIP ----------------
     useEffect(() => {
@@ -98,6 +106,63 @@ export default function TripDetailPage() {
     const handleReceiptsChange = (updatedTrip: any) => {
         // Directly update trip state with the updated trip from backend
         setTrip(updatedTrip);
+    };
+
+    // ---------------- LOAD POST (for comments/likes) ----------------
+    useEffect(() => {
+        if (!trip?._id || !trip.isPublic) {
+            setPost(null);
+            setPostError(trip && !trip.isPublic ? "Comments are only available on public trips." : null);
+            return;
+        }
+
+        let cancelled = false;
+        const loadPost = async () => {
+            try {
+                setLoadingPost(true);
+                setPostError(null);
+                const data = await getPostByTrip(trip._id);
+                if (!cancelled) setPost(data);
+            } catch (err) {
+                if (!cancelled) {
+                    const msg = err instanceof Error ? err.message : "Unable to load comments right now.";
+                    setPost(null);
+                    setPostError(msg);
+                }
+            } finally {
+                if (!cancelled) setLoadingPost(false);
+            }
+        };
+
+        loadPost();
+        return () => { cancelled = true; };
+    }, [trip?._id, trip?.isPublic, refreshKey]);
+
+    // ---------------- COMMENTS & LIKES ----------------
+    const handleLikeToggle = async () => {
+        if (!user?.id || !post?._id) return;
+        try {
+            const updated = await toggleLike(post._id, user.id);
+            setPost(updated);
+        } catch (err) {
+            console.error("Failed to toggle like:", err);
+        }
+    };
+
+    const handleAddComment = async () => {
+        if (!user?.id || !post?._id) return;
+        const text = commentText.trim();
+        if (!text) return;
+        try {
+            setCommentSubmitting(true);
+            const updated = await addComment(post._id, user.id, text);
+            setPost(updated);
+            setCommentText("");
+        } catch (err) {
+            console.error("Failed to add comment:", err);
+        } finally {
+            setCommentSubmitting(false);
+        }
     };
 
     // ---------------- HANDLERS ----------------
@@ -310,6 +375,116 @@ export default function TripDetailPage() {
                         onReceiptsChange={handleReceiptsChange}
                     />
                 )}
+
+                {/* DISCUSSION / COMMENTS */}
+                <section className="max-w-4xl mx-auto mt-10 w-full">
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+                            <MessageCircle className="w-5 h-5 text-slate-700" />
+                            Discussion
+                        </h2>
+                        {post && (
+                            <button
+                                className="flex items-center gap-2 text-sm text-slate-700 hover:text-red-600 transition-colors disabled:opacity-50"
+                                onClick={handleLikeToggle}
+                                disabled={!user}
+                            >
+                                <Heart
+                                    className={`w-4 h-4 ${post.likes.includes(user?.id || "") ? "fill-red-600 text-red-600" : ""}`}
+                                />
+                                <span>{post.likeCount}</span>
+                                <span className="text-xs text-slate-500">Like</span>
+                            </button>
+                        )}
+                    </div>
+
+                    <Card className="p-4 shadow-sm">
+                        {!trip.isPublic && (
+                            <p className="text-sm text-muted-foreground">
+                                Comments are only available on public trips.
+                            </p>
+                        )}
+
+                        {trip.isPublic && (
+                            <>
+                                {loadingPost && (
+                                    <p className="text-sm text-muted-foreground">Loading comments...</p>
+                                )}
+
+                                {postError && !loadingPost && (
+                                    <p className="text-sm text-red-600">{postError}</p>
+                                )}
+
+                                {post && (
+                                    <div className="space-y-4">
+                                        <div className="max-h-80 overflow-y-auto pr-2 space-y-3">
+                                            {post.comments.length === 0 ? (
+                                                <p className="text-sm text-muted-foreground">
+                                                    No comments yet. Be the first to share your thoughts.
+                                                </p>
+                                            ) : (
+                                                post.comments.map((comment) => (
+                                                    <div
+                                                        key={comment._id}
+                                                        className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+                                                    >
+                                                        <div className="text-xs font-semibold text-slate-700">
+                                                            {comment.userId?.username || "Traveler"}
+                                                            <span className="ml-2 text-[11px] text-slate-500">
+                                                                {new Date(comment.dateCreated).toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-slate-800 mt-1 whitespace-pre-wrap">
+                                                            {comment.commentText}
+                                                        </p>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+
+                                        <div className="border-t border-slate-100 pt-4 space-y-2">
+                                            <label className="text-sm font-medium text-slate-800" htmlFor="comment-box">
+                                                Add a comment
+                                            </label>
+                                            <textarea
+                                                id="comment-box"
+                                                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                                rows={3}
+                                                placeholder={user ? "Share feedback, tips, or questions about this trip..." : "Log in to comment"}
+                                                value={commentText}
+                                                onChange={(e) => setCommentText(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                                                        e.preventDefault();
+                                                        handleAddComment();
+                                                    }
+                                                }}
+                                                disabled={!user || commentSubmitting}
+                                            />
+                                            <div className="flex justify-between items-center">
+                                                <p className="text-xs text-muted-foreground">
+                                                    Tip: Press Cmd/Ctrl + Enter to post.
+                                                </p>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={handleAddComment}
+                                                    disabled={!user || commentSubmitting || !commentText.trim().length}
+                                                >
+                                                    {commentSubmitting ? "Posting..." : "Post comment"}
+                                                </Button>
+                                            </div>
+                                            {!user && (
+                                                <p className="text-xs text-amber-600">
+                                                    Please log in to participate in the discussion.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </Card>
+                </section>
 
                 {/* MODALS */}
                 <AddStopModal
