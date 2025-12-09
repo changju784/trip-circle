@@ -7,6 +7,7 @@ import AddStopModal from "@/components/trip/AddStopModal";
 import ShareTripModal from "@/components/trip/ShareTripModal";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
 import { useTrips } from "@/lib/trips/use-trips";
+import { useTripsContext } from "@/contexts/TripsContext";
 import { useAuth } from "@/auth/hook/use-auth";
 import { getUser } from "@/lib/users/users-api";
 import { Button } from "@/components/ui/Button";
@@ -15,7 +16,8 @@ import { Modal } from "@/components/ui/Modal";
 export default function TripDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getTrip, updateTrip, deleteTrip, shareTrip, forkTrip, isLoading } = useTrips();
+    const { getTrip, updateTrip, shareTrip, isLoading } = useTrips();
+    const { deleteTrip, forkTrip } = useTripsContext();
     const { user } = useAuth();
 
     const [trip, setTrip] = useState<any | null>(null);

@@ -1,12 +1,9 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Trip } from "@/lib/trips/trips-api";
-import { useAuth } from "@/auth/hook/use-auth";
-import { useUsers } from "@/lib/users/use-users";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
+import { useTripsContext } from "@/contexts/TripsContext";
 
 function formatDateRange(startDate: string, endDate: string): string {
     const start = new Date(startDate);
@@ -32,37 +29,7 @@ function formatDateRange(startDate: string, endDate: string): string {
 
 export default function MyTripsSection() {
     const navigate = useNavigate();
-    const { user } = useAuth();
-    const { getUserTrips } = useUsers();
-
-    const [trips, setTrips] = useState<Trip[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    // Load user's trips
-    useEffect(() => {
-        if (!user?.id) return;
-
-        let cancelled = false;
-
-        async function loadTrips() {
-            try {
-                setIsLoading(true);
-                const result = await getUserTrips(user.id);
-                if (!cancelled) setTrips(result);
-            } catch (err) {
-                if (!cancelled)
-                    setError("Failed to load your trips");
-            } finally {
-                if (!cancelled) setIsLoading(false);
-            }
-        }
-
-        loadTrips();
-        return () => {
-            cancelled = true;
-        };
-    }, [user, getUserTrips]);
+    const { userTrips: trips, isLoading, error } = useTripsContext();
 
     // Load Splash thumbnails for any trip missing one
     const thumbnails = useSplashThumbnails(trips);
