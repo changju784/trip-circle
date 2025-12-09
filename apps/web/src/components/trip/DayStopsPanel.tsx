@@ -1,9 +1,43 @@
 import React from "react";
 import StopItem from "./StopItem";
 import MapPreview from "./MapPreview";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
-export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop, onDeleteStop }: any) {
+export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: any) {
     const day = days[selectedDay];
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            const oldIndex = day.stops.findIndex((s: any) => s.id === active.id);
+            const newIndex = day.stops.findIndex((s: any) => s.id === over.id);
+
+            const reordered = arrayMove(day.stops, oldIndex, newIndex);
+            onReorderStops?.(selectedDay, reordered);
+        }
+    };
 
     const dayLabel = (iso: string) => {
         // accept either full ISO (with time) or date-only (YYYY-MM-DD)
@@ -58,11 +92,27 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
                         <br />Add your first stop.
                     </div>
                 ) : (
-                    <div>
-                        {day.stops.map((stop) => (
-                            <StopItem key={stop.id} stop={stop} onEdit={() => onEditStop?.(stop.id)} onDelete={() => onDeleteStop?.(stop.id)} />
-                        ))}
-                    </div>
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext
+                            items={day.stops.map((s: any) => s.id)}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            <div>
+                                {day.stops.map((stop) => (
+                                    <StopItem 
+                                        key={stop.id} 
+                                        stop={stop} 
+                                        onEdit={() => onEditStop?.(stop.id)} 
+                                        onDelete={() => onDeleteStop?.(stop.id)} 
+                                    />
+                                ))}
+                            </div>
+                        </SortableContext>
+                    </DndContext>
                 )}
             </div>
         </div>
