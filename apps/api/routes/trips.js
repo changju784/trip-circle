@@ -1,12 +1,31 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import multer from 'multer';
 import Trip from '../schema/TripSchema.js';
 import User from '../schema/UserSchema.js';
 import dotenv from 'dotenv';
 import { Resend } from 'resend';
+import { uploadToBlob, deleteFromBlob } from '../utils/blobStorage.js';
 
 const router = express.Router();
 dotenv.config();
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images and PDFs
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, WebP, and PDF are allowed.'));
+    }
+  }
+});
 
 router.get('/', async (req, res) => {
   try {
@@ -436,6 +455,107 @@ router.get('/:id', async (req, res) => {
     res.json(trip);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/trips/:id/receipts - Upload receipt to trip
+router.post('/:id/receipts', upload.single('receipt'), async (req, res) => {
+  const tripId = String(req.params.id);
+
+  if (!mongoose.Types.ObjectId.isValid(tripId)) {
+    return res.status(400).json({ error: 'Invalid trip id' });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const filename = `receipts/${tripId}/${timestamp}-${req.file.originalname}`;
+
+    // Upload to Vercel Blob
+    const { url } = await uploadToBlob(
+      req.file.buffer,
+      filename,
+      req.file.mimetype
+    );
+
+    // Create receipt object
+    const receipt = {
+      id: `receipt-${timestamp}`,
+      name: req.file.originalname,
+      url,
+      contentType: req.file.mimetype,
+      size: req.file.size,
+      uploadedAt: new Date(),
+      dayDate: req.body.dayDate ? new Date(req.body.dayDate) : null
+    };
+
+    // Add receipt to trip
+    trip.receipts.push(receipt);
+    await trip.save();
+
+    // Return the full updated trip object
+    res.status(201).json(trip);
+  } catch (err) {
+    console.error('Receipt upload error:', err);
+    res.status(500).json({
+      error: 'Failed to upload receipt',
+      details: err.message
+    });
+  }
+});
+
+// DELETE /api/trips/:id/receipts/:receiptId - Delete receipt from trip
+router.delete('/:id/receipts/:receiptId', async (req, res) => {
+  const tripId = String(req.params.id);
+  const receiptId = String(req.params.receiptId);
+
+  if (!mongoose.Types.ObjectId.isValid(tripId)) {
+    return res.status(400).json({ error: 'Invalid trip id' });
+  }
+
+  try {
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    // Find the receipt
+    const receiptIndex = trip.receipts.findIndex(r => r.id === receiptId);
+    if (receiptIndex === -1) {
+      return res.status(404).json({ error: 'Receipt not found' });
+    }
+
+    const receipt = trip.receipts[receiptIndex];
+
+    // Delete from Vercel Blob
+    try {
+      await deleteFromBlob(receipt.url);
+    } catch (blobErr) {
+      console.error('Failed to delete from blob storage:', blobErr);
+      // Continue anyway to remove from database
+    }
+
+    // Remove receipt from trip
+    trip.receipts.splice(receiptIndex, 1);
+    await trip.save();
+
+    // Return the full updated trip object
+    res.json(trip);
+  } catch (err) {
+    console.error('Receipt deletion error:', err);
+    res.status(500).json({
+      error: 'Failed to delete receipt',
+      details: err.message
+    });
   }
 });
 
