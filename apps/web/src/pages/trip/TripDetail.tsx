@@ -91,6 +91,11 @@ export default function TripDetailPage() {
         setRefreshKey(prev => prev + 1);
     };
 
+    const handleReceiptsChange = (updatedTrip: any) => {
+        // Directly update trip state with the updated trip from backend
+        setTrip(updatedTrip);
+    };
+
     // ---------------- HANDLERS ----------------
     const handleAddStop = async (data: any, stopId?: string | null) => {
         if (!id || !trip) return;
@@ -279,7 +284,7 @@ export default function TripDetailPage() {
                     <Receipts
                         tripId={trip._id}
                         receipts={trip.receipts || []}
-                        onReceiptsChange={refresh}
+                        onReceiptsChange={handleReceiptsChange}
                     />
                 )}
 

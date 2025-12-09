@@ -15,7 +15,7 @@ interface ReceiptItem {
 interface ReceiptsProps {
     tripId: string;
     receipts: ReceiptItem[];
-    onReceiptsChange: () => void;
+    onReceiptsChange: (updatedTrip: any) => void;
 }
 
 export default function Receipts({ tripId, receipts, onReceiptsChange }: ReceiptsProps) {
@@ -66,8 +66,11 @@ export default function Receipts({ tripId, receipts, onReceiptsChange }: Receipt
                 throw new Error(errorData.error || "Failed to upload receipt");
             }
 
-            // Refresh receipts first
-            onReceiptsChange();
+            // Get the updated trip from response
+            const updatedTrip = await response.json();
+
+            // Update parent component with the new trip data
+            onReceiptsChange(updatedTrip);
 
             // Then clear selected day and reset input
             setSelectedDay(null);
@@ -81,7 +84,7 @@ export default function Receipts({ tripId, receipts, onReceiptsChange }: Receipt
     };
 
     const handleDelete = async (receiptId: string) => {
-        if (!confirm("Are you sure you want to delete this receipt?")) {
+        if (!window.confirm("Are you sure you want to delete this receipt?")) {
             return;
         }
 
@@ -101,8 +104,11 @@ export default function Receipts({ tripId, receipts, onReceiptsChange }: Receipt
                 throw new Error(errorData.error || "Failed to delete receipt");
             }
 
-            // Refresh receipts
-            onReceiptsChange();
+            // Get the updated trip from response
+            const updatedTrip = await response.json();
+
+            // Update parent component with the new trip data
+            onReceiptsChange(updatedTrip);
         } catch (err) {
             console.error("Delete error:", err);
             setError(err instanceof Error ? err.message : "Failed to delete receipt");

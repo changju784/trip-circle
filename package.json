@@ -19,6 +19,8 @@
     "@types/react-dom": "19.0.0"
   },
   "dependencies": {
-    "lucide-react": "^0.556.0"
+    "@vercel/blob": "^2.0.0",
+    "lucide-react": "^0.556.0",
+    "multer": "^2.0.2"
   }
 }
