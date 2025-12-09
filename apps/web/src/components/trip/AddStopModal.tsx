@@ -122,13 +122,6 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
         >
             <form onSubmit={handleSubmit(submit)} className="space-y-4">
 
-                {/* Smart Fill */}
-                <div className="p-3 bg-blue-50 rounded">
-                    <div className="font-medium">Smart Fill</div>
-                    <div className="text-sm text-muted-foreground">Upload a receipt, ticket, or booking confirmation to automatically extract details (mock)</div>
-                    <Button variant="primary" size="sm" className="mt-2">Upload Image / PDF</Button>
-                </div>
-
                 {/* Title */}
                 <div>
                     <label className="text-sm font-medium">Title *</label>

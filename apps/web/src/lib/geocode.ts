@@ -8,7 +8,8 @@ export async function geocodeLocation(query: string) {
         {
             headers: {
                 "User-Agent": "TripCircle Demo (your-email@example.com)"
-            }
+            },
+            referrerPolicy: "no-referrer"
         }
     );
 
@@ -32,7 +33,8 @@ export async function geocodeSearch(query: string) {
         {
             headers: {
                 "User-Agent": "TripCircle Demo (your-email@example.com)"
-            }
+            },
+            referrerPolicy: "no-referrer"
         }
     );
 

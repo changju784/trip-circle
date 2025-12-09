@@ -5,6 +5,7 @@ import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
 import AddStopModal from "@/components/trip/AddStopModal";
 import ShareTripModal from "@/components/trip/ShareTripModal";
+import Receipts from "@/components/trip/Receipts";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
 import { useTrips } from "@/lib/trips/use-trips";
 import { useTripsContext } from "@/contexts/TripsContext";
@@ -21,6 +22,7 @@ export default function TripDetailPage() {
     const { user } = useAuth();
 
     const [trip, setTrip] = useState<any | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
     const [selectedDay, setSelectedDay] = useState(0);
     const [openAdd, setOpenAdd] = useState(false);
     const [editingStop, setEditingStop] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export default function TripDetailPage() {
         }
         load();
         return () => { cancelled = true; };
-    }, [id, getTrip]);
+    }, [id, getTrip, refreshKey]);
 
     // ---------------- LOAD OWNER ----------------
     useEffect(() => {
@@ -84,10 +86,9 @@ export default function TripDetailPage() {
         return null;
     }, [editingStop, trip]);
 
-    const refresh = async () => {
-        if (!id) return;
-        const updated = await getTrip(id);
-        setTrip(updated);
+    const refresh = () => {
+        // Increment refreshKey to trigger useEffect reload
+        setRefreshKey(prev => prev + 1);
     };
 
     // ---------------- HANDLERS ----------------
@@ -115,7 +116,7 @@ export default function TripDetailPage() {
             });
         }
         await updateTrip(id, { days });
-        await refresh();
+        refresh();
         setEditingStop(null);
         setOpenAdd(false);
     };
@@ -272,6 +273,15 @@ export default function TripDetailPage() {
                         </TabsContent>
                     ))}
                 </Tabs>
+
+                {/* RECEIPTS SECTION */}
+                {isOwner && (
+                    <Receipts
+                        tripId={trip._id}
+                        receipts={trip.receipts || []}
+                        onReceiptsChange={refresh}
+                    />
+                )}
 
                 {/* MODALS */}
                 <AddStopModal
