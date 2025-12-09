@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import multer from 'multer';
 import Trip from '../schema/TripSchema.js';
 import User from '../schema/UserSchema.js';
+import Post from '../schema/PostSchema.js';
 import dotenv from 'dotenv';
 import { Resend } from 'resend';
 import { uploadToBlob, deleteFromBlob } from '../utils/blobStorage.js';
@@ -248,6 +249,25 @@ router.post('/', async (req, res) => {
       );
     }
 
+    // Create post if trip is public
+    if (isPublic && members?.length > 0) {
+      try {
+        const post = new Post({
+          tripId: trip._id,
+          userId: members[0], // First member is the owner
+          likes: [],
+          comments: [],
+          forkCount: 0,
+          likeCount: 0,
+          commentCount: 0
+        });
+        await post.save();
+      } catch (postErr) {
+        console.error('Failed to create post for public trip:', postErr);
+        // Don't fail the trip creation if post creation fails
+      }
+    }
+
     res.status(201).json(trip);
   } catch (err) {
     res.status(500).json({ error: 'Server error', details: err.message });
@@ -386,32 +406,38 @@ router.put('/:id', async (req, res) => {
       }
     }
 
-    // If startDate or endDate changed, regenerate days array
-    if (updates.startDate || updates.endDate) {
-      const newStart = new Date(updates.startDate || oldTrip.startDate);
-      const newEnd = new Date(updates.endDate || oldTrip.endDate);
+    // Handle post creation/deletion when isPublic changes
+    if (updates.isPublic !== undefined && updates.isPublic !== oldTrip.isPublic) {
+      const finalMembers = updates.members || oldTrip.members;
 
-      // generate list of dates between start and end
-      const days = [];
-      let d = new Date(newStart);
-
-      while (d <= newEnd) {
-        // if the day exists in oldTrip.days, keep its stops
-        const existing = oldTrip.days.find(day =>
-          new Date(day.date).toDateString() === d.toDateString()
-        );
-
-        days.push({
-          date: new Date(d),
-          stops: existing ? existing.stops : []
-        });
-
-        d.setDate(d.getDate());
+      if (updates.isPublic && finalMembers.length > 0) {
+        // Trip becoming public - create post if it doesn't exist
+        try {
+          const existingPost = await Post.findOne({ tripId: id });
+          if (!existingPost) {
+            const post = new Post({
+              tripId: id,
+              userId: finalMembers[0],
+              likes: [],
+              comments: [],
+              forkCount: 0,
+              likeCount: 0,
+              commentCount: 0
+            });
+            await post.save();
+          }
+        } catch (postErr) {
+          console.error('Failed to create post for public trip:', postErr);
+        }
+      } else if (!updates.isPublic) {
+        // Trip becoming private - delete post if it exists
+        try {
+          await Post.findOneAndDelete({ tripId: id });
+        } catch (postErr) {
+          console.error('Failed to delete post for private trip:', postErr);
+        }
       }
-
-      updates.days = days;
     }
-
 
     const trip = await Trip.findByIdAndUpdate(id, updates, { new: true, runValidators: true });
     res.json(trip);
@@ -420,6 +446,57 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+
+// POST /api/trips/backfill-posts - Create posts for all public trips that don't have one
+// This route must come before /:id to avoid route conflicts
+router.post('/backfill-posts', async (req, res) => {
+  try {
+    // Find all public trips with members
+    const publicTrips = await Trip.find({
+      isPublic: true,
+      members: { $exists: true, $ne: [] }
+    });
+
+    let created = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (const trip of publicTrips) {
+      try {
+        // Check if post already exists
+        const existingPost = await Post.findOne({ tripId: trip._id });
+        if (existingPost) {
+          skipped++;
+          continue;
+        }
+
+        // Create new post
+        const post = new Post({
+          tripId: trip._id,
+          userId: trip.members[0],
+          likes: [],
+          comments: [],
+          forkCount: 0,
+          likeCount: 0,
+          commentCount: 0
+        });
+        await post.save();
+        created++;
+      } catch (err) {
+        errors.push({ tripId: trip._id, error: err.message });
+      }
+    }
+
+    res.json({
+      message: 'Backfill completed',
+      created,
+      skipped,
+      errors: errors.length > 0 ? errors : undefined
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Backfill failed', details: err.message });
+  }
+});
 
 router.delete('/:id', async (req, res) => {
   const id = String(req.params.id);
