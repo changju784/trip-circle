@@ -288,7 +288,7 @@ Under base path (example): /trip-circle
 ## ✨ Frontend Features
 
 ### Auth & User Experience
-<img width="514" height="740" alt="image" src="https://github.com/user-attachments/assets/635fd8b1-d2d8-4378-b336-91357de087ca" />
+<img width="450" height="600" alt="image" src="https://github.com/user-attachments/assets/635fd8b1-d2d8-4378-b336-91357de087ca" />
 
 - Login / Signup with email + password and/or OAuth (Google, etc.)
 - AuthProvider wraps the app and exposes `useAuth` hook (user, loading, logOut, etc.).
@@ -303,8 +303,8 @@ Under base path (example): /trip-circle
   - Possibly explore section snippet with public trips
 
 ### My Trips & Explore
-<img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/075065b1-0c81-49e2-a486-f93cf9304f6c" />
-<img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/6fe15dc1-07ef-40e5-9f76-454cbcdec6c2" />
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/075065b1-0c81-49e2-a486-f93cf9304f6c" />
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/6fe15dc1-07ef-40e5-9f76-454cbcdec6c2" />
 
 
 - My Trips:
@@ -321,7 +321,7 @@ Under base path (example): /trip-circle
     - Date range
 
 ### Trip Detail Page
-<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/192849e8-fb61-4651-b19c-0818eb319baa" />
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/192849e8-fb61-4651-b19c-0818eb319baa" />
 
 - Shows:
   - Trip title, description, destinations.
@@ -335,8 +335,8 @@ Under base path (example): /trip-circle
     - Renders markers for stops that have lat/lng.
 
 ### Edit Trip / New Trip Page
-<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/bcb711dc-cb25-42d5-be77-71c0d039c8b1" />
-<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/790719dc-5683-4b4f-9384-d9da18fc6743" />
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/bcb711dc-cb25-42d5-be77-71c0d039c8b1" />
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/790719dc-5683-4b4f-9384-d9da18fc6743" />
 
 - Form-driven UI with:
   - Trip metadata:
