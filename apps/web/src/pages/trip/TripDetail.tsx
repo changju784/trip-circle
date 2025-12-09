@@ -130,13 +130,31 @@ export default function TripDetailPage() {
         refresh();
     };
 
+    const handleReorderStops = async (dayIndex: number, reorderedStops: any[]) => {
+        if (!id || !trip) return;
+        
+        // Update local state immediately
+        const updatedTrip = { ...trip };
+        updatedTrip.days = [...trip.days];
+        updatedTrip.days[dayIndex] = {
+            ...updatedTrip.days[dayIndex],
+            stops: reorderedStops
+        };
+        setTrip(updatedTrip);
+        
+        // Save to backend and update cache
+        updateTrip(id, { days: updatedTrip.days }).catch(err => {
+            console.error('Failed to save reorder:', err);
+        });
+    };
+
     const confirmDeleteTrip = async () => {
         await deleteTrip(trip._id);
         navigate("/trip-circle/dashboard");
     };
 
     // ---------------- LOADING / ERROR STATE ----------------
-    if (isLoading) {
+    if (isLoading && !trip) {
         return <div className="min-h-screen p-10 text-center text-muted-foreground">Loading trip...</div>;
     }
     if (error || !trip) {
@@ -268,6 +286,7 @@ export default function TripDetailPage() {
                                     setOpenAdd(true);
                                 }}
                                 onDeleteStop={handleDeleteStop}
+                                onReorderStops={handleReorderStops}
                             />
                         </TabsContent>
                     ))}
