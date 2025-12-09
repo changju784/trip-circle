@@ -1,5 +1,5 @@
 # TripCircle — Collaborative Travel Planner
-![alt text](image.png)
+<img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/e0a221c6-e981-4091-a6ad-5429d68facb8" />
 
 TripCircle is a full-stack travel-planning application that lets users:
 
