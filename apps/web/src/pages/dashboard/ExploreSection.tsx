@@ -5,10 +5,18 @@ import { Heart, MessageCircle, GitFork } from "lucide-react";
 
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import Select, { Option } from "../../components/ui/Select";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 import { getPosts, toggleLike, addComment, Post, searchPosts } from "@/lib/posts/posts-api";
 import { AuthContext } from "@/components/auth/AuthProvider";
 import { TripCard } from "@/components/trip/TripCard";
+
+const SORT_OPTIONS: Option[] = [
+    { id: "recent", label: "Most recent" },
+    { id: "likes", label: "Most liked" },
+    { id: "forks", label: "Most forked" },
+    { id: "name", label: "Name (A-Z)" },
+];
 
 export default function ExploreSection() {
     const navigate = useNavigate();
@@ -21,7 +29,9 @@ export default function ExploreSection() {
     const [, setError] = useState<string | null>(null);
     const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
     const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
-    const [sortOption, setSortOption] = useState<"recent" | "likes" | "forks" | "name">("recent");
+
+    // Manage sort option as a single Option object
+    const [sortOption, setSortOption] = useState<Option>(SORT_OPTIONS[0]);
 
     const debouncedSearch = useCallback(
         debounce((value: string) => { setDebouncedQuery(value); }, 300), []
@@ -84,11 +94,11 @@ export default function ExploreSection() {
 
     const filteredPosts = useMemo(() => {
         const sorted = [...posts];
-        switch (sortOption) {
+        switch (sortOption.id) {
             case "likes": sorted.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0)); break;
             case "forks": sorted.sort((a, b) => (b.forkCount || 0) - (a.forkCount || 0)); break;
             case "name": sorted.sort((a, b) => (a.tripId?.title || "").localeCompare(b.tripId?.title || "")); break;
-            default: break;
+            default: break; // recent
         }
         return sorted;
     }, [posts, sortOption]);
@@ -107,16 +117,20 @@ export default function ExploreSection() {
                         value={query}
                         onChange={handleQueryChange}
                     />
-                    <select
-                        value={sortOption}
-                        onChange={(e) => setSortOption(e.target.value as typeof sortOption)}
-                        className="h-10 rounded-md border border-input bg-white px-3 text-sm text-gray-700 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-                    >
-                        <option value="recent">Most recent</option>
-                        <option value="likes">Most liked</option>
-                        <option value="forks">Most forked</option>
-                        <option value="name">Name (A-Z)</option>
-                    </select>
+
+                    <div className="w-48">
+                        <Select
+                            value={sortOption}
+                            onChange={(val) => {
+                                if (val && !Array.isArray(val)) {
+                                    setSortOption(val as Option);
+                                }
+                            }}
+                            // Simple mock fetch that returns static options immediately
+                            fetchOptions={async () => SORT_OPTIONS}
+                            placeholder="Sort by..."
+                        />
+                    </div>
                 </div>
             </div>
 
