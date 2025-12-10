@@ -44,7 +44,6 @@ export default function EditTripPage() {
 
     const { errors } = formState;
 
-    // Load trip on mount
     useEffect(() => {
         if (!id) return;
 
@@ -59,7 +58,6 @@ export default function EditTripPage() {
                     setTrip(data);
                     setPreview(data.thumbnail ?? null);
 
-                    // Set form values
                     setValue("title", data.title);
                     setValue("description", data.description || "");
                     setValue("startDate", data.startDate.split("T")[0]);
@@ -120,9 +118,9 @@ export default function EditTripPage() {
 
     if (initialLoading) {
         return (
-            <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
+            <div className="min-h-screen">
                 <main className="max-w-screen-md mx-auto p-6">
-                    <div className="text-center">Loading trip...</div>
+                    <div className="text-center text-muted-foreground">Loading trip...</div>
                 </main>
             </div>
         );
@@ -130,9 +128,9 @@ export default function EditTripPage() {
 
     if (error && !trip) {
         return (
-            <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
+            <div className="min-h-screen">
                 <main className="max-w-screen-md mx-auto p-6">
-                    <div className="text-center text-red-600">
+                    <div className="text-center text-destructive">
                         Error: {error} — <a href="/trip-circle/dashboard" className="underline">Back</a>
                     </div>
                 </main>
@@ -141,7 +139,7 @@ export default function EditTripPage() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", background: "#eaf6ff" }}>
+        <div className="min-h-screen">
             <main className="max-w-screen-md mx-auto p-6">
                 <FormContainer title="Edit Trip" subtitle="Update your trip details">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -152,11 +150,11 @@ export default function EditTripPage() {
                         )}
 
                         <div>
-                            <div className="text-sm font-medium mb-1">Trip Title</div>
+                            <div className="text-sm font-medium mb-1 text-gray-700">Trip Title</div>
                             <input
                                 {...register("title", { required: "This field is required" })}
                                 placeholder="e.g., Summer in Europe"
-                                className={`w-full px-4 py-2 rounded-lg border ${errors.title ? "border-red-600" : ""}`}
+                                className={`w-full px-4 py-2 rounded-lg border bg-white text-gray-900 ${errors.title ? "border-red-600" : "border-gray-300"}`}
                             />
                             {errors.title && (
                                 <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>
@@ -164,7 +162,7 @@ export default function EditTripPage() {
                         </div>
 
                         <div>
-                            <div className="text-sm font-medium mb-1">Destinations</div>
+                            <div className="text-sm font-medium mb-1 text-gray-700">Destinations</div>
                             <Controller
                                 control={control}
                                 name="destinations"
@@ -190,19 +188,18 @@ export default function EditTripPage() {
                         </div>
 
                         <div>
-                            <div className="text-sm font-medium mb-1">Description (Optional)</div>
+                            <div className="text-sm font-medium mb-1 text-gray-700">Description (Optional)</div>
                             <textarea
                                 {...register("description")}
-                                className="w-full rounded-lg p-3 border"
+                                className="w-full rounded-lg p-3 border border-gray-300 bg-white text-gray-900"
                                 placeholder="Tell others about your trip..."
                             ></textarea>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
                             {/* START DATE */}
                             <div>
-                                <div className="text-sm font-medium mb-1">Start Date</div>
+                                <div className="text-sm font-medium mb-1 text-gray-700">Start Date</div>
                                 <Controller
                                     control={control}
                                     name="startDate"
@@ -210,7 +207,6 @@ export default function EditTripPage() {
                                         required: "Start date is required",
                                         validate: (value) => {
                                             const end = watch("endDate");
-                                            // Compare dates safely by converting strings to Date objects
                                             if (end && new Date(value) > new Date(end)) {
                                                 return "Start cannot be after end date";
                                             }
@@ -219,9 +215,7 @@ export default function EditTripPage() {
                                     }}
                                     render={({ field }) => (
                                         <DatePicker
-                                            // 1. Convert form string -> Date object for the UI
                                             value={field.value ? new Date(field.value) : undefined}
-                                            // 2. Pass the Date object directly to form state (or .toISOString() if you prefer strings)
                                             onChange={field.onChange}
                                             placeholder="Select start date"
                                         />
@@ -234,7 +228,7 @@ export default function EditTripPage() {
 
                             {/* END DATE */}
                             <div>
-                                <div className="text-sm font-medium mb-1">End Date</div>
+                                <div className="text-sm font-medium mb-1 text-gray-700">End Date</div>
                                 <Controller
                                     control={control}
                                     name="endDate"
@@ -250,11 +244,9 @@ export default function EditTripPage() {
                                     }}
                                     render={({ field }) => (
                                         <DatePicker
-                                            // 1. Convert form string -> Date object
                                             value={field.value ? new Date(field.value) : undefined}
                                             onChange={field.onChange}
                                             placeholder="Select end date"
-                                            // 2. Prevent picking a date before the Start Date in the UI
                                             minDate={watch("startDate") ? new Date(watch("startDate")) : undefined}
                                         />
                                     )}
@@ -263,9 +255,7 @@ export default function EditTripPage() {
                                     <div className="text-red-600 text-xs mt-1">{errors.endDate.message}</div>
                                 )}
                             </div>
-
                         </div>
-
 
                         <Upload
                             label="Upload Trip Thumbnail (Optional)"
@@ -278,18 +268,18 @@ export default function EditTripPage() {
 
                         {preview && (
                             <div className="mt-3">
-                                <div className="text-sm font-medium mb-1">Preview</div>
+                                <div className="text-sm font-medium mb-1 text-gray-700">Preview</div>
                                 <img
                                     src={preview}
                                     alt="thumbnail preview"
-                                    className="w-40 h-28 object-cover rounded-lg border shadow"
+                                    className="w-40 h-28 object-cover rounded-lg border border-gray-300 shadow"
                                 />
                             </div>
                         )}
 
-                        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
+                        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
                             <div className="flex flex-col">
-                                <div className="flex items-center gap-2 font-medium text-gray-800">
+                                <div className="flex items-center gap-2 font-medium text-gray-900">
                                     <span className="text-lg">{watch("isPublic") ? "🌍" : "🔒"}</span>
                                     {watch("isPublic") ? "Public Trip" : "Private Trip"}
                                 </div>
