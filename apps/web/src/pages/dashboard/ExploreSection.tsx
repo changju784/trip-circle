@@ -57,7 +57,7 @@ export default function ExploreSection() {
     const [debouncedQuery, setDebouncedQuery] = useState("");
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [, setError] = useState<string | null>(null);
     const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
     const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
     const [sortOption, setSortOption] = useState<"recent" | "likes" | "forks" | "name">("recent");

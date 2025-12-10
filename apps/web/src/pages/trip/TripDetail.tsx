@@ -20,7 +20,7 @@ import { addComment, getPostByTrip, toggleLike, type Post } from "@/lib/posts/po
 export default function TripDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getTrip, updateTrip, shareTrip, isLoading } = useTrips();
+    const { getTrip, updateTrip, shareTrip } = useTrips();
     const { deleteTrip, forkTrip } = useTripsContext();
     const { user } = useAuth();
 
@@ -136,7 +136,7 @@ export default function TripDetailPage() {
 
         loadPost();
         return () => { cancelled = true; };
-    }, [trip?._id, trip?.isPublic, refreshKey]);
+    }, [trip?._id, trip?.isPublic, refreshKey, trip]);
 
     // ---------------- COMMENTS & LIKES ----------------
     const handleLikeToggle = async () => {
@@ -207,7 +207,7 @@ export default function TripDetailPage() {
 
     const handleReorderStops = async (dayIndex: number, reorderedStops: any[]) => {
         if (!id || !trip) return;
-        
+
         // Update local state immediately
         const updatedTrip = { ...trip };
         updatedTrip.days = [...trip.days];
@@ -216,7 +216,7 @@ export default function TripDetailPage() {
             stops: reorderedStops
         };
         setTrip(updatedTrip);
-        
+
         // Save to backend and update cache
         updateTrip(id, { days: updatedTrip.days }).catch(err => {
             console.error('Failed to save reorder:', err);
@@ -240,7 +240,6 @@ export default function TripDetailPage() {
         );
     }
 
-    const destinationLabels = trip.destinations?.map((d: any) => d.label).slice(0, 3).join(", ") || "Unknown";
     const hasMoreDestinations = trip.destinations && trip.destinations.length > 3;
 
     return (
