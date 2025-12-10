@@ -36,30 +36,29 @@ export function DatePicker({
                     disabled={disabled}
                     variant={"outline"}
                     className={cn(
-                        "w-full justify-start text-left font-normal bg-white",
+                        "w-full justify-start text-left font-normal bg-white text-gray-900 border-gray-300",
                         "flex-nowrap overflow-hidden whitespace-nowrap",
                         "text-ellipsis",
                         "pr-8",
-                        !value && "text-muted-foreground"
+                        !value && "text-gray-500"
                     )}
-
                 >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
                     {value ? format(value, "PPP") : <span>{placeholder}</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 bg-white border-gray-200" align="start">
                 <Calendar
                     mode="single"
                     selected={value}
                     onSelect={onChange}
                     disabled={(date) => {
-                        // Optional: Disable dates based on min/max logic
                         if (minDate && date < minDate) return true;
                         if (maxDate && date > maxDate) return true;
                         return false;
                     }}
                     initialFocus
+                    className="bg-white text-gray-900 rounded-md border"
                 />
             </PopoverContent>
         </Popover>

@@ -144,7 +144,7 @@ export default function Receipts({ tripId, receipts, onReceiptsChange }: Receipt
         <div className="bg-white border rounded-lg p-6 mt-6">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-lg font-semibold">Receipts & Documents</h3>
+                    <h3 className="text-lg text-black font-semibold">Receipts & Documents</h3>
                     <p className="text-sm text-gray-600 mt-1">
                         Upload receipts, tickets, and booking confirmations
                     </p>

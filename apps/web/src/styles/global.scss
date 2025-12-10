@@ -9,7 +9,7 @@
 :root {
     --font-size: 16px;
 
-    /* Base Colors */
+    /* Base Colors - Light Mode */
     --background: #cae5e9;
     --foreground: oklch(0.145 0 0);
 
@@ -41,7 +41,6 @@
 
     /* Typography */
     --font-weight-medium: 600;
-    /* Bumped slightly for Nunito */
     --font-weight-normal: 400;
 
     --ring: oklch(0.708 0 0);
@@ -66,6 +65,7 @@
 }
 
 .dark {
+    /* Base Colors - Dark Mode */
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
 
@@ -94,12 +94,14 @@
     --input: oklch(0.269 0 0);
     --ring: oklch(0.439 0 0);
 
+    /* Charts */
     --chart-1: oklch(0.488 0.243 264.376);
     --chart-2: oklch(0.696 0.17 162.48);
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
 
+    /* Sidebar */
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -165,11 +167,22 @@
         @apply text-foreground;
         font-family: 'Nunito', sans-serif;
 
-        background-color: #cae5e9;
+        /* DYNAMIC BACKGROUND COLOR */
+        background-color: var(--background);
+
+        /* DEFAULT (LIGHT) WALLPAPER */
         background-image: url("/assets/airplane-trails.svg");
         background-repeat: repeat;
         background-size: 120px 120px;
         background-attachment: fixed;
+
+        /* Smooth transition when toggling */
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* DARK MODE WALLPAPER OVERRIDE */
+    :root.dark body {
+        background-image: url("/assets/airplane-trails-dark.svg");
     }
 
     :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {

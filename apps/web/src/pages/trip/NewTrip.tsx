@@ -88,12 +88,11 @@ export default function NewTripPage() {
                         )}
 
                         <div>
-                            <div className="text-sm font-medium mb-1">Trip Title</div>
+                            <div className="text-sm font-medium mb-1 text-gray-700">Trip Title</div>
                             <input
                                 {...register("title", { required: "This field is required" })}
                                 placeholder="e.g., Summer in Europe"
-                                className={`w-full px-4 py-2 rounded-lg border ${errors.title ? "border-red-600" : ""
-                                    }`}
+                                className={`w-full px-4 py-2 rounded-lg border bg-white text-gray-900 ${errors.title ? "border-red-600" : "border-gray-300"}`}
                             />
                             {errors.title && (
                                 <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>
@@ -101,7 +100,7 @@ export default function NewTripPage() {
                         </div>
 
                         <div>
-                            <div className="text-sm font-medium mb-1">Destinations</div>
+                            <div className="text-sm font-medium mb-1 text-gray-700">Destinations</div>
                             <Controller
                                 control={control}
                                 name="destinations"
@@ -125,38 +124,25 @@ export default function NewTripPage() {
                         </div>
 
                         <div>
-                            <div className="text-sm font-medium mb-1">Description (Optional)</div>
+                            <div className="text-sm font-medium mb-1 text-gray-700">Description (Optional)</div>
                             <textarea
                                 {...register("description")}
-                                className="w-full rounded-lg p-3 border"
+                                className="w-full rounded-lg p-3 border border-gray-300 bg-white text-gray-900"
                                 placeholder="Tell others about your trip..."
                             ></textarea>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
                             {/* START DATE */}
                             <div>
-                                <div className="text-sm font-medium mb-1">Start Date</div>
+                                <div className="text-sm font-medium mb-1 text-gray-700">Start Date</div>
                                 <Controller
                                     control={control}
                                     name="startDate"
-                                    rules={{
-                                        required: "Start date is required",
-                                        validate: (value) => {
-                                            const end = watch("endDate");
-                                            // Compare dates safely by converting strings to Date objects
-                                            if (end && new Date(value) > new Date(end)) {
-                                                return "Start cannot be after end date";
-                                            }
-                                            return true;
-                                        }
-                                    }}
+                                    rules={{ required: "Start date is required" }}
                                     render={({ field }) => (
                                         <DatePicker
-                                            // 1. Convert form string -> Date object for the UI
                                             value={field.value ? new Date(field.value) : undefined}
-                                            // 2. Pass the Date object directly to form state (or .toISOString() if you prefer strings)
                                             onChange={field.onChange}
                                             placeholder="Select start date"
                                         />
@@ -169,27 +155,16 @@ export default function NewTripPage() {
 
                             {/* END DATE */}
                             <div>
-                                <div className="text-sm font-medium mb-1">End Date</div>
+                                <div className="text-sm font-medium mb-1 text-gray-700">End Date</div>
                                 <Controller
                                     control={control}
                                     name="endDate"
-                                    rules={{
-                                        required: "End date is required",
-                                        validate: (value) => {
-                                            const start = watch("startDate");
-                                            if (start && new Date(value) < new Date(start)) {
-                                                return "End cannot be before start date";
-                                            }
-                                            return true;
-                                        }
-                                    }}
+                                    rules={{ required: "End date is required" }}
                                     render={({ field }) => (
                                         <DatePicker
-                                            // 1. Convert form string -> Date object
                                             value={field.value ? new Date(field.value) : undefined}
                                             onChange={field.onChange}
                                             placeholder="Select end date"
-                                            // 2. Prevent picking a date before the Start Date in the UI
                                             minDate={watch("startDate") ? new Date(watch("startDate")) : undefined}
                                         />
                                     )}
@@ -198,9 +173,7 @@ export default function NewTripPage() {
                                     <div className="text-red-600 text-xs mt-1">{errors.endDate.message}</div>
                                 )}
                             </div>
-
                         </div>
-
 
                         <Upload
                             label="Upload Trip Thumbnail (Optional)"
@@ -211,21 +184,20 @@ export default function NewTripPage() {
                             }}
                         />
 
-
                         {preview && (
                             <div className="mt-3">
-                                <div className="text-sm font-medium mb-1">Preview</div>
+                                <div className="text-sm font-medium mb-1 text-gray-700">Preview</div>
                                 <img
                                     src={preview}
                                     alt="trip thumbnail preview"
-                                    className="w-40 h-28 object-cover rounded-lg border shadow"
+                                    className="w-40 h-28 object-cover rounded-lg border border-gray-300 shadow"
                                 />
                             </div>
                         )}
 
-                        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl">
+                        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-100">
                             <div className="flex flex-col">
-                                <div className="flex items-center gap-2 font-medium text-gray-800">
+                                <div className="flex items-center gap-2 font-medium text-gray-900">
                                     <span className="text-lg">{watch("isPublic") ? "🌍" : "🔒"}</span>
                                     {watch("isPublic") ? "Public Trip" : "Private Trip"}
                                 </div>

@@ -64,12 +64,12 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
         <div className="space-y-4">
             {/* Map Preview for this day's stops */}
             <div className="bg-white rounded-lg shadow-sm p-3">
-                <h3 className="font-medium mb-2">🗺️ Route Preview</h3>
+                <h3 className="text-black font-medium mb-2">🗺️ Route Preview</h3>
                 <MapPreview stops={day.stops} height={350} />
             </div>
 
             {/* Day header and stops */}
-            <div className="bg-white rounded-lg p-6">
+            <div className="bg-white text-black rounded-lg p-6">
                 <div className="flex items-start justify-between mb-4">
                     <div>
                         <div className="text-sm font-medium">Day {selectedDay + 1}</div>
@@ -103,11 +103,11 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
                         >
                             <div>
                                 {day.stops.map((stop) => (
-                                    <StopItem 
-                                        key={stop.id} 
-                                        stop={stop} 
-                                        onEdit={() => onEditStop?.(stop.id)} 
-                                        onDelete={() => onDeleteStop?.(stop.id)} 
+                                    <StopItem
+                                        key={stop.id}
+                                        stop={stop}
+                                        onEdit={() => onEditStop?.(stop.id)}
+                                        onDelete={() => onDeleteStop?.(stop.id)}
                                     />
                                 ))}
                             </div>
