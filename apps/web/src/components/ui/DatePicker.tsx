@@ -37,8 +37,12 @@ export function DatePicker({
                     variant={"outline"}
                     className={cn(
                         "w-full justify-start text-left font-normal bg-white",
+                        "flex-nowrap overflow-hidden whitespace-nowrap",
+                        "text-ellipsis",
+                        "pr-8",
                         !value && "text-muted-foreground"
                     )}
+
                 >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {value ? format(value, "PPP") : <span>{placeholder}</span>}
