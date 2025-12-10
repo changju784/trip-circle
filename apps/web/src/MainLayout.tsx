@@ -8,7 +8,7 @@ export default function MainLayout() {
             <Navbar />
 
             {/* Outlet renders the child route (Dashboard, Profile, etc.) */}
-            <main className="flex-1 w-full max-w-screen-xl mx-auto px-6 py-8">
+            <main className="flex-1 w-full max-w-screen-xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
                 <Outlet />
             </main>
 

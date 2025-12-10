@@ -2,22 +2,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "./Input";
 
 interface UploadProps {
-    /**
-     * The text displayed above the input.
-     * @default "Upload File"
-     */
     label?: string;
-
-    /**
-     * Accepted file types (e.g., "image/*", ".pdf", "audio/*").
-     * @default "image/*"
-     */
     accept?: string;
-
-    /**
-     * Callback fired when a file is processed.
-     * Returns the base64 string of the file or null on error.
-     */
     onFileSelect: (base64Data: string | null, fileName: string) => void;
 }
 
@@ -43,12 +29,15 @@ export function Upload({
 
     return (
         <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="upload-file">{label}</Label>
+            <Label htmlFor="upload-file" className="text-gray-700">
+                {label}
+            </Label>
+
             <Input
                 id="upload-file"
                 type="file"
                 accept={accept}
-                className="cursor-pointer bg-white"
+                className="cursor-pointer bg-white text-gray-900 border-gray-300 file:text-gray-700 file:bg-gray-100 file:mr-4 file:px-2 file:rounded-sm"
                 onChange={handleFileChange}
             />
         </div>

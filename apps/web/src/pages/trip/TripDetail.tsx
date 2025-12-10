@@ -20,7 +20,7 @@ import { addComment, getPostByTrip, toggleLike, type Post } from "@/lib/posts/po
 export default function TripDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getTrip, updateTrip, shareTrip, isLoading } = useTrips();
+    const { getTrip, updateTrip, shareTrip } = useTrips();
     const { deleteTrip, forkTrip } = useTripsContext();
     const { user } = useAuth();
 
@@ -99,12 +99,10 @@ export default function TripDetailPage() {
     }, [editingStop, trip]);
 
     const refresh = () => {
-        // Increment refreshKey to trigger useEffect reload
         setRefreshKey(prev => prev + 1);
     };
 
     const handleReceiptsChange = (updatedTrip: any) => {
-        // Directly update trip state with the updated trip from backend
         setTrip(updatedTrip);
     };
 
@@ -136,7 +134,7 @@ export default function TripDetailPage() {
 
         loadPost();
         return () => { cancelled = true; };
-    }, [trip?._id, trip?.isPublic, refreshKey]);
+    }, [trip?._id, trip?.isPublic, refreshKey, trip]);
 
     // ---------------- COMMENTS & LIKES ----------------
     const handleLikeToggle = async () => {
@@ -207,8 +205,6 @@ export default function TripDetailPage() {
 
     const handleReorderStops = async (dayIndex: number, reorderedStops: any[]) => {
         if (!id || !trip) return;
-        
-        // Update local state immediately
         const updatedTrip = { ...trip };
         updatedTrip.days = [...trip.days];
         updatedTrip.days[dayIndex] = {
@@ -216,8 +212,6 @@ export default function TripDetailPage() {
             stops: reorderedStops
         };
         setTrip(updatedTrip);
-        
-        // Save to backend and update cache
         updateTrip(id, { days: updatedTrip.days }).catch(err => {
             console.error('Failed to save reorder:', err);
         });
@@ -228,44 +222,36 @@ export default function TripDetailPage() {
         navigate("/trip-circle/dashboard");
     };
 
-    // ---------------- LOADING / ERROR STATE ----------------
     if (loadingTrip) {
         return <div className="min-h-screen p-10 text-center text-muted-foreground">Loading trip...</div>;
     }
     if (error || !trip) {
         return (
-            <div className="min-h-screen p-10 text-center text-red-600">
-                {error ? `Error: ${error}` : "Trip not found"} — <Link to="/trip-circle/dashboard" className="underline">Back</Link>
+            <div className="min-h-screen p-10 text-center text-destructive">
+                {error ? `Error: ${error}` : "Trip not found"} — <Link to="/trip-circle/dashboard" className="underline text-foreground">Back</Link>
             </div>
         );
     }
 
-    const destinationLabels = trip.destinations?.map((d: any) => d.label).slice(0, 3).join(", ") || "Unknown";
     const hasMoreDestinations = trip.destinations && trip.destinations.length > 3;
 
     return (
         <div className="min-h-screen pb-20">
-
-            {/* 🟢 TOP SECTION: BACK BUTTON (Aligned with Navbar) */}
             <div className="max-w-screen-xl mx-auto px-6 pt-6">
                 <BackToDashboardButton />
             </div>
 
-            {/* 🟢 MAIN CONTENT */}
             <main className="max-w-screen-xl mx-auto px-6 mt-4">
-
-                {/* HEADER */}
                 <header className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">{trip.title}</h1>
+                        <h1 className="text-3xl font-bold text-foreground">{trip.title}</h1>
 
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-2">
-                            {/* Destinations */}
                             <div className="flex flex-col gap-1">
                                 {trip.destinations?.slice(0, 3).map((d: any) => (
                                     <div key={d.id} className="flex items-center gap-1">
                                         <span>📍</span>
-                                        <span className="text-slate-700">{d.label}</span>
+                                        <span className="text-foreground">{d.label}</span>
                                     </div>
                                 ))}
                                 {hasMoreDestinations && (
@@ -273,18 +259,15 @@ export default function TripDetailPage() {
                                 )}
                             </div>
 
-                            {/* Separator */}
-                            <div className="hidden md:block w-px h-8 bg-slate-300 mx-2"></div>
+                            <div className="hidden md:block w-px h-8 bg-border mx-2"></div>
 
-                            {/* Date */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 text-muted-foreground">
                                 📅 {new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}
                             </div>
 
-                            {/* Badge */}
                             <div className={`px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1 ${trip.isPublic
-                                ? "bg-green-50 text-green-700 border-green-200"
-                                : "bg-amber-50 text-amber-700 border-amber-200"
+                                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
+                                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
                                 }`}>
                                 <span>{trip.isPublic ? "🌍" : "🔒"}</span>
                                 {trip.isPublic ? "Public" : "Private"}
@@ -292,29 +275,24 @@ export default function TripDetailPage() {
                         </div>
 
                         {trip.description && (
-                            <p className="text-sm text-slate-600 mt-3 max-w-2xl leading-relaxed">
+                            <p className="text-sm text-muted-foreground mt-3 max-w-2xl leading-relaxed">
                                 {trip.description}
                             </p>
                         )}
 
                         <p className="text-sm text-muted-foreground mt-2">
-                            Owned by <span className="font-medium text-slate-900">{ownerName || "Unknown"}</span>
+                            Owned by <span className="font-medium text-foreground">{ownerName || "Unknown"}</span>
                         </p>
                     </div>
 
-                    {/* ACTION BUTTONS */}
                     <div className="flex items-center gap-2">
                         {isOwner ? (
                             <>
-                                <Button variant="secondary" onClick={() => setShareOpen(true)}>
-                                    Share
-                                </Button>
+                                <Button variant="secondary" onClick={() => setShareOpen(true)}>Share</Button>
                                 <Link to={`/trip-circle/trip/${trip._id}/edit`}>
                                     <Button variant="outline">Edit Trip</Button>
                                 </Link>
-                                <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>
-                                    Delete
-                                </Button>
+                                <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>Delete</Button>
                             </>
                         ) : (
                             trip.isPublic && user && (
@@ -337,7 +315,6 @@ export default function TripDetailPage() {
                     </div>
                 </header>
 
-                {/* TABS & STOPS */}
                 <Tabs
                     value={`day-${selectedDay}`}
                     onValueChange={(v) => setSelectedDay(Number(v.replace("day-", "")))}
@@ -367,7 +344,6 @@ export default function TripDetailPage() {
                     ))}
                 </Tabs>
 
-                {/* RECEIPTS SECTION */}
                 {isOwner && (
                     <Receipts
                         tripId={trip._id}
@@ -376,16 +352,15 @@ export default function TripDetailPage() {
                     />
                 )}
 
-                {/* DISCUSSION / COMMENTS */}
                 <section className="max-w-4xl mx-auto mt-10 w-full">
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                            <MessageCircle className="w-5 h-5 text-slate-700" />
+                        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                            <MessageCircle className="w-5 h-5 text-muted-foreground" />
                             Discussion
                         </h2>
                         {post && (
                             <button
-                                className="flex items-center gap-2 text-sm text-slate-700 hover:text-red-600 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
                                 onClick={handleLikeToggle}
                                 disabled={!user}
                             >
@@ -393,7 +368,7 @@ export default function TripDetailPage() {
                                     className={`w-4 h-4 ${post.likes.includes(user?.id || "") ? "fill-red-600 text-red-600" : ""}`}
                                 />
                                 <span>{post.likeCount}</span>
-                                <span className="text-xs text-slate-500">Like</span>
+                                <span className="text-xs text-muted-foreground">Like</span>
                             </button>
                         )}
                     </div>
@@ -407,34 +382,24 @@ export default function TripDetailPage() {
 
                         {trip.isPublic && (
                             <>
-                                {loadingPost && (
-                                    <p className="text-sm text-muted-foreground">Loading comments...</p>
-                                )}
-
-                                {postError && !loadingPost && (
-                                    <p className="text-sm text-red-600">{postError}</p>
-                                )}
+                                {loadingPost && <p className="text-sm text-muted-foreground">Loading comments...</p>}
+                                {postError && !loadingPost && <p className="text-sm text-destructive">{postError}</p>}
 
                                 {post && (
                                     <div className="space-y-4">
                                         <div className="max-h-80 overflow-y-auto pr-2 space-y-3">
                                             {post.comments.length === 0 ? (
-                                                <p className="text-sm text-muted-foreground">
-                                                    No comments yet. Be the first to share your thoughts.
-                                                </p>
+                                                <p className="text-sm text-muted-foreground">No comments yet. Be the first to share your thoughts.</p>
                                             ) : (
                                                 post.comments.map((comment) => (
-                                                    <div
-                                                        key={comment._id}
-                                                        className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
-                                                    >
-                                                        <div className="text-xs font-semibold text-slate-700">
+                                                    <div key={comment._id} className="rounded-lg border border-border bg-muted/50 px-3 py-2">
+                                                        <div className="text-xs font-semibold text-foreground">
                                                             {comment.userId?.username || "Traveler"}
-                                                            <span className="ml-2 text-[11px] text-slate-500">
+                                                            <span className="ml-2 text-[11px] text-muted-foreground">
                                                                 {new Date(comment.dateCreated).toLocaleString()}
                                                             </span>
                                                         </div>
-                                                        <p className="text-sm text-slate-800 mt-1 whitespace-pre-wrap">
+                                                        <p className="text-sm text-foreground mt-1 whitespace-pre-wrap">
                                                             {comment.commentText}
                                                         </p>
                                                     </div>
@@ -442,13 +407,11 @@ export default function TripDetailPage() {
                                             )}
                                         </div>
 
-                                        <div className="border-t border-slate-100 pt-4 space-y-2">
-                                            <label className="text-sm font-medium text-slate-800" htmlFor="comment-box">
-                                                Add a comment
-                                            </label>
+                                        <div className="border-t border-border pt-4 space-y-2">
+                                            <label className="text-sm font-medium text-foreground" htmlFor="comment-box">Add a comment</label>
                                             <textarea
                                                 id="comment-box"
-                                                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                                                 rows={3}
                                                 placeholder={user ? "Share feedback, tips, or questions about this trip..." : "Log in to comment"}
                                                 value={commentText}
@@ -462,22 +425,12 @@ export default function TripDetailPage() {
                                                 disabled={!user || commentSubmitting}
                                             />
                                             <div className="flex justify-between items-center">
-                                                <p className="text-xs text-muted-foreground">
-                                                    Tip: Press Cmd/Ctrl + Enter to post.
-                                                </p>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={handleAddComment}
-                                                    disabled={!user || commentSubmitting || !commentText.trim().length}
-                                                >
+                                                <p className="text-xs text-muted-foreground">Tip: Press Cmd/Ctrl + Enter to post.</p>
+                                                <Button size="sm" onClick={handleAddComment} disabled={!user || commentSubmitting || !commentText.trim().length}>
                                                     {commentSubmitting ? "Posting..." : "Post comment"}
                                                 </Button>
                                             </div>
-                                            {!user && (
-                                                <p className="text-xs text-amber-600">
-                                                    Please log in to participate in the discussion.
-                                                </p>
-                                            )}
+                                            {!user && <p className="text-xs text-amber-600">Please log in to participate in the discussion.</p>}
                                         </div>
                                     </div>
                                 )}
@@ -486,47 +439,17 @@ export default function TripDetailPage() {
                     </Card>
                 </section>
 
-                {/* MODALS */}
-                <AddStopModal
-                    open={openAdd}
-                    onClose={() => {
-                        setOpenAdd(false);
-                        setEditingStop(null);
-                    }}
-                    onSubmit={handleAddStop}
-                    initialStop={initialStop}
-                />
-
-                <ShareTripModal
-                    open={shareOpen}
-                    onClose={() => setShareOpen(false)}
-                    onShare={async (email: string) => {
-                        await shareTrip(trip._id, email);
-                        setShareOpen(false);
-                        refresh();
-                    }}
-                />
-
-                <Modal
-                    title="Delete Trip?"
-                    isOpen={openDeleteModal}
-                    onClose={() => setOpenDeleteModal(false)}
-                >
+                <AddStopModal open={openAdd} onClose={() => { setOpenAdd(false); setEditingStop(null); }} onSubmit={handleAddStop} initialStop={initialStop} />
+                <ShareTripModal open={shareOpen} onClose={() => setShareOpen(false)} onShare={async (email: string) => { await shareTrip(trip._id, email); setShareOpen(false); refresh(); }} />
+                <Modal title="Delete Trip?" isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
                     <div className="space-y-4">
-                        <p className="text-sm text-gray-600">
-                            This action cannot be undone. Are you sure you want to delete this trip?
-                        </p>
+                        <p className="text-sm text-muted-foreground">This action cannot be undone. Are you sure you want to delete this trip?</p>
                         <div className="flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
-                                Cancel
-                            </Button>
-                            <Button variant="destructive" onClick={confirmDeleteTrip}>
-                                Delete
-                            </Button>
+                            <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>Cancel</Button>
+                            <Button variant="destructive" onClick={confirmDeleteTrip}>Delete</Button>
                         </div>
                     </div>
                 </Modal>
-
             </main>
         </div>
     );
