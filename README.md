@@ -22,6 +22,7 @@ Built with:
 
 - Live demo link: https://trip-circle-web.vercel.app
 - Prototype: https://www.figma.com/make/Pmpb5O72zFjbVOmr0zHHpd/Collaborative-Travel-Planner?node-id=0-1&p=f&t=vg61q3YmHQyS0ZzC-0&fullscreen=1
+- Demo video link: https://youtu.be/gnb8saeWT7k?si=aRVRfJqwtg0zwLng
 
 ## 📁 Project Structure
 High-level layout:
