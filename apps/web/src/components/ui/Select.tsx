@@ -48,7 +48,6 @@ const TAG_COLORS = [
     "bg-rose-200 text-rose-800 hover:bg-rose-300",
 ];
 
-// 2. Helper to get color by index
 function getColor(index: number) {
     return TAG_COLORS[index % TAG_COLORS.length];
 }
@@ -120,17 +119,16 @@ export default function Select({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between h-auto min-h-[40px] px-3 py-2 bg-white"
+                    className="w-full justify-between h-auto min-h-[40px] px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 hover:text-gray-900"
                 >
-                    {/* DISPLAY AREA */}
                     <div className="flex flex-wrap gap-1 items-center text-left">
                         {selected.length > 0 ? (
                             multiple ? (
-                                selected.map((v, index) => ( // Using Index for Color
+                                selected.map((v, index) => (
                                     <Badge
                                         key={v.id}
                                         variant="secondary"
-                                        className={cn("pr-1 font-normal", getColor(index))} // Cycle colors by index
+                                        className={cn("pr-1 font-normal", getColor(index))}
                                     >
                                         {v.label}
                                         <div
@@ -143,30 +141,32 @@ export default function Select({
                                     </Badge>
                                 ))
                             ) : (
-                                <span className="font-normal">{selected[0].label}</span>
+                                // Single Value Display
+                                <span className="font-normal text-gray-900">{selected[0].label}</span>
                             )
                         ) : (
-                            <span className="text-muted-foreground font-normal">{placeholder}</span>
+                            // Placeholder
+                            <span className="text-gray-500 font-normal">{placeholder}</span>
                         )}
                     </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 text-gray-500" />
                 </Button>
             </PopoverTrigger>
 
-            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                <Command shouldFilter={false}>
-                    {/* SEARCH INPUT */}
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white border-gray-300" align="start">
+                <Command className="bg-white">
                     <CommandInput
                         placeholder="Search..."
-                        value={query}
                         onValueChange={setQuery}
+                        value={query}
+                        className="text-gray-900 placeholder:text-gray-500"
                     />
 
                     <CommandList>
-                        {loading && <div className="p-2 text-sm text-muted-foreground text-center">Loading...</div>}
+                        {loading && <div className="p-2 text-sm text-gray-500 text-center">Loading...</div>}
 
                         {!loading && options.length === 0 && (
-                            <CommandEmpty>No results found.</CommandEmpty>
+                            <CommandEmpty className="py-6 text-center text-sm text-gray-500">No results found.</CommandEmpty>
                         )}
 
                         <CommandGroup>
@@ -177,10 +177,11 @@ export default function Select({
                                         key={option.id}
                                         value={option.label}
                                         onSelect={() => handleSelect(option)}
+                                        className="text-gray-900 aria-selected:bg-gray-100 aria-selected:text-gray-900 cursor-pointer"
                                     >
                                         <Check
                                             className={cn(
-                                                "mr-2 h-4 w-4",
+                                                "mr-2 h-4 w-4 text-gray-900",
                                                 isSelected ? "opacity-100" : "opacity-0"
                                             )}
                                         />
