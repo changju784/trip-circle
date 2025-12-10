@@ -33,6 +33,129 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/posts/search?q=... - Search posts via associated trip fields
+router.get('/search', async (req, res) => {
+  try {
+    const { q, limit = 20, skip = 0 } = req.query;
+    const query = String(q || '').trim();
+    const limitNum = parseInt(String(limit));
+    const skipNum = parseInt(String(skip));
+
+    if (!query) {
+      return res.json([]);
+    }
+
+    // dynamic score threshold: lower for short queries, higher for long ones
+    const minScore = query.length <= 3 ? 0.5 : 1;
+
+    // Search trips (public only) using Atlas Search, then fetch posts for those trips
+    const tripResults = await Trip.aggregate([
+      {
+        $search: {
+          index: 'trip_search',
+          compound: {
+            should: [
+              {
+                autocomplete: {
+                  query,
+                  path: 'title',
+                  score: { boost: { value: 10 } },
+                  fuzzy: { maxEdits: 1 }
+                }
+              },
+              {
+                autocomplete: {
+                  query,
+                  path: 'destinations.label',
+                  score: { boost: { value: 5 } },
+                  fuzzy: { maxEdits: 1 }
+                }
+              },
+              {
+                autocomplete: {
+                  query,
+                  path: 'description',
+                  score: { boost: { value: 1 } },
+                  fuzzy: { maxEdits: 1 }
+                }
+              },
+              {
+                text: {
+                  query,
+                  path: 'title',
+                  score: { boost: { value: 8 } },
+                  fuzzy: { maxEdits: 2 }
+                }
+              },
+              {
+                text: {
+                  query,
+                  path: 'destinations.label',
+                  score: { boost: { value: 4 } },
+                  fuzzy: { maxEdits: 2 }
+                }
+              },
+              {
+                text: {
+                  query,
+                  path: 'description',
+                  score: { boost: { value: 0.5 } },
+                  fuzzy: { maxEdits: 2 }
+                }
+              }
+            ],
+            filter: [
+              { equals: { path: 'isPublic', value: true } }
+            ],
+            minimumShouldMatch: 1
+          }
+        }
+      },
+      { $addFields: { score: { $meta: 'searchScore' } } },
+      { $match: { score: { $gte: minScore } } },
+      { $limit: limitNum + skipNum },
+      { $skip: skipNum },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          destinations: 1,
+          startDate: 1,
+          endDate: 1,
+          thumbnail: 1,
+          dateCreated: 1,
+          members: 1
+        }
+      }
+    ]);
+
+    const tripIds = tripResults.map(t => t._id);
+    if (tripIds.length === 0) {
+      return res.json([]);
+    }
+
+    const orderMap = new Map(tripIds.map((id, idx) => [String(id), idx]));
+
+    const posts = await Post.find({ tripId: { $in: tripIds } })
+      .populate('userId', 'username email')
+      .populate('tripId')
+      .lean();
+
+    const validPosts = posts
+      .filter(p => p.tripId && p.tripId.isPublic)
+      .sort((a, b) => {
+        const aIdx = orderMap.get(String(a.tripId._id)) ?? 0;
+        const bIdx = orderMap.get(String(b.tripId._id)) ?? 0;
+        return aIdx - bIdx;
+      });
+
+    res.json(validPosts);
+  } catch (err) {
+    console.error('Search posts error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET /api/posts/:id - Get single post by ID
 router.get('/:id', async (req, res) => {
   try {

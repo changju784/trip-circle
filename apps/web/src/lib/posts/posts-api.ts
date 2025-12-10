@@ -56,6 +56,21 @@ export async function getPost(postId: string): Promise<Post> {
 }
 
 /**
+ * Search posts by trip fields (title, destinations, description)
+ */
+export async function searchPosts(
+    query: string,
+    limit: number = 20,
+    skip: number = 0
+): Promise<Post[]> {
+    const params = new URLSearchParams();
+    params.append("q", query);
+    params.append("limit", limit.toString());
+    params.append("skip", skip.toString());
+    return apiGet<Post[]>(`/api/posts/search?${params.toString()}`);
+}
+
+/**
  * Get post by trip ID
  */
 export async function getPostByTrip(tripId: string): Promise<Post> {
