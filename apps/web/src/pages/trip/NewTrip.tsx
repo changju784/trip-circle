@@ -75,16 +75,6 @@ export default function NewTripPage() {
         }
     };
 
-    const handleFile = async (f?: File | null) => {
-        if (!f) return null;
-        return await new Promise<string | null>((res) => {
-            const reader = new FileReader();
-            reader.onload = () => res(String(reader.result));
-            reader.onerror = () => res(null);
-            reader.readAsDataURL(f);
-        });
-    };
-
     return (
         <div className="min-h-screen">
             <main className="max-w-screen-md mx-auto p-6">
