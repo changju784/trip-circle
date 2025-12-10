@@ -1,5 +1,5 @@
 # TripCircle — Collaborative Travel Planner
-![alt text](image.png)
+<img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/e0a221c6-e981-4091-a6ad-5429d68facb8" />
 
 TripCircle is a full-stack travel-planning application that lets users:
 
@@ -25,49 +25,48 @@ Built with:
 - Demo video link: https://youtu.be/gnb8saeWT7k?si=aRVRfJqwtg0zwLng
 
 ## 📁 Project Structure
-
 High-level layout:
-
+```bash
 trip-circle/
 │
 ├── apps/
-│   ├── web/                      # Frontend (React + TypeScript)
+│   ├── web/                          # Frontend (React + TypeScript)
 │   │   ├── src/
-│   │   │   ├── components/       # Reusable UI: Navbar, Cards, Buttons, MapPreview, etc.
-│   │   │   ├── pages/            # Route-level pages
-│   │   │   │   ├── dashboard/    # Dashboard page (My trips, Explore snippet, etc.)
-│   │   │   │   ├── profile/      # Profile page
-│   │   │   │   ├── trip/         # NewTrip, TripDetail, EditTrip pages
-│   │   │   │   └── auth/         # Auth layouts, login/register, OAuth callback, username setup
+│   │   │   ├── components/           # Reusable UI: Navbar, Cards, Buttons, MapPreview, etc.
+│   │   │   ├── pages/                # Route-level pages
+│   │   │   │   ├── dashboard/        # Dashboard page (My trips, Explore snippet, etc.)
+│   │   │   │   ├── profile/          # Profile page
+│   │   │   │   ├── trip/             # NewTrip, TripDetail, EditTrip pages
+│   │   │   │   └── auth/             # Auth layouts, login/register, OAuth callback, username setup
 │   │   │   ├── lib/
-│   │   │   │   ├── trips/        # Trip API client (get/create/update/delete/fork/explore)
-│   │   │   │   ├── users/        # User API client (get user, user trips)
-│   │   │   │   └── splashClient/ # Thumbnail/splash image helper
-│   │   │   ├── auth/             # AuthProvider, useAuth hook, ProtectedRoute
-│   │   │   ├── MainLayout.tsx    # Main shell layout (navbar, container)
-│   │   │   ├── App.tsx           # Route configuration
-│   │   │   └── index.tsx         # React entrypoint
-│   │   ├── public/               # Static assets
-│   │   ├── index.css             # Global styles (gradient background, Tailwind base)
+│   │   │   │   ├── trips/            # Trip API client (get/create/update/delete/fork/explore)
+│   │   │   │   ├── users/            # User API client (get user, user trips)
+│   │   │   │   └── splashClient/     # Thumbnail/splash image helper
+│   │   │   ├── auth/                 # AuthProvider, useAuth hook, ProtectedRoute
+│   │   │   ├── MainLayout.tsx        # Main shell layout (navbar, container)
+│   │   │   ├── App.tsx               # Route configuration
+│   │   │   └── index.tsx             # React entrypoint
+│   │   ├── public/                   # Static assets
+│   │   ├── index.css                 # Global styles (gradient background, Tailwind base)
 │   │   └── package.json
 │   │
-│   └── server/                   # Backend (Express + MongoDB)
-│       ├── server.js             # Express app entrypoint
+│   └── server/                       # Backend (Express + MongoDB)
+│       ├── server.js                 # Express app entrypoint
 │       ├── routes/
-│       │   ├── auth.js           # Auth routes (OAuth callbacks, login, etc.)
-│       │   ├── trips.js          # Trip CRUD, explore, fork
-│       │   └── users.js          # User profile + user trips
+│       │   ├── auth.js               # Auth routes (OAuth callbacks, login, etc.)
+│       │   ├── trips.js              # Trip CRUD, explore, fork
+│       │   └── users.js              # User profile + user trips
 │       ├── schema/
-│       │   ├── TripSchema.js     # Trip model (members, days, stops, etc.)
-│       │   └── UserSchema.js     # User model (name, email, auth provider, etc.)
+│       │   ├── TripSchema.js         # Trip model (members, days, stops, etc.)
+│       │   └── UserSchema.js         # User model (name, email, auth provider, etc.)
 │       ├── config/
-│       │   └── logger.js         # Logger configuration (winston or similar)
-│       ├── .env.example          # Example backend environment variables
+│       │   └── logger.js             # Logger configuration (winston or similar)
+│       ├── .env.example              # Example backend environment variables
 │       └── package.json
 │
-├── package.json                  # Root (optional workspaces / scripts)
-└── README.md                     # You are here
-
+├── package.json                      # Root (optional workspaces / scripts)
+└── README.md                         # You are here
+```
 ---
 
 ## 🗄️ Backend Overview (apps/server)
@@ -290,6 +289,7 @@ Under base path (example): /trip-circle
 ## ✨ Frontend Features
 
 ### Auth & User Experience
+<img width="450" height="600" alt="image" src="https://github.com/user-attachments/assets/635fd8b1-d2d8-4378-b336-91357de087ca" />
 
 - Login / Signup with email + password and/or OAuth (Google, etc.)
 - AuthProvider wraps the app and exposes `useAuth` hook (user, loading, logOut, etc.).
@@ -304,6 +304,9 @@ Under base path (example): /trip-circle
   - Possibly explore section snippet with public trips
 
 ### My Trips & Explore
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/075065b1-0c81-49e2-a486-f93cf9304f6c" />
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/6fe15dc1-07ef-40e5-9f76-454cbcdec6c2" />
+
 
 - My Trips:
   - Lists trips where the user is a member.
@@ -319,6 +322,7 @@ Under base path (example): /trip-circle
     - Date range
 
 ### Trip Detail Page
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/192849e8-fb61-4651-b19c-0818eb319baa" />
 
 - Shows:
   - Trip title, description, destinations.
@@ -332,6 +336,8 @@ Under base path (example): /trip-circle
     - Renders markers for stops that have lat/lng.
 
 ### Edit Trip / New Trip Page
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/bcb711dc-cb25-42d5-be77-71c0d039c8b1" />
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/790719dc-5683-4b4f-9384-d9da18fc6743" />
 
 - Form-driven UI with:
   - Trip metadata:
@@ -347,6 +353,7 @@ Under base path (example): /trip-circle
 - Save button triggers POST/PUT to trip endpoints.
 
 ### Forking a Trip
+<img width="700" height="480" alt="image" src="https://github.com/user-attachments/assets/61fdb53c-1286-4d80-ae75-be14c04bb7a4" />
 
 - On a public trip’s detail page, a “Fork Trip” button calls:
   - POST /api/trips/:id/fork
