@@ -32,6 +32,7 @@ export default function TripDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [shareOpen, setShareOpen] = useState(false);
     const [ownerName, setOwnerName] = useState<string | null>(null);
+    const [contributors, setContributors] = useState<{ id: string; name: string; email?: string }[]>([]);
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
     const [loadingTrip, setLoadingTrip] = useState(true);
     const [post, setPost] = useState<Post | null>(null);
@@ -80,6 +81,41 @@ export default function TripDetailPage() {
         })();
         return () => { cancelled = true; };
     }, [trip]);
+
+    // ---------------- LOAD CONTRIBUTORS ----------------
+    useEffect(() => {
+        let cancelled = false;
+        const loadContributors = async () => {
+            const memberIds: string[] = (trip?.members || []).map((m: any) => String(m));
+            if (memberIds.length === 0) {
+                setContributors([]);
+                return;
+            }
+
+            const uniqueIds: string[] = Array.from(new Set(memberIds));
+            try {
+                const users = await Promise.all(uniqueIds.map(async (uid) => {
+                    try {
+                        const user = await getUser(uid);
+                        return {
+                            id: user.id || uid,
+                            name: user.username || user.email || "Unknown",
+                            email: user.email,
+                        };
+                    } catch {
+                        return { id: uid, name: "Unknown" };
+                    }
+                }));
+                if (!cancelled) setContributors(users as { id: string; name: string; email?: string }[]);
+            } catch (err) {
+                console.error("Failed to load contributors", err);
+                if (!cancelled) setContributors(uniqueIds.map((id) => ({ id, name: "Unknown" })));
+            }
+        };
+
+        loadContributors();
+        return () => { cancelled = true; };
+    }, [trip?.members]);
 
     // ---------------- HELPER VARS ----------------
     const isOwner = Boolean(
@@ -283,6 +319,21 @@ export default function TripDetailPage() {
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                             Owned by <span className="font-medium text-gray-900 dark:text-gray-100">{ownerName || "Unknown"}</span>
                         </p>
+
+                        {contributors.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
+                                <span className="font-medium text-gray-900 dark:text-gray-100">Contributors:</span>
+                                {contributors.map((c) => (
+                                    <span
+                                        key={c.id}
+                                        className="px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-600"
+                                        title={c.email}
+                                    >
+                                        {c.name}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-2">
