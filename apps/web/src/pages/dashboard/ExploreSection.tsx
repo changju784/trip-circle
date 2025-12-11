@@ -8,7 +8,7 @@ import { Input } from "../../components/ui/Input";
 import Select, { Option } from "../../components/ui/Select";
 import { useTrips } from "@/lib/trips/use-trips";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
-import { getPosts, toggleLike, addComment, Post } from "@/lib/posts/posts-api";
+import { getPosts, toggleLike, addComment, Post, searchPosts } from "@/lib/posts/posts-api";
 import { AuthContext } from "@/components/auth/AuthProvider";
 import { TripCard } from "@/components/trip/TripCard";
 
@@ -21,7 +21,6 @@ const SORT_OPTIONS: Option[] = [
 
 export default function ExploreSection() {
     const navigate = useNavigate();
-    const { exploreTrips } = useTrips();
     const { user } = useContext(AuthContext);
 
     const [query, setQuery] = useState("");
@@ -51,20 +50,13 @@ export default function ExploreSection() {
             try {
                 setIsLoading(true);
                 setError(null);
-                if (debouncedQuery) {
-                    const trips = await exploreTrips(debouncedQuery || undefined);
-                    if (!cancelled) {
-                        setPosts(trips.map(trip => ({
-                            _id: `trip-${trip._id}`,
-                            tripId: trip,
-                            userId: { _id: '', username: '', email: '' },
-                            likes: [], comments: [], forkCount: 0, likeCount: 0, commentCount: 0,
-                            dateCreated: trip.dateCreated
-                        })));
-                    }
-                } else {
-                    const result = await getPosts();
-                    if (!cancelled) setPosts(result);
+
+                const result = debouncedQuery
+                    ? await searchPosts(debouncedQuery)
+                    : await getPosts();
+
+                if (!cancelled) {
+                    setPosts(result);
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -77,7 +69,7 @@ export default function ExploreSection() {
         }
         loadPosts();
         return () => { cancelled = true; };
-    }, [debouncedQuery, exploreTrips]);
+    }, [debouncedQuery]);
 
     const handleLike = async (postId: string) => {
         if (!user?.id) return;
@@ -155,8 +147,7 @@ export default function ExploreSection() {
                         const trip = post.tripId;
                         const thumb = trip.thumbnail || thumbnails[trip._id] || null;
                         const isLiked = user?.id ? post.likes.includes(user.id) : false;
-                        const showComments = openComments[post._id] && !post._id.startsWith('trip-');
-                        const isSearchItem = post._id.startsWith('trip-');
+                        const showComments = openComments[post._id];
 
                         return (
                             <TripCard
@@ -166,68 +157,64 @@ export default function ExploreSection() {
                                 onClick={() => navigate(`/trip-circle/trip/${trip._id}`)}
                                 footer={
                                     <div className="space-y-3">
-                                        {!isSearchItem && (
-                                            <>
-                                                <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleLike(post._id); }}
-                                                        className="flex items-center gap-1 hover:text-red-600 transition-colors disabled:opacity-50"
-                                                        disabled={!user}
-                                                    >
-                                                        <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-600 text-red-600' : ''}`} />
-                                                        <span>{post.likeCount}</span>
-                                                    </button>
-                                                    <div className="flex items-center gap-1 text-gray-600">
-                                                        <GitFork className="w-4 h-4" />
-                                                        <span>{post.forkCount}</span>
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setOpenComments((prev) => ({ ...prev, [post._id]: !prev[post._id] }));
-                                                        }}
-                                                        className="flex items-center gap-1 hover:text-sky-700 transition-colors disabled:opacity-50"
-                                                    >
-                                                        <MessageCircle className="w-4 h-4" />
-                                                        <span>{post.commentCount}</span>
-                                                    </button>
-                                                </div>
+                                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleLike(post._id); }}
+                                                className="flex items-center gap-1 hover:text-red-600 transition-colors disabled:opacity-50"
+                                                disabled={!user}
+                                            >
+                                                <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-600 text-red-600' : ''}`} />
+                                                <span>{post.likeCount}</span>
+                                            </button>
+                                            <div className="flex items-center gap-1 text-gray-600">
+                                                <GitFork className="w-4 h-4" />
+                                                <span>{post.forkCount}</span>
+                                            </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenComments((prev) => ({ ...prev, [post._id]: !prev[post._id] }));
+                                                }}
+                                                className="flex items-center gap-1 hover:text-sky-700 transition-colors disabled:opacity-50"
+                                            >
+                                                <MessageCircle className="w-4 h-4" />
+                                                <span>{post.commentCount}</span>
+                                            </button>
+                                        </div>
 
-                                                {showComments && (
-                                                    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-                                                        {post.comments?.length > 0 && (
-                                                            <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
-                                                                {post.comments.slice(-3).map((comment) => (
-                                                                    <div key={comment._id} className="rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                                                                        <span className="font-semibold text-gray-800">
-                                                                            {comment.userId?.username || "User"}:
-                                                                        </span>{" "}
-                                                                        {comment.commentText}
-                                                                    </div>
-                                                                ))}
+                                        {showComments && (
+                                            <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                                                {post.comments?.length > 0 && (
+                                                    <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                                                        {post.comments.slice(-3).map((comment) => (
+                                                            <div key={comment._id} className="rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                                                                <span className="font-semibold text-gray-800">
+                                                                    {comment.userId?.username || "User"}:
+                                                                </span>{" "}
+                                                                {comment.commentText}
                                                             </div>
-                                                        )}
-                                                        <div className="flex items-center gap-2">
-                                                            <Input
-                                                                placeholder={user ? "Add a comment" : "Log in to comment"}
-                                                                value={commentInputs[post._id] ?? ""}
-                                                                onChange={(e) => setCommentInputs(p => ({ ...p, [post._id]: e.target.value }))}
-                                                                onKeyDown={(e) => { if (e.key === "Enter") handleCommentSubmit(post._id); }}
-                                                                disabled={!user}
-                                                            />
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleCommentSubmit(post._id)}
-                                                                disabled={!user || !(commentInputs[post._id]?.trim().length)}
-                                                            >
-                                                                Post
-                                                            </Button>
-                                                        </div>
-                                                        {!user && <p className="text-xs text-gray-500">Log in to add a comment.</p>}
+                                                        ))}
                                                     </div>
                                                 )}
-                                            </>
+                                                <div className="flex items-center gap-2">
+                                                    <Input
+                                                        placeholder={user ? "Add a comment" : "Log in to comment"}
+                                                        value={commentInputs[post._id] ?? ""}
+                                                        onChange={(e) => setCommentInputs(p => ({ ...p, [post._id]: e.target.value }))}
+                                                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCommentSubmit(post._id); } }}
+                                                        disabled={!user}
+                                                    />
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleCommentSubmit(post._id)}
+                                                        disabled={!user || !(commentInputs[post._id]?.trim().length)}
+                                                    >
+                                                        Post
+                                                    </Button>
+                                                </div>
+                                                {!user && <p className="text-xs text-gray-500">Log in to add a comment.</p>}
+                                            </div>
                                         )}
 
                                         <Button
