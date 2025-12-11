@@ -6,6 +6,7 @@ import { Heart, MessageCircle, GitFork } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import Select, { Option } from "../../components/ui/Select";
+import { useTrips } from "@/lib/trips/use-trips";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 import { getPosts, toggleLike, addComment, Post, searchPosts } from "@/lib/posts/posts-api";
 import { AuthContext } from "@/components/auth/AuthProvider";
