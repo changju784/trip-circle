@@ -1,5 +1,6 @@
 import { useAuth } from "@/auth/hook/use-auth";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
+import { Avatar } from "@/components/ui/Avatar";
 
 export default function ProfilePage() {
     const { user } = useAuth();
@@ -11,8 +12,13 @@ export default function ProfilePage() {
             <main className="max-w-screen-md mx-auto p-6">
                 <BackToDashboardButton />
                 <div className="bg-card p-6 rounded-lg shadow-sm border">
-                    <h2 className="text-xl font-medium mb-2">Profile</h2>
-                    <p className="text-sm text-muted-foreground mb-4">Basic account information</p>
+                    <div className="flex items-center gap-4 mb-4">
+                        <Avatar user={{ id: user.id, username: user.username, email: user.email, name: user.name }} size={72} />
+                        <div>
+                            <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100">Profile</h2>
+                            <p className="text-sm text-muted-foreground">Basic account information</p>
+                        </div>
+                    </div>
 
                     <div className="space-y-3">
                         <div>

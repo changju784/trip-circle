@@ -4,6 +4,7 @@ import TripCircleLogo from "../TripCircleLogo";
 import { useAuth } from "../../auth/hook/use-auth";
 import { Menu, X } from "lucide-react";
 import { NavbarActions } from "./NavbarActions";
+import { Avatar } from "../ui/Avatar";
 
 export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
     const { user } = useAuth();
@@ -25,6 +26,15 @@ export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
                         </p>
                     </div>
                 </Link>
+
+                {user && (
+                    <div className="hidden sm:flex items-center gap-2">
+                        <Avatar user={{ id: user.id, username: user.username, email: user.email, name: user.name }} size={36} />
+                        <div className="text-sm text-muted-foreground hidden md:block">
+                            {user.username || user.name || user.email}
+                        </div>
+                    </div>
+                )}
 
                 {/* Desktop Actions */}
                 {showLinks && (
