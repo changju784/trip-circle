@@ -119,7 +119,7 @@ export default function Select({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between h-auto min-h-[40px] px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 hover:text-gray-900"
+                    className="w-full justify-between h-auto min-h-[40px] px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
                 >
                     <div className="flex flex-wrap gap-1 items-center text-left">
                         {selected.length > 0 ? (
@@ -133,7 +133,7 @@ export default function Select({
                                         {v.label}
                                         <div
                                             role="button"
-                                            className="ml-1 hover:text-red-900 rounded-full p-0.5 cursor-pointer"
+                                            className="ml-1 hover:text-red-900 dark:hover:text-red-200 rounded-full p-0.5 cursor-pointer"
                                             onClick={(e) => removeTag(e, v.id)}
                                         >
                                             <X className="h-3 w-3" />
@@ -142,31 +142,31 @@ export default function Select({
                                 ))
                             ) : (
                                 // Single Value Display
-                                <span className="font-normal text-gray-900">{selected[0].label}</span>
+                                <span className="font-normal text-gray-900 dark:text-gray-100">{selected[0].label}</span>
                             )
                         ) : (
                             // Placeholder
-                            <span className="text-gray-500 font-normal">{placeholder}</span>
+                            <span className="text-gray-500 dark:text-gray-400 font-normal">{placeholder}</span>
                         )}
                     </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 text-gray-500" />
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 text-gray-500 dark:text-gray-400" />
                 </Button>
             </PopoverTrigger>
 
-            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white border-gray-300" align="start">
-                <Command className="bg-white">
+            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600" align="start">
+                <Command className="bg-white dark:bg-gray-800">
                     <CommandInput
                         placeholder="Search..."
                         onValueChange={setQuery}
                         value={query}
-                        className="text-gray-900 placeholder:text-gray-500"
+                        className="text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                     />
 
                     <CommandList>
-                        {loading && <div className="p-2 text-sm text-gray-500 text-center">Loading...</div>}
+                        {loading && <div className="p-2 text-sm text-gray-500 dark:text-gray-400 text-center">Loading...</div>}
 
                         {!loading && options.length === 0 && (
-                            <CommandEmpty className="py-6 text-center text-sm text-gray-500">No results found.</CommandEmpty>
+                            <CommandEmpty className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">No results found.</CommandEmpty>
                         )}
 
                         <CommandGroup>
@@ -177,11 +177,11 @@ export default function Select({
                                         key={option.id}
                                         value={option.label}
                                         onSelect={() => handleSelect(option)}
-                                        className="text-gray-900 aria-selected:bg-gray-100 aria-selected:text-gray-900 cursor-pointer"
+                                        className="text-gray-900 dark:text-gray-100 aria-selected:bg-gray-100 dark:aria-selected:bg-gray-700 aria-selected:text-gray-900 dark:aria-selected:text-gray-100 cursor-pointer"
                                     >
                                         <Check
                                             className={cn(
-                                                "mr-2 h-4 w-4 text-gray-900",
+                                                "mr-2 h-4 w-4 text-gray-900 dark:text-gray-100",
                                                 isSelected ? "opacity-100" : "opacity-0"
                                             )}
                                         />

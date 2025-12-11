@@ -124,29 +124,29 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
 
                 {/* Title */}
                 <div>
-                    <label className="text-sm font-medium">Title *</label>
-                    <input {...register("title", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border ${errors.title ? "border-red-600" : ""}`} placeholder="e.g., Eiffel Tower" />
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Title *</label>
+                    <input {...register("title", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.title ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} placeholder="e.g., Eiffel Tower" />
                     {errors.title && <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>}
                 </div>
 
                 {/* Time */}
                 <div>
-                    <label className="text-sm font-medium">Time *</label>
-                    <input {...register("time", { required: "This field is required" })} type="time" className={`w-full mt-1 px-3 py-2 rounded-lg border ${errors.time ? "border-red-600" : ""}`} />
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Time *</label>
+                    <input {...register("time", { required: "This field is required" })} type="time" className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} />
                     {errors.time && <div className="text-red-600 text-xs mt-1">{errors.time.message}</div>}
                 </div>
 
                 {/* Location */}
                 <div>
-                    <label className="text-sm font-medium">Location *</label>
-                    <input {...register("locationName", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border ${errors.locationName ? "border-red-600" : ""}`} placeholder="e.g., Champ de Mars, Paris" />
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Location *</label>
+                    <input {...register("locationName", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.locationName ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} placeholder="e.g., Champ de Mars, Paris" />
                     {errors.locationName && <div className="text-red-600 text-xs mt-1">{errors.locationName.message}</div>}
                     {geoError && (<div className="text-red-600 text-xs mt-1">{geoError}</div>)}
 
                     {suggestions.length > 0 && (
-                        <div className="border rounded bg-white mt-2 max-h-40 overflow-auto">
+                        <div className="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 mt-2 max-h-40 overflow-auto shadow-sm">
                             {suggestions.map((s, i) => (
-                                <div key={`${s.lat}-${s.lng}-${i}`} className="px-3 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => {
+                                <div key={`${s.lat}-${s.lng}-${i}`} className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-gray-100" onClick={() => {
                                     setValue("locationName", s.displayName);
                                     setSelectedCoords({ lat: s.lat, lng: s.lng, displayName: s.displayName });
                                     setSuggestions([]);
@@ -158,8 +158,8 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
 
                 {/* Description */}
                 <div>
-                    <label className="text-sm font-medium">Description</label>
-                    <textarea {...register("description")} className="w-full mt-1 px-3 py-2 rounded-lg border" placeholder="Notes, activities, or details about this stop..." />
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Description</label>
+                    <textarea {...register("description")} className="w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border-gray-300 dark:border-gray-600" placeholder="Notes, activities, or details about this stop..." />
                 </div>
 
                 {/* Buttons */}

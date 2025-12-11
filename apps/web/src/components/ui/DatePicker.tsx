@@ -36,18 +36,18 @@ export function DatePicker({
                     disabled={disabled}
                     variant={"outline"}
                     className={cn(
-                        "w-full justify-start text-left font-normal bg-white text-gray-900 border-gray-300",
+                        "w-full justify-start text-left font-normal bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600",
                         "flex-nowrap overflow-hidden whitespace-nowrap",
                         "text-ellipsis",
                         "pr-8",
-                        !value && "text-gray-500"
+                        !value && "text-gray-500 dark:text-gray-400"
                     )}
                 >
-                    <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
+                    <CalendarIcon className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                     {value ? format(value, "PPP") : <span>{placeholder}</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-white border-gray-200" align="start">
+            <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" align="start">
                 <Calendar
                     mode="single"
                     selected={value}
@@ -58,7 +58,7 @@ export function DatePicker({
                         return false;
                     }}
                     initialFocus
-                    className="bg-white text-gray-900 rounded-md border"
+                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md border border-gray-200 dark:border-gray-700"
                 />
             </PopoverContent>
         </Popover>

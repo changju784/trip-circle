@@ -29,7 +29,7 @@ export function Upload({
 
     return (
         <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="upload-file" className="text-gray-700">
+            <Label htmlFor="upload-file" className="text-gray-700 dark:text-gray-200">
                 {label}
             </Label>
 
@@ -37,7 +37,7 @@ export function Upload({
                 id="upload-file"
                 type="file"
                 accept={accept}
-                className="cursor-pointer bg-white text-gray-900 border-gray-300 file:text-gray-700 file:bg-gray-100 file:mr-4 file:px-2 file:rounded-sm"
+                className="cursor-pointer bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 file:text-gray-700 dark:file:text-gray-200 file:bg-gray-100 dark:file:bg-gray-700 file:mr-4 file:px-2 file:rounded-sm"
                 onChange={handleFileChange}
             />
         </div>
