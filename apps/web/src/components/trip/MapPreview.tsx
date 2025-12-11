@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap, Popup } from "react-leaflet";
 import L, { LatLngTuple } from "leaflet";
 import { Stop } from "@/lib/tripStorage";
@@ -45,14 +45,36 @@ type MapPreviewProps = {
 };
 
 export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps) {
+    const [isDark, setIsDark] = useState(() =>
+        document.documentElement.classList.contains("dark")
+    );
+
+    // Watch for theme changes so the tile layer can swap to a darker style
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setIsDark(document.documentElement.classList.contains("dark"));
+        });
+
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+        return () => observer.disconnect();
+    }, []);
+
     const coords: LatLngTuple[] = stops
         .filter((s) => s.lat != null && s.lng != null)
         .map((s) => [Number(s.lat), Number(s.lng)] as LatLngTuple);
 
+    const tileUrl = isDark
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+    const tileAttribution = isDark
+        ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        : "&copy; OpenStreetMap contributors";
+
     if (coords.length === 0) {
         return (
             <div
-                className="w-full h-full bg-white rounded-lg p-4 flex flex-col items-center justify-center text-muted-foreground"
+                className="w-full h-full rounded-lg p-4 flex flex-col items-center justify-center text-muted-foreground dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                 style={{ height }}
             >
                 <div className="text-center">Add stops to see them on the map</div>
@@ -67,16 +89,17 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
     const TileLayerAny = TileLayer as any;
 
     return (
-        <div className="w-full bg-white rounded-lg shadow-sm p-3" style={{ height, position: "relative", zIndex: 0 }}>
+        <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 border border-gray-200 dark:border-gray-700" style={{ height, position: "relative", zIndex: 0 }}>
             <MapContainerAny
                 center={defaultCenter}
                 zoom={13}
-                scrollWheelZoom={false}
+                scrollWheelZoom={true}
                 style={{ width: "100%", height: mapHeight, borderRadius: 8, position: "relative", zIndex: 1 }}
             >
                 <TileLayerAny
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap contributors"
+                    key={isDark ? "dark" : "light"}
+                    url={tileUrl}
+                    attribution={tileAttribution}
                 />
 
                 {/* Markers */}
@@ -89,7 +112,12 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
                 ))}
 
                 {/* Route line connecting stops */}
-                {coords.length > 1 && <Polyline pathOptions={{ color: "blue", weight: 2 }} positions={coords} />}
+                {coords.length > 1 && (
+                    <Polyline
+                        pathOptions={{ color: isDark ? "#38bdf8" : "blue", weight: 2 }}
+                        positions={coords}
+                    />
+                )}
 
                 <AutoFitBounds points={coords} />
             </MapContainerAny>

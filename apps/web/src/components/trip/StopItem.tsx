@@ -22,16 +22,16 @@ export default function StopItem({ stop, onEdit, onDelete }: { stop: Stop; onEdi
     };
 
     return (
-        <div 
+        <div
             ref={setNodeRef}
             style={style}
-            className="border border-border rounded-lg p-3 mb-3 bg-white flex items-center gap-2"
+            className="border border-border dark:border-gray-600 rounded-lg p-3 mb-3 bg-white dark:bg-gray-600 flex items-center gap-2"
         >
             {/* Drag Handle */}
             <button
                 {...attributes}
                 {...listeners}
-                className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-1"
+                className="cursor-grab active:cursor-grabbing text-muted-foreground dark:text-gray-400 hover:text-foreground dark:hover:text-gray-200 p-1"
                 title="Drag to reorder"
             >
                 <GripVertical className="h-5 w-5" />
@@ -39,12 +39,12 @@ export default function StopItem({ stop, onEdit, onDelete }: { stop: Stop; onEdi
 
             {/* Content */}
             <div className="flex-1">
-                <div className="font-medium">{stop.title}</div>
-                <div className="text-sm text-muted-foreground flex gap-4 mt-1">
+                <div className="font-medium dark:text-gray-100">{stop.title}</div>
+                <div className="text-sm text-muted-foreground dark:text-gray-400 flex gap-4 mt-1">
                     <div>{stop.time ?? "--:--"}</div>
                     <div>{stop.locationName ?? ""}</div>
                 </div>
-                {stop.description && <div className="text-sm mt-2 text-muted-foreground">{stop.description}</div>}
+                {stop.description && <div className="text-sm mt-2 text-muted-foreground dark:text-gray-400">{stop.description}</div>}
             </div>
 
             {/* Actions */}
@@ -53,7 +53,7 @@ export default function StopItem({ stop, onEdit, onDelete }: { stop: Stop; onEdi
                     variant="ghost"
                     size="icon"
                     onClick={() => onEdit?.(stop.id)}
-                    className="h-8 w-8 text-muted-foreground hover:text-indigo-600"
+                    className="h-8 w-8 text-muted-foreground dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
                     title="Edit Stop"
                 >
                     <Pencil className="h-4 w-4" />
@@ -63,7 +63,7 @@ export default function StopItem({ stop, onEdit, onDelete }: { stop: Stop; onEdi
                     variant="ghost"
                     size="icon"
                     onClick={() => onDelete?.(stop.id)}
-                    className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                    className="h-8 w-8 text-muted-foreground dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400"
                     title="Delete Stop"
                 >
                     <Trash2 className="h-4 w-4" />
