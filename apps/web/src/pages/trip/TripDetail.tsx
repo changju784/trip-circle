@@ -223,12 +223,12 @@ export default function TripDetailPage() {
     };
 
     if (loadingTrip) {
-        return <div className="min-h-screen p-10 text-center text-muted-foreground">Loading trip...</div>;
+        return <div className="min-h-screen p-10 text-center text-gray-600 dark:text-gray-400">Loading trip...</div>;
     }
     if (error || !trip) {
         return (
-            <div className="min-h-screen p-10 text-center text-destructive">
-                {error ? `Error: ${error}` : "Trip not found"} — <Link to="/trip-circle/dashboard" className="underline text-foreground">Back</Link>
+            <div className="min-h-screen p-10 text-center text-red-600 dark:text-red-400">
+                {error ? `Error: ${error}` : "Trip not found"} — <Link to="/trip-circle/dashboard" className="underline text-gray-900 dark:text-gray-100">Back</Link>
             </div>
         );
     }
@@ -244,24 +244,24 @@ export default function TripDetailPage() {
             <main className="max-w-screen-xl mx-auto px-6 mt-4">
                 <header className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-foreground">{trip.title}</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{trip.title}</h1>
 
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-2">
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mt-2">
                             <div className="flex flex-col gap-1">
                                 {trip.destinations?.slice(0, 3).map((d: any) => (
                                     <div key={d.id} className="flex items-center gap-1">
                                         <span>📍</span>
-                                        <span className="text-foreground">{d.label}</span>
+                                        <span className="text-gray-900 dark:text-gray-100">{d.label}</span>
                                     </div>
                                 ))}
                                 {hasMoreDestinations && (
-                                    <span className="text-xs text-muted-foreground pl-5">+ {trip.destinations.length - 3} more</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-500 pl-5">+ {trip.destinations.length - 3} more</span>
                                 )}
                             </div>
 
-                            <div className="hidden md:block w-px h-8 bg-border mx-2"></div>
+                            <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
 
-                            <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                 📅 {new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}
                             </div>
 
@@ -275,13 +275,13 @@ export default function TripDetailPage() {
                         </div>
 
                         {trip.description && (
-                            <p className="text-sm text-muted-foreground mt-3 max-w-2xl leading-relaxed">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 max-w-2xl leading-relaxed">
                                 {trip.description}
                             </p>
                         )}
 
-                        <p className="text-sm text-muted-foreground mt-2">
-                            Owned by <span className="font-medium text-foreground">{ownerName || "Unknown"}</span>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            Owned by <span className="font-medium text-gray-900 dark:text-gray-100">{ownerName || "Unknown"}</span>
                         </p>
                     </div>
 
@@ -354,52 +354,52 @@ export default function TripDetailPage() {
 
                 <section className="max-w-4xl mx-auto mt-10 w-full">
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                            <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                            <MessageCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                             Discussion
                         </h2>
                         {post && (
                             <button
-                                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+                                className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
                                 onClick={handleLikeToggle}
                                 disabled={!user}
                             >
                                 <Heart
-                                    className={`w-4 h-4 ${post.likes.includes(user?.id || "") ? "fill-red-600 text-red-600" : ""}`}
+                                    className={`w-4 h-4 ${post.likes.includes(user?.id || "") ? "fill-red-600 text-red-600 dark:fill-red-400 dark:text-red-400" : ""}`}
                                 />
                                 <span>{post.likeCount}</span>
-                                <span className="text-xs text-muted-foreground">Like</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-500">Like</span>
                             </button>
                         )}
                     </div>
 
-                    <Card className="p-4 shadow-sm">
+                    <Card className="p-4 shadow-sm bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                         {!trip.isPublic && (
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
                                 Comments are only available on public trips.
                             </p>
                         )}
 
                         {trip.isPublic && (
                             <>
-                                {loadingPost && <p className="text-sm text-muted-foreground">Loading comments...</p>}
-                                {postError && !loadingPost && <p className="text-sm text-destructive">{postError}</p>}
+                                {loadingPost && <p className="text-sm text-gray-600 dark:text-gray-400">Loading comments...</p>}
+                                {postError && !loadingPost && <p className="text-sm text-red-600 dark:text-red-400">{postError}</p>}
 
                                 {post && (
                                     <div className="space-y-4">
                                         <div className="max-h-80 overflow-y-auto pr-2 space-y-3">
                                             {post.comments.length === 0 ? (
-                                                <p className="text-sm text-muted-foreground">No comments yet. Be the first to share your thoughts.</p>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400">No comments yet. Be the first to share your thoughts.</p>
                                             ) : (
                                                 post.comments.map((comment) => (
-                                                    <div key={comment._id} className="rounded-lg border border-border bg-muted/50 px-3 py-2">
-                                                        <div className="text-xs font-semibold text-foreground">
+                                                    <div key={comment._id} className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-600/50 px-3 py-2">
+                                                        <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
                                                             {comment.userId?.username || "Traveler"}
-                                                            <span className="ml-2 text-[11px] text-muted-foreground">
+                                                            <span className="ml-2 text-[11px] text-gray-500 dark:text-gray-400">
                                                                 {new Date(comment.dateCreated).toLocaleString()}
                                                             </span>
                                                         </div>
-                                                        <p className="text-sm text-foreground mt-1 whitespace-pre-wrap">
+                                                        <p className="text-sm text-gray-900 dark:text-gray-200 mt-1 whitespace-pre-wrap">
                                                             {comment.commentText}
                                                         </p>
                                                     </div>
@@ -407,11 +407,11 @@ export default function TripDetailPage() {
                                             )}
                                         </div>
 
-                                        <div className="border-t border-border pt-4 space-y-2">
-                                            <label className="text-sm font-medium text-foreground" htmlFor="comment-box">Add a comment</label>
+                                        <div className="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2">
+                                            <label className="text-sm font-medium text-gray-900 dark:text-gray-100" htmlFor="comment-box">Add a comment</label>
                                             <textarea
                                                 id="comment-box"
-                                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                                                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-500 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                                                 rows={3}
                                                 placeholder={user ? "Share feedback, tips, or questions about this trip..." : "Log in to comment"}
                                                 value={commentText}
@@ -425,12 +425,12 @@ export default function TripDetailPage() {
                                                 disabled={!user || commentSubmitting}
                                             />
                                             <div className="flex justify-between items-center">
-                                                <p className="text-xs text-muted-foreground">Tip: Press Cmd/Ctrl + Enter to post.</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Tip: Press Cmd/Ctrl + Enter to post.</p>
                                                 <Button size="sm" onClick={handleAddComment} disabled={!user || commentSubmitting || !commentText.trim().length}>
                                                     {commentSubmitting ? "Posting..." : "Post comment"}
                                                 </Button>
                                             </div>
-                                            {!user && <p className="text-xs text-amber-600">Please log in to participate in the discussion.</p>}
+                                            {!user && <p className="text-xs text-amber-600 dark:text-amber-400">Please log in to participate in the discussion.</p>}
                                         </div>
                                     </div>
                                 )}
@@ -443,7 +443,7 @@ export default function TripDetailPage() {
                 <ShareTripModal open={shareOpen} onClose={() => setShareOpen(false)} onShare={async (email: string) => { await shareTrip(trip._id, email); setShareOpen(false); refresh(); }} />
                 <Modal title="Delete Trip?" isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
                     <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">This action cannot be undone. Are you sure you want to delete this trip?</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone. Are you sure you want to delete this trip?</p>
                         <div className="flex justify-end gap-3">
                             <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>Cancel</Button>
                             <Button variant="destructive" onClick={confirmDeleteTrip}>Delete</Button>

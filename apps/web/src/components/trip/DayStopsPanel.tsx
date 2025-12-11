@@ -63,31 +63,31 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
     return (
         <div className="space-y-4">
             {/* Map Preview for this day's stops */}
-            <div className="bg-white rounded-lg shadow-sm p-3">
-                <h3 className="text-black font-medium mb-2">🗺️ Route Preview</h3>
+            <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3">
+                <h3 className="text-black dark:text-gray-100 font-medium mb-2">🗺️ Route Preview</h3>
                 <MapPreview stops={day.stops} height={350} />
             </div>
 
             {/* Day header and stops */}
-            <div className="bg-white text-black rounded-lg p-6">
+            <div className="bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded-lg p-6">
                 <div className="flex items-start justify-between mb-4">
                     <div>
                         <div className="text-sm font-medium">Day {selectedDay + 1}</div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-muted-foreground dark:text-gray-400">
                             {dayLabel(day.date)}
                         </div>
                     </div>
 
                     <button
                         onClick={() => onOpenAdd(selectedDay)}
-                        className="bg-black text-white px-3 py-2 rounded-lg"
+                        className="bg-black dark:bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-500"
                     >
                         + Add Stop
                     </button>
                 </div>
 
                 {day.stops.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-12">
+                    <div className="text-center text-muted-foreground dark:text-gray-400 py-12">
                         No stops planned yet.
                         <br />Add your first stop.
                     </div>
