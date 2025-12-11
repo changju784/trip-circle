@@ -16,12 +16,12 @@ export function TripCard({ trip, thumbnailUrl, onClick, footer }: TripCardProps)
 
     return (
         <Card
-            className="flex flex-col overflow-hidden hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-700"
+            className="flex flex-col overflow-hidden cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
             onClick={onClick}
         >
             {/* Thumbnail Section */}
             {thumbnailUrl ? (
-                <div className="h-32 w-full bg-gray-100 dark:bg-gray-600">
+                <div className="h-32 w-full bg-gray-100 dark:bg-gray-700">
                     <div
                         className="h-full w-full bg-cover bg-center"
                         style={{ backgroundImage: `url(${thumbnailUrl})` }}
@@ -39,7 +39,7 @@ export function TripCard({ trip, thumbnailUrl, onClick, footer }: TripCardProps)
                     </h3>
 
                     {dateRange && (
-                        <p className="text-xs font-medium text-sky-700 bg-sky-50 dark:text-sky-300 dark:bg-sky-900/30 inline-flex px-2 py-1 rounded-full">
+                        <p className="text-xs font-medium text-sky-700 bg-sky-50 dark:text-sky-200 dark:bg-sky-900/40 inline-flex px-2 py-1 rounded-full">
                             {dateRange}
                         </p>
                     )}

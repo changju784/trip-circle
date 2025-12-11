@@ -33,7 +33,7 @@ export default function LoginPage() {
         >
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {error && (
-                    <div className="p-3 bg-destructive/10 border border-destructive text-destructive rounded-lg text-sm">
+                    <div className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded-lg text-sm">
                         {error}
                     </div>
                 )}
@@ -65,10 +65,12 @@ export default function LoginPage() {
 
                 <div className="relative py-2">
                     <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-border"></div>
+                        <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
+                        <span className="px-3 py-0.5 rounded-full bg-white dark:bg-gray-900 text-muted-foreground dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700">
+                            Or continue with
+                        </span>
                     </div>
                 </div>
 

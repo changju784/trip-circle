@@ -16,7 +16,7 @@ export function FormField({
             rules={rules}
             render={({ field, fieldState }) => (
                 <div className="space-y-1">
-                    <label className="text-sm font-medium">{label}</label>
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">{label}</label>
 
                     <Input
                         {...field}

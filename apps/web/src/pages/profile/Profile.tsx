@@ -16,8 +16,8 @@ export default function ProfilePage() {
 
                     <div className="space-y-3">
                         <div>
-                            <div className="text-xs text-muted-foreground">Name</div>
-                            <div className="font-medium">{user.name || "-"}</div>
+                            <div className="text-xs text-muted-foreground">Username</div>
+                            <div className="font-medium">{user.username || user.name || "-"}</div>
                         </div>
 
                         <div>
