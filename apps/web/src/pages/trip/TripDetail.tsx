@@ -271,7 +271,6 @@ export default function TripDetailPage() {
         );
     }
 
-    const hasMoreDestinations = trip.destinations && trip.destinations.length > 3;
 
     return (
         <div className="min-h-screen pb-20">
@@ -280,80 +279,22 @@ export default function TripDetailPage() {
             </div>
 
             <main className="max-w-screen-xl mx-auto px-6 mt-4">
-                {/* --- OVERVIEW / HEADER --- */}
-                <header className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{trip.title}</h1>
-
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            <div className="flex flex-col gap-1">
-                                {trip.destinations?.slice(0, 3).map((d: any) => (
-                                    <div key={d.id} className="flex items-center gap-1">
-                                        <span>📍</span>
-                                        <span className="text-gray-900 dark:text-gray-100">{d.label}</span>
-                                    </div>
-                                ))}
-                                {hasMoreDestinations && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-500 pl-5">+ {trip.destinations.length - 3} more</span>
-                                )}
-                            </div>
-
-                            <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
-
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                📅 {new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}
-                            </div>
-
-                            <div className={`px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1 ${trip.isPublic
-                                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
-                                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
-                                }`}>
-                                <span>{trip.isPublic ? "🌍" : "🔒"}</span>
-                                {trip.isPublic ? "Public" : "Private"}
-                            </div>
-                        </div>
-
-                        {trip.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 max-w-2xl leading-relaxed">
-                                {trip.description}
-                            </p>
-                        )}
-
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            Owned by <span className="font-medium text-gray-900 dark:text-gray-100">{ownerName || "Unknown"}</span>
-                        </p>
-
-                        {contributors.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
-                                <span className="font-medium text-gray-900 dark:text-gray-100">Contributors:</span>
-                                {contributors.map((c) => (
-                                    <span
-                                        key={c.id}
-                                        className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-600"
-                                        title={c.email}
-                                    >
-                                        <Avatar user={{ id: c.id, username: c.name, email: c.email }} size={28} />
-                                        <span className="pr-1">{c.name}</span>
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        {isOwner ? (
-                            <>
-                                <Button variant="secondary" onClick={() => setShareOpen(true)}>Share</Button>
-                                <Link to={`/trip-circle/trip/${trip._id}/edit`}>
-                                    <Button variant="outline">Edit Trip</Button>
-                                </Link>
-                                <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>Delete</Button>
-                            </>
-                        ) : (
-                            trip.isPublic && user && (
-                                <Button
-                                    variant="dark"
-                                    onClick={async () => {
+                {/* --- OVERVIEW SECTION --- */}
+                <Section
+                    title={trip.title}
+                    rightElement={
+                        <div className="flex items-center gap-2">
+                            {isOwner ? (
+                                <>
+                                    <Button variant="secondary" onClick={() => setShareOpen(true)}>Share</Button>
+                                    <Link to={`/trip-circle/trip/${trip._id}/edit`}>
+                                        <Button variant="outline">Edit Trip</Button>
+                                    </Link>
+                                    <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>Delete</Button>
+                                </>
+                            ) : (
+                                trip.isPublic && user && (
+                                    <Button variant="dark" onClick={async () => {
                                         try {
                                             const newTrip = await forkTrip(trip._id, user.id);
                                             navigate(`/trip-circle/trip/${newTrip._id}`);
@@ -361,14 +302,58 @@ export default function TripDetailPage() {
                                             console.error(err);
                                             alert("Failed to copy trip.");
                                         }
-                                    }}
-                                >
-                                    Copy Trip
-                                </Button>
-                            )
+                                    }}>Copy Trip</Button>
+                                )
+                            )}
+                        </div>
+                    }
+                >
+                    {/* The children of this section is the "Overview" content */}
+                    <div className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex flex-col gap-1">
+                                {trip.destinations?.slice(0, 3).map((d: any) => (
+                                    <div key={d.id} className="flex items-center gap-1">
+                                        <span>📍</span>
+                                        <span className="text-gray-900 dark:text-gray-100">{d.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+
+                            <div className="flex items-center gap-2">
+                                📅 {new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}
+                            </div>
+
+                            <div className={`px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1 ${trip.isPublic ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                                }`}>
+                                <span>{trip.isPublic ? "🌍" : "🔒"}</span>
+                                {trip.isPublic ? "Public" : "Private"}
+                            </div>
+                        </div>
+
+                        {trip.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed italic">
+                                {trip.description}
+                            </p>
                         )}
+
+                        <div className="flex items-center gap-4 text-sm">
+                            <p>Owned by <span className="font-medium text-gray-900 dark:text-gray-100">{ownerName || "Unknown"}</span></p>
+                            {contributors.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-500">Contributors:</span>
+                                    <div className="flex -space-x-2">
+                                        {contributors.map((c) => (
+                                            <Avatar key={c.id} user={{ id: c.id, username: c.name }} size={28} className="border-2 border-white dark:border-gray-900" />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </header>
+                </Section>
 
                 {/* --- ITINERARY SECTION --- */}
                 <Section title="Itinerary">
