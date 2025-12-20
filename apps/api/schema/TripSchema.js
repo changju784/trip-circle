@@ -34,7 +34,6 @@ const DaySchema = new mongoose.Schema(
     {
         date: { type: Date, required: true },          // must exist
         stops: { type: [StopSchema], default: [] },     // can be empty
-        pricePerDay: { type: Number, default: 0, min: 0 }
     },
     { _id: false }
 );
