@@ -2,6 +2,11 @@ import Trip from '../schema/TripSchema.js';
 import User from '../schema/UserSchema.js';
 import Post from '../schema/PostSchema.js';
 import { generateDays } from '../utils/dateUtils.js';
+import {
+    calculateDayPrice,
+    calculateTripPrice
+} from '../utils/priceCalculator.js';
+
 
 /* ---------- reads ---------- */
 
@@ -27,7 +32,10 @@ export async function createTrip(payload) {
         members
     } = payload;
 
-    const days = generateDays(startDate, endDate);
+    const days = generateDays(startDate, endDate).map(day => ({
+        ...day,
+        pricePerDay: 0
+    }));
 
     const trip = new Trip({
         title,
@@ -36,6 +44,7 @@ export async function createTrip(payload) {
         isPublic: isPublic ?? false,
         thumbnail: thumbnail || null,
         days,
+        totalPrice: 0,
         startDate,
         endDate,
         members
@@ -108,6 +117,17 @@ export async function updateTrip(id, updates) {
             await Post.findOneAndDelete({ tripId: id });
         }
     }
+
+    /* ---------- price recalculation ---------- */
+    if (updates.days !== undefined) {
+        updates.days = updates.days.map(day => ({
+            ...day,
+            pricePerDay: calculateDayPrice(day)
+        }));
+
+        updates.totalPrice = calculateTripPrice(updates.days);
+    }
+
 
     return Trip.findByIdAndUpdate(id, updates, {
         new: true,
