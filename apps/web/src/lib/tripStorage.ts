@@ -7,6 +7,7 @@ export type Stop = {
     locationName?: string;
     lat?: number | null;
     lng?: number | null;
+    price?: number;
     description?: string;
 };
 
