@@ -14,10 +14,10 @@ import { useAuth } from "@/auth/hook/use-auth";
 import { getUser } from "@/lib/users/users-api";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { addComment, getPostByTrip, toggleLike, type Post } from "@/lib/posts/posts-api";
 import { Section } from "@/components/ui/Section";
+import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -331,6 +331,18 @@ export default function TripDetailPage() {
                                 <span>{trip.isPublic ? "🌍" : "🔒"}</span>
                                 {trip.isPublic ? "Public" : "Private"}
                             </div>
+
+                            <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+
+                            {trip.isPublic && (
+                                <PostActivitySummary
+                                    likeCount={post?.likeCount}
+                                    forkCount={post?.forkCount}
+                                    commentCount={post?.commentCount}
+                                    isLiked={post?.likes.includes(user?.id || "")}
+                                    onLike={handleLikeToggle}
+                                />
+                            )}
                         </div>
 
                         {trip.description && (
@@ -402,6 +414,7 @@ export default function TripDetailPage() {
                 <Section
                     title="Discussion"
                     icon={<MessageCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />}
+                    className="mt-10"
                     rightElement={post && (
                         <button
                             className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
@@ -416,83 +429,97 @@ export default function TripDetailPage() {
                         </button>
                     )}
                 >
-                    <Card className="p-4 shadow-sm bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+                    <div className="w-full space-y-6">
                         {!trip.isPublic && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Comments are only available on public trips.
-                            </p>
+                            <div className="p-8 text-center rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Comments are only available on public trips.
+                                </p>
+                            </div>
                         )}
 
                         {trip.isPublic && (
-                            <>
-                                {loadingPost && <p className="text-sm text-gray-600 dark:text-gray-400">Loading comments...</p>}
-                                {postError && !loadingPost && <p className="text-sm text-red-600 dark:text-red-400">{postError}</p>}
-
-                                {post && (
+                            <div className="w-full space-y-6">
+                                {/* 1. Comments Feed */}
+                                {post && post.comments.length > 0 ? (
                                     <div className="space-y-4">
-                                        <div className="max-h-80 overflow-y-auto pr-2 space-y-3">
-                                            {post.comments.length === 0 ? (
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">No comments yet. Be the first to share your thoughts.</p>
-                                            ) : (
-                                                post.comments.map((comment) => (
-                                                    <div key={comment._id} className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-600/50 px-3 py-2">
-                                                        <div className="flex items-start gap-2">
-                                                            <Avatar
-                                                                user={{
-                                                                    id: (comment.userId as any)?._id || (comment.userId as any)?.id,
-                                                                    username: (comment.userId as any)?.username,
-                                                                    email: (comment.userId as any)?.email,
-                                                                    name: (comment.userId as any)?.name,
-                                                                }}
-                                                                size={28}
-                                                            />
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
-                                                                    {comment.userId?.username || "Traveler"}
-                                                                    <span className="ml-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                                                        {new Date(comment.dateCreated).toLocaleString()}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-sm text-gray-900 dark:text-gray-200 mt-1 whitespace-pre-wrap">
-                                                                    {comment.commentText}
-                                                                </p>
-                                                            </div>
-                                                        </div>
+                                        {post.comments.map((comment) => (
+                                            <div
+                                                key={comment._id}
+                                                className="flex items-start gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm"
+                                            >
+                                                <Avatar
+                                                    user={{
+                                                        id: (comment.userId as any)?._id || (comment.userId as any)?.id,
+                                                        username: (comment.userId as any)?.username,
+                                                        email: (comment.userId as any)?.email,
+                                                        name: (comment.userId as any)?.name,
+                                                    }}
+                                                    size={36}
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                                            {comment.userId?.username || "Traveler"}
+                                                        </span>
+                                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                                            {new Date(comment.dateCreated).toLocaleString()}
+                                                        </span>
                                                     </div>
-                                                ))
-                                            )}
-                                        </div>
-
-                                        <div className="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2">
-                                            <label className="text-sm font-medium text-gray-900 dark:text-gray-100" htmlFor="comment-box">Add a comment</label>
-                                            <textarea
-                                                id="comment-box"
-                                                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-500 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                                                rows={3}
-                                                placeholder={user ? "Share feedback, tips, or questions about this trip..." : "Log in to comment"}
-                                                value={commentText}
-                                                onChange={(e) => setCommentText(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                                                        e.preventDefault();
-                                                        handleAddComment();
-                                                    }
-                                                }}
-                                                disabled={!user || commentSubmitting}
-                                            />
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">Tip: Press Cmd/Ctrl + Enter to post.</p>
-                                                <Button size="sm" onClick={handleAddComment} disabled={!user || commentSubmitting || !commentText.trim().length}>
-                                                    {commentSubmitting ? "Posting..." : "Post comment"}
-                                                </Button>
+                                                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                        {comment.commentText}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            {!user && <p className="text-xs text-amber-600 dark:text-amber-400">Please log in to participate in the discussion.</p>}
-                                        </div>
+                                        ))}
                                     </div>
+                                ) : (
+                                    trip.isPublic && !loadingPost && (
+                                        <div className="p-10 text-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
+                                            <p className="text-sm text-gray-500">No comments yet. Be the first to share your thoughts.</p>
+                                        </div>
+                                    )
                                 )}
-                            </>
+
+                                {/* 2. Add Comment Input Area */}
+                                <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-5 space-y-4 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Add a comment</span>
+                                    </div>
+
+                                    <textarea
+                                        id="comment-box"
+                                        className="w-full min-h-[120px] rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent placeholder:text-gray-500 transition-all"
+                                        placeholder={user ? "Share feedback, tips, or questions about this trip..." : "Log in to comment"}
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                                                e.preventDefault();
+                                                handleAddComment();
+                                            }
+                                        }}
+                                        disabled={!user || commentSubmitting}
+                                    />
+
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-[11px] text-gray-500">
+                                            Tip: Press <kbd className="px-1.5 py-0.5 rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-sans">Cmd/Ctrl</kbd> + <kbd className="px-1.5 py-0.5 rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-sans">Enter</kbd> to post.
+                                        </p>
+
+                                        <Button
+                                            onClick={handleAddComment}
+                                            disabled={!user || commentSubmitting || !commentText.trim().length}
+                                            className="px-6"
+                                        >
+                                            {commentSubmitting ? "Posting..." : "Post comment"}
+                                        </Button>
+                                    </div>
+                                    {!user && <p className="text-xs text-amber-600 dark:text-amber-500 text-right">Please log in to participate in the discussion.</p>}
+                                </div>
+                            </div>
                         )}
-                    </Card>
+                    </div>
                 </Section>
 
                 {/* --- MODALS --- */}
