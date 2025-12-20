@@ -72,7 +72,9 @@ const TripSchema = new mongoose.Schema({
 
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
-    budget: { type: Number, default: 0 },
+
+    totalPrice: { type: Number, default: 0, min: 0 },
+    budget: { type: Number, default: 0, min: 0 },
 
     dateCreated: {
         type: Date,
