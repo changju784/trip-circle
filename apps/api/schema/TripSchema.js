@@ -23,6 +23,7 @@ const StopSchema = new mongoose.Schema(
         locationName: { type: String },
         lat: { type: Number },
         lng: { type: Number },
+        price: { type: Number, default: 0, min: 0 },
         description: { type: String }
     },
     { _id: false } // prevents _id for each stop (cleaner)
@@ -32,7 +33,8 @@ const StopSchema = new mongoose.Schema(
 const DaySchema = new mongoose.Schema(
     {
         date: { type: Date, required: true },          // must exist
-        stops: { type: [StopSchema], default: [] }     // can be empty
+        stops: { type: [StopSchema], default: [] },     // can be empty
+        pricePerDay: { type: Number, default: 0, min: 0 }
     },
     { _id: false }
 );
