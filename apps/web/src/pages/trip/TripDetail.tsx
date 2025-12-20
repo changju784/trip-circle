@@ -17,6 +17,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { addComment, getPostByTrip, toggleLike, type Post } from "@/lib/posts/posts-api";
+import { Section } from "@/components/ui/Section";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -279,6 +280,7 @@ export default function TripDetailPage() {
             </div>
 
             <main className="max-w-screen-xl mx-auto px-6 mt-4">
+                {/* --- OVERVIEW / HEADER --- */}
                 <header className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{trip.title}</h1>
@@ -368,64 +370,67 @@ export default function TripDetailPage() {
                     </div>
                 </header>
 
-                <Tabs
-                    value={`day-${selectedDay}`}
-                    onValueChange={(v) => setSelectedDay(Number(v.replace("day-", "")))}
-                    className="mb-4"
-                >
-                    <DayTabs days={trip.days} />
+                {/* --- ITINERARY SECTION --- */}
+                <Section title="Itinerary">
+                    <Tabs
+                        value={`day-${selectedDay}`}
+                        onValueChange={(v) => setSelectedDay(Number(v.replace("day-", "")))}
+                        className="mb-4"
+                    >
+                        <DayTabs days={trip.days} />
 
-                    {trip.days.map((d: any, i: number) => (
-                        <TabsContent key={d.date || i} value={`day-${i}`}>
-                            <DayStopsPanel
-                                days={trip.days}
-                                selectedDay={i}
-                                onOpenAdd={(dayIndex) => {
-                                    setSelectedDay(dayIndex);
-                                    setEditingStop(null);
-                                    setOpenAdd(true);
-                                }}
-                                onEditStop={(sId: string) => {
-                                    setSelectedDay(i);
-                                    setEditingStop(sId);
-                                    setOpenAdd(true);
-                                }}
-                                onDeleteStop={handleDeleteStop}
-                                onReorderStops={handleReorderStops}
-                            />
-                        </TabsContent>
-                    ))}
-                </Tabs>
+                        {trip.days.map((d: any, i: number) => (
+                            <TabsContent key={d.date || i} value={`day-${i}`}>
+                                <DayStopsPanel
+                                    days={trip.days}
+                                    selectedDay={i}
+                                    onOpenAdd={(dayIndex) => {
+                                        setSelectedDay(dayIndex);
+                                        setEditingStop(null);
+                                        setOpenAdd(true);
+                                    }}
+                                    onEditStop={(sId: string) => {
+                                        setSelectedDay(i);
+                                        setEditingStop(sId);
+                                        setOpenAdd(true);
+                                    }}
+                                    onDeleteStop={handleDeleteStop}
+                                    onReorderStops={handleReorderStops}
+                                />
+                            </TabsContent>
+                        ))}
+                    </Tabs>
+                </Section>
 
+                {/* --- DOCUMENTS SECTION --- */}
                 {isOwner && (
-                    <Receipts
-                        tripId={trip._id}
-                        receipts={trip.receipts || []}
-                        onReceiptsChange={handleReceiptsChange}
-                    />
+                    <Section title="Documents & Receipts">
+                        <Receipts
+                            tripId={trip._id}
+                            receipts={trip.receipts || []}
+                            onReceiptsChange={handleReceiptsChange}
+                        />
+                    </Section>
                 )}
 
-                <section className="max-w-4xl mx-auto mt-10 w-full">
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                            <MessageCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                            Discussion
-                        </h2>
-                        {post && (
-                            <button
-                                className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-                                onClick={handleLikeToggle}
-                                disabled={!user}
-                            >
-                                <Heart
-                                    className={`w-4 h-4 ${post.likes.includes(user?.id || "") ? "fill-red-600 text-red-600 dark:fill-red-400 dark:text-red-400" : ""}`}
-                                />
-                                <span>{post.likeCount}</span>
-                                <span className="text-xs text-gray-500 dark:text-gray-500">Like</span>
-                            </button>
-                        )}
-                    </div>
-
+                {/* --- DISCUSSION SECTION --- */}
+                <Section
+                    title="Discussion"
+                    icon={<MessageCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />}
+                    rightElement={post && (
+                        <button
+                            className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+                            onClick={handleLikeToggle}
+                            disabled={!user}
+                        >
+                            <Heart
+                                className={`w-4 h-4 ${post.likes.includes(user?.id || "") ? "fill-red-600 text-red-600 dark:fill-red-400 dark:text-red-400" : ""}`}
+                            />
+                            <span>{post.likeCount}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-500">Like</span>
+                        </button>
+                    )}
+                >
                     <Card className="p-4 shadow-sm bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                         {!trip.isPublic && (
                             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -503,8 +508,9 @@ export default function TripDetailPage() {
                             </>
                         )}
                     </Card>
-                </section>
+                </Section>
 
+                {/* --- MODALS --- */}
                 <AddStopModal open={openAdd} onClose={() => { setOpenAdd(false); setEditingStop(null); }} onSubmit={handleAddStop} initialStop={initialStop} />
                 <ShareTripModal open={shareOpen} onClose={() => setShareOpen(false)} onShare={async (email: string) => { await shareTrip(trip._id, email); setShareOpen(false); refresh(); }} />
                 <Modal title="Delete Trip?" isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
