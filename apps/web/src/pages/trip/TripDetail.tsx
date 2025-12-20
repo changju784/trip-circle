@@ -14,9 +14,10 @@ import { useAuth } from "@/auth/hook/use-auth";
 import { getUser } from "@/lib/users/users-api";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { addComment, getPostByTrip, toggleLike, type Post } from "@/lib/posts/posts-api";
+import { Section } from "@/components/ui/Section";
+import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -270,7 +271,6 @@ export default function TripDetailPage() {
         );
     }
 
-    const hasMoreDestinations = trip.destinations && trip.destinations.length > 3;
 
     return (
         <div className="min-h-screen pb-20">
@@ -279,79 +279,22 @@ export default function TripDetailPage() {
             </div>
 
             <main className="max-w-screen-xl mx-auto px-6 mt-4">
-                <header className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{trip.title}</h1>
-
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            <div className="flex flex-col gap-1">
-                                {trip.destinations?.slice(0, 3).map((d: any) => (
-                                    <div key={d.id} className="flex items-center gap-1">
-                                        <span>📍</span>
-                                        <span className="text-gray-900 dark:text-gray-100">{d.label}</span>
-                                    </div>
-                                ))}
-                                {hasMoreDestinations && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-500 pl-5">+ {trip.destinations.length - 3} more</span>
-                                )}
-                            </div>
-
-                            <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
-
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                                📅 {new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}
-                            </div>
-
-                            <div className={`px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1 ${trip.isPublic
-                                ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
-                                : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
-                                }`}>
-                                <span>{trip.isPublic ? "🌍" : "🔒"}</span>
-                                {trip.isPublic ? "Public" : "Private"}
-                            </div>
-                        </div>
-
-                        {trip.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 max-w-2xl leading-relaxed">
-                                {trip.description}
-                            </p>
-                        )}
-
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            Owned by <span className="font-medium text-gray-900 dark:text-gray-100">{ownerName || "Unknown"}</span>
-                        </p>
-
-                        {contributors.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
-                                <span className="font-medium text-gray-900 dark:text-gray-100">Contributors:</span>
-                                {contributors.map((c) => (
-                                    <span
-                                        key={c.id}
-                                        className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-600"
-                                        title={c.email}
-                                    >
-                                        <Avatar user={{ id: c.id, username: c.name, email: c.email }} size={28} />
-                                        <span className="pr-1">{c.name}</span>
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        {isOwner ? (
-                            <>
-                                <Button variant="secondary" onClick={() => setShareOpen(true)}>Share</Button>
-                                <Link to={`/trip-circle/trip/${trip._id}/edit`}>
-                                    <Button variant="outline">Edit Trip</Button>
-                                </Link>
-                                <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>Delete</Button>
-                            </>
-                        ) : (
-                            trip.isPublic && user && (
-                                <Button
-                                    variant="dark"
-                                    onClick={async () => {
+                {/* --- OVERVIEW SECTION --- */}
+                <Section
+                    title={trip.title}
+                    rightElement={
+                        <div className="flex items-center gap-2">
+                            {isOwner ? (
+                                <>
+                                    <Button variant="secondary" onClick={() => setShareOpen(true)}>Share</Button>
+                                    <Link to={`/trip-circle/trip/${trip._id}/edit`}>
+                                        <Button variant="outline">Edit Trip</Button>
+                                    </Link>
+                                    <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>Delete</Button>
+                                </>
+                            ) : (
+                                trip.isPublic && user && (
+                                    <Button variant="dark" onClick={async () => {
                                         try {
                                             const newTrip = await forkTrip(trip._id, user.id);
                                             navigate(`/trip-circle/trip/${newTrip._id}`);
@@ -359,152 +302,227 @@ export default function TripDetailPage() {
                                             console.error(err);
                                             alert("Failed to copy trip.");
                                         }
-                                    }}
-                                >
-                                    Copy Trip
-                                </Button>
-                            )
-                        )}
-                    </div>
-                </header>
-
-                <Tabs
-                    value={`day-${selectedDay}`}
-                    onValueChange={(v) => setSelectedDay(Number(v.replace("day-", "")))}
-                    className="mb-4"
+                                    }}>Copy Trip</Button>
+                                )
+                            )}
+                        </div>
+                    }
                 >
-                    <DayTabs days={trip.days} />
+                    {/* The children of this section is the "Overview" content */}
+                    <div className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex flex-col gap-1">
+                                {trip.destinations?.slice(0, 3).map((d: any) => (
+                                    <div key={d.id} className="flex items-center gap-1">
+                                        <span>📍</span>
+                                        <span className="text-gray-900 dark:text-gray-100">{d.label}</span>
+                                    </div>
+                                ))}
+                            </div>
 
-                    {trip.days.map((d: any, i: number) => (
-                        <TabsContent key={d.date || i} value={`day-${i}`}>
-                            <DayStopsPanel
-                                days={trip.days}
-                                selectedDay={i}
-                                onOpenAdd={(dayIndex) => {
-                                    setSelectedDay(dayIndex);
-                                    setEditingStop(null);
-                                    setOpenAdd(true);
-                                }}
-                                onEditStop={(sId: string) => {
-                                    setSelectedDay(i);
-                                    setEditingStop(sId);
-                                    setOpenAdd(true);
-                                }}
-                                onDeleteStop={handleDeleteStop}
-                                onReorderStops={handleReorderStops}
-                            />
-                        </TabsContent>
-                    ))}
-                </Tabs>
+                            <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
 
-                {isOwner && (
-                    <Receipts
-                        tripId={trip._id}
-                        receipts={trip.receipts || []}
-                        onReceiptsChange={handleReceiptsChange}
-                    />
-                )}
+                            <div className="flex items-center gap-2">
+                                📅 {new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}
+                            </div>
 
-                <section className="max-w-4xl mx-auto mt-10 w-full">
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                            <MessageCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                            Discussion
-                        </h2>
-                        {post && (
-                            <button
-                                className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-                                onClick={handleLikeToggle}
-                                disabled={!user}
-                            >
-                                <Heart
-                                    className={`w-4 h-4 ${post.likes.includes(user?.id || "") ? "fill-red-600 text-red-600 dark:fill-red-400 dark:text-red-400" : ""}`}
+                            <div className={`px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1 ${trip.isPublic ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                                }`}>
+                                <span>{trip.isPublic ? "🌍" : "🔒"}</span>
+                                {trip.isPublic ? "Public" : "Private"}
+                            </div>
+
+                            <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+
+                            {trip.isPublic && (
+                                <PostActivitySummary
+                                    likeCount={post?.likeCount}
+                                    forkCount={post?.forkCount}
+                                    commentCount={post?.commentCount}
+                                    isLiked={post?.likes.includes(user?.id || "")}
+                                    onLike={handleLikeToggle}
                                 />
-                                <span>{post.likeCount}</span>
-                                <span className="text-xs text-gray-500 dark:text-gray-500">Like</span>
-                            </button>
-                        )}
-                    </div>
+                            )}
+                        </div>
 
-                    <Card className="p-4 shadow-sm bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600">
-                        {!trip.isPublic && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Comments are only available on public trips.
+                        {trip.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed italic">
+                                {trip.description}
                             </p>
                         )}
 
-                        {trip.isPublic && (
-                            <>
-                                {loadingPost && <p className="text-sm text-gray-600 dark:text-gray-400">Loading comments...</p>}
-                                {postError && !loadingPost && <p className="text-sm text-red-600 dark:text-red-400">{postError}</p>}
-
-                                {post && (
-                                    <div className="space-y-4">
-                                        <div className="max-h-80 overflow-y-auto pr-2 space-y-3">
-                                            {post.comments.length === 0 ? (
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">No comments yet. Be the first to share your thoughts.</p>
-                                            ) : (
-                                                post.comments.map((comment) => (
-                                                    <div key={comment._id} className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-600/50 px-3 py-2">
-                                                        <div className="flex items-start gap-2">
-                                                            <Avatar
-                                                                user={{
-                                                                    id: (comment.userId as any)?._id || (comment.userId as any)?.id,
-                                                                    username: (comment.userId as any)?.username,
-                                                                    email: (comment.userId as any)?.email,
-                                                                    name: (comment.userId as any)?.name,
-                                                                }}
-                                                                size={28}
-                                                            />
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">
-                                                                    {comment.userId?.username || "Traveler"}
-                                                                    <span className="ml-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                                                        {new Date(comment.dateCreated).toLocaleString()}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-sm text-gray-900 dark:text-gray-200 mt-1 whitespace-pre-wrap">
-                                                                    {comment.commentText}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-
-                                        <div className="border-t border-gray-200 dark:border-gray-600 pt-4 space-y-2">
-                                            <label className="text-sm font-medium text-gray-900 dark:text-gray-100" htmlFor="comment-box">Add a comment</label>
-                                            <textarea
-                                                id="comment-box"
-                                                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-500 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                                                rows={3}
-                                                placeholder={user ? "Share feedback, tips, or questions about this trip..." : "Log in to comment"}
-                                                value={commentText}
-                                                onChange={(e) => setCommentText(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                                                        e.preventDefault();
-                                                        handleAddComment();
-                                                    }
-                                                }}
-                                                disabled={!user || commentSubmitting}
-                                            />
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">Tip: Press Cmd/Ctrl + Enter to post.</p>
-                                                <Button size="sm" onClick={handleAddComment} disabled={!user || commentSubmitting || !commentText.trim().length}>
-                                                    {commentSubmitting ? "Posting..." : "Post comment"}
-                                                </Button>
-                                            </div>
-                                            {!user && <p className="text-xs text-amber-600 dark:text-amber-400">Please log in to participate in the discussion.</p>}
-                                        </div>
+                        <div className="flex items-center gap-4 text-sm">
+                            <p>Owned by <span className="font-medium text-gray-900 dark:text-gray-100">{ownerName || "Unknown"}</span></p>
+                            {contributors.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-500">Contributors:</span>
+                                    <div className="flex -space-x-2">
+                                        {contributors.map((c) => (
+                                            <Avatar key={c.id} user={{ id: c.id, username: c.name }} size={28} className="border-2 border-white dark:border-gray-900" />
+                                        ))}
                                     </div>
-                                )}
-                            </>
-                        )}
-                    </Card>
-                </section>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </Section>
 
+                {/* --- ITINERARY SECTION --- */}
+                <Section title="Itinerary">
+                    <Tabs
+                        value={`day-${selectedDay}`}
+                        onValueChange={(v) => setSelectedDay(Number(v.replace("day-", "")))}
+                        className="mb-4"
+                    >
+                        <DayTabs days={trip.days} />
+
+                        {trip.days.map((d: any, i: number) => (
+                            <TabsContent key={d.date || i} value={`day-${i}`}>
+                                <DayStopsPanel
+                                    days={trip.days}
+                                    selectedDay={i}
+                                    onOpenAdd={(dayIndex) => {
+                                        setSelectedDay(dayIndex);
+                                        setEditingStop(null);
+                                        setOpenAdd(true);
+                                    }}
+                                    onEditStop={(sId: string) => {
+                                        setSelectedDay(i);
+                                        setEditingStop(sId);
+                                        setOpenAdd(true);
+                                    }}
+                                    onDeleteStop={handleDeleteStop}
+                                    onReorderStops={handleReorderStops}
+                                />
+                            </TabsContent>
+                        ))}
+                    </Tabs>
+                </Section>
+
+                {/* --- DOCUMENTS SECTION --- */}
+                {isOwner && (
+                    <Section title="Documents & Receipts">
+                        <Receipts
+                            tripId={trip._id}
+                            receipts={trip.receipts || []}
+                            onReceiptsChange={handleReceiptsChange}
+                        />
+                    </Section>
+                )}
+
+                {/* --- DISCUSSION SECTION --- */}
+                <Section
+                    title="Discussion"
+                    icon={<MessageCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />}
+                    className="mt-10"
+                    rightElement={post && (
+                        <button
+                            className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+                            onClick={handleLikeToggle}
+                            disabled={!user}
+                        >
+                            <Heart
+                                className={`w-4 h-4 ${post.likes.includes(user?.id || "") ? "fill-red-600 text-red-600 dark:fill-red-400 dark:text-red-400" : ""}`}
+                            />
+                            <span>{post.likeCount}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-500">Like</span>
+                        </button>
+                    )}
+                >
+                    <div className="w-full space-y-6">
+                        {!trip.isPublic && (
+                            <div className="p-8 text-center rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Comments are only available on public trips.
+                                </p>
+                            </div>
+                        )}
+
+                        {trip.isPublic && (
+                            <div className="w-full space-y-6">
+                                {/* 1. Comments Feed */}
+                                {post && post.comments.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {post.comments.map((comment) => (
+                                            <div
+                                                key={comment._id}
+                                                className="flex items-start gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm"
+                                            >
+                                                <Avatar
+                                                    user={{
+                                                        id: (comment.userId as any)?._id || (comment.userId as any)?.id,
+                                                        username: (comment.userId as any)?.username,
+                                                        email: (comment.userId as any)?.email,
+                                                        name: (comment.userId as any)?.name,
+                                                    }}
+                                                    size={36}
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                                            {comment.userId?.username || "Traveler"}
+                                                        </span>
+                                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                                            {new Date(comment.dateCreated).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                                        {comment.commentText}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    trip.isPublic && !loadingPost && (
+                                        <div className="p-10 text-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800">
+                                            <p className="text-sm text-gray-500">No comments yet. Be the first to share your thoughts.</p>
+                                        </div>
+                                    )
+                                )}
+
+                                {/* 2. Add Comment Input Area */}
+                                <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-5 space-y-4 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Add a comment</span>
+                                    </div>
+
+                                    <textarea
+                                        id="comment-box"
+                                        className="w-full min-h-[120px] rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent placeholder:text-gray-500 transition-all"
+                                        placeholder={user ? "Share feedback, tips, or questions about this trip..." : "Log in to comment"}
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                                                e.preventDefault();
+                                                handleAddComment();
+                                            }
+                                        }}
+                                        disabled={!user || commentSubmitting}
+                                    />
+
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-[11px] text-gray-500">
+                                            Tip: Press <kbd className="px-1.5 py-0.5 rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-sans">Cmd/Ctrl</kbd> + <kbd className="px-1.5 py-0.5 rounded border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-sans">Enter</kbd> to post.
+                                        </p>
+
+                                        <Button
+                                            onClick={handleAddComment}
+                                            disabled={!user || commentSubmitting || !commentText.trim().length}
+                                            className="px-6"
+                                        >
+                                            {commentSubmitting ? "Posting..." : "Post comment"}
+                                        </Button>
+                                    </div>
+                                    {!user && <p className="text-xs text-amber-600 dark:text-amber-500 text-right">Please log in to participate in the discussion.</p>}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </Section>
+
+                {/* --- MODALS --- */}
                 <AddStopModal open={openAdd} onClose={() => { setOpenAdd(false); setEditingStop(null); }} onSubmit={handleAddStop} initialStop={initialStop} />
                 <ShareTripModal open={shareOpen} onClose={() => setShareOpen(false)} onShare={async (email: string) => { await shareTrip(trip._id, email); setShareOpen(false); refresh(); }} />
                 <Modal title="Delete Trip?" isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>

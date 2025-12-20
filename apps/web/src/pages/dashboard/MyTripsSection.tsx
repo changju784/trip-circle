@@ -1,13 +1,54 @@
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 import { useTripsContext } from "@/contexts/TripsContext";
 import { TripCard } from "@/components/trip/TripCard";
+import { AuthContext } from "@/components/auth/AuthProvider";
+import { getPostByTrip, toggleLike, Post } from "@/lib/posts/posts-api";
+import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 
 export default function MyTripsSection() {
     const navigate = useNavigate();
+    const { user } = useContext(AuthContext);
     const { userTrips: trips, isLoading, error } = useTripsContext();
     const thumbnails = useSplashThumbnails(trips);
+
+    // Store post data (social stats) for each trip
+    const [postsData, setPostsData] = useState<Record<string, Post>>({});
+
+    // Load social stats for these trips (only works if a post exists/is public)
+    useEffect(() => {
+        async function loadSocialStats() {
+            const stats: Record<string, Post> = {};
+            await Promise.all(
+                trips.map(async (t) => {
+                    try {
+                        const post = await getPostByTrip(t._id);
+                        if (post) stats[t._id] = post;
+                    } catch (err) {
+                        // Trip might be private or have no post, ignore
+                    }
+                })
+            );
+            setPostsData(stats);
+        }
+
+        if (trips.length > 0) {
+            loadSocialStats();
+        }
+    }, [trips]);
+
+    const handleLike = async (tripId: string) => {
+        const post = postsData[tripId];
+        if (!user?.id || !post?._id) return;
+        try {
+            const updatedPost = await toggleLike(post._id, user.id);
+            setPostsData((prev) => ({ ...prev, [tripId]: updatedPost }));
+        } catch (err) {
+            console.error("Failed to like trip", err);
+        }
+    };
 
     return (
         <section className="space-y-5">
@@ -56,27 +97,35 @@ export default function MyTripsSection() {
                 <div className="grid gap-4 md:grid-cols-3">
                     {trips.map((trip) => {
                         const thumb = trip.thumbnail || thumbnails[trip._id] || null;
+                        const post = postsData[trip._id];
 
                         return (
                             <TripCard
                                 key={trip._id}
                                 trip={trip}
                                 thumbnailUrl={thumb}
-                                onClick={() =>
-                                    navigate(`/trip-circle/trip/${trip._id}`)
-                                }
+                                onClick={() => navigate(`/trip-circle/trip/${trip._id}`)}
                                 footer={
-                                    <Button
-                                        className="self-start"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(
-                                                `/trip-circle/trip/${trip._id}`
-                                            );
-                                        }}
-                                    >
-                                        View trip
-                                    </Button>
+                                    <div className="space-y-3">
+                                        <PostActivitySummary
+                                            likeCount={post?.likeCount || 0}
+                                            forkCount={post?.forkCount || 0}
+                                            commentCount={post?.commentCount || 0}
+                                            isLiked={user?.id ? post?.likes?.includes(user.id) : false}
+                                            onLike={() => handleLike(trip._id)}
+                                            onCommentClick={() => navigate(`/trip-circle/trip/${trip._id}`)}
+                                        />
+
+                                        <Button
+                                            className="w-full"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/trip-circle/trip/${trip._id}`);
+                                            }}
+                                        >
+                                            View this trip
+                                        </Button>
+                                    </div>
                                 }
                             />
                         );

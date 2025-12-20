@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
-import { Heart, MessageCircle, GitFork } from "lucide-react";
 
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -10,12 +9,12 @@ import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 import {
     getPosts,
     toggleLike,
-    addComment,
     Post,
     searchPosts,
 } from "@/lib/posts/posts-api";
 import { AuthContext } from "@/components/auth/AuthProvider";
 import { TripCard } from "@/components/trip/TripCard";
+import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 
 const SORT_OPTIONS: Option[] = [
     { id: "recent", label: "Most recent" },
@@ -33,16 +32,11 @@ export default function ExploreSection() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [, setError] = useState<string | null>(null);
-    const [commentInputs, setCommentInputs] = useState<Record<string, string>>(
-        {}
-    );
-    const [openComments, setOpenComments] = useState<Record<string, boolean>>(
-        {}
-    );
 
     // Manage sort option as a single Option object
     const [sortOption, setSortOption] = useState<Option>(SORT_OPTIONS[0]);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedSearch = useCallback(
         debounce((value: string) => {
             setDebouncedQuery(value);
@@ -92,21 +86,6 @@ export default function ExploreSection() {
             setPosts((prev) =>
                 prev.map((p) => (p._id === postId ? updatedPost : p))
             );
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const handleCommentSubmit = async (postId: string) => {
-        if (!user?.id) return;
-        const text = commentInputs[postId]?.trim();
-        if (!text) return;
-        try {
-            const updatedPost = await addComment(postId, user.id, text);
-            setPosts((prev) =>
-                prev.map((p) => (p._id === postId ? updatedPost : p))
-            );
-            setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
         } catch (err) {
             console.error(err);
         }
@@ -198,7 +177,6 @@ export default function ExploreSection() {
                         const isLiked = user?.id
                             ? post.likes.includes(user.id)
                             : false;
-                        const showComments = openComments[post._id];
 
                         return (
                             <TripCard
@@ -210,159 +188,15 @@ export default function ExploreSection() {
                                 }
                                 footer={
                                     <div className="space-y-3">
-                                        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleLike(post._id);
-                                                }}
-                                                className="flex items-center gap-1 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-                                                disabled={!user}
-                                            >
-                                                <Heart
-                                                    className={`w-4 h-4 ${
-                                                        isLiked
-                                                            ? "fill-red-600 text-red-600 dark:fill-red-400 dark:text-red-400"
-                                                            : ""
-                                                    }`}
-                                                />
-                                                <span>{post.likeCount}</span>
-                                            </button>
-                                            <div className="flex items-center gap-1">
-                                                <GitFork className="w-4 h-4" />
-                                                <span>
-                                                    {post.forkCount}
-                                                </span>
-                                            </div>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setOpenComments((prev) => ({
-                                                        ...prev,
-                                                        [post._id]:
-                                                            !prev[post._id],
-                                                    }));
-                                                }}
-                                                className="flex items-center gap-1 hover:text-sky-600 dark:hover:text-sky-400 transition-colors disabled:opacity-50"
-                                            >
-                                                <MessageCircle className="w-4 h-4" />
-                                                <span>
-                                                    {post.commentCount}
-                                                </span>
-                                            </button>
-                                        </div>
+                                        <PostActivitySummary
+                                            likeCount={post.likeCount}
+                                            forkCount={post.forkCount}
+                                            commentCount={post.commentCount}
+                                            isLiked={isLiked}
+                                            onLike={() => handleLike(post._id)}
+                                        />
 
-                                        {showComments && (
-                                            <div
-                                                className="space-y-2"
-                                                onClick={(e) =>
-                                                    e.stopPropagation()
-                                                }
-                                            >
-                                                {post.comments?.length > 0 && (
-                                                    <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
-                                                        {post.comments
-                                                            .slice(-3)
-                                                            .map(
-                                                                (comment) => (
-                                                                    <div
-                                                                        key={
-                                                                            comment._id
-                                                                        }
-                                                                        className="rounded-md bg-gray-50 dark:bg-gray-700/50 px-3 py-2 text-sm"
-                                                                    >
-                                                                        <span className="font-semibold text-gray-900 dark:text-gray-100">
-                                                                            {comment
-                                                                                .userId
-                                                                                ?.username ||
-                                                                                "User"}
-                                                                            :
-                                                                        </span>{" "}
-                                                                        <span className="text-gray-700 dark:text-gray-300">
-                                                                            {
-                                                                                comment.commentText
-                                                                            }
-                                                                        </span>
-                                                                    </div>
-                                                                )
-                                                            )}
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-2">
-                                                    <Input
-                                                        placeholder={
-                                                            user
-                                                                ? "Add a comment"
-                                                                : "Log in to comment"
-                                                        }
-                                                        value={
-                                                            commentInputs[
-                                                                post._id
-                                                            ] ?? ""
-                                                        }
-                                                        onChange={(e) =>
-                                                            setCommentInputs(
-                                                                (p) => ({
-                                                                    ...p,
-                                                                    [post._id]:
-                                                                        e
-                                                                            .target
-                                                                            .value,
-                                                                })
-                                                            )
-                                                        }
-                                                        onKeyDown={(e) => {
-                                                            if (
-                                                                e.key ===
-                                                                "Enter"
-                                                            ) {
-                                                                e.preventDefault();
-                                                                handleCommentSubmit(
-                                                                    post._id
-                                                                );
-                                                            }
-                                                        }}
-                                                        disabled={!user}
-                                                    />
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            handleCommentSubmit(
-                                                                post._id
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            !user ||
-                                                            !(
-                                                                commentInputs[
-                                                                    post._id
-                                                                ]?.trim()
-                                                                    .length
-                                                            )
-                                                        }
-                                                    >
-                                                        Post
-                                                    </Button>
-                                                </div>
-                                                {!user && (
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        Log in to add a
-                                                        comment.
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <Button
-                                            className="w-full"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(
-                                                    `/trip-circle/trip/${trip._id}`
-                                                );
-                                            }}
-                                        >
+                                        <Button className="w-full" onClick={() => navigate(`/trip-circle/trip/${trip._id}`)}>
                                             View this trip
                                         </Button>
                                     </div>
