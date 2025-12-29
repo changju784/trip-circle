@@ -38,13 +38,26 @@ export default function StopItem({ stop, onEdit, onDelete }: { stop: Stop; onEdi
             </button>
 
             {/* Content */}
-            <div className="flex-1">
-                <div className="font-medium dark:text-gray-100">{stop.title}</div>
-                <div className="text-sm text-muted-foreground dark:text-gray-400 flex gap-4 mt-1">
-                    <div>{stop.time ?? "--:--"}</div>
-                    <div>{stop.locationName ?? ""}</div>
+            <div className="flex-1 min-w-0"> {/* added min-w-0 to prevent text overflow issues */}
+                <div className="flex items-center gap-2">
+                    <div className="font-medium dark:text-gray-100 truncate">{stop.title}</div>
                 </div>
-                {stop.description && <div className="text-sm mt-2 text-muted-foreground dark:text-gray-400">{stop.description}</div>}
+
+                <div className="text-sm text-muted-foreground dark:text-gray-400 flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                    <div>{stop.time ?? "--:--"}</div>
+
+                    <div className="font-medium text-indigo-600 dark:text-indigo-400">
+                        {stop.price && stop.price > 0 ? `$${stop.price.toLocaleString()}` : "Free"}
+                    </div>
+
+                    <div className="truncate flex-1">{stop.locationName ?? ""}</div>
+                </div>
+
+                {stop.description && (
+                    <div className="text-sm mt-2 text-muted-foreground dark:text-gray-400 line-clamp-2">
+                        {stop.description}
+                    </div>
+                )}
             </div>
 
             {/* Actions */}

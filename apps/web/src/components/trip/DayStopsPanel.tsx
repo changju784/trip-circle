@@ -20,6 +20,10 @@ import {
 export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: any) {
     const day = days[selectedDay];
 
+    const dailyPriceTotal = day.stops.reduce((sum: number, stop: any) => {
+        return sum + (Number(stop.price) || 0);
+    }, 0);
+
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -71,16 +75,27 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
             {/* Day header and stops */}
             <div className="bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded-lg p-6">
                 <div className="flex items-start justify-between mb-4">
-                    <div>
-                        <div className="text-sm font-medium">Day {selectedDay + 1}</div>
-                        <div className="text-sm text-muted-foreground dark:text-gray-400">
-                            {dayLabel(day.date)}
+                    <div className="flex items-center gap-4"> {/* Flex container for date + total */}
+                        <div>
+                            <div className="text-sm font-medium">Day {selectedDay + 1}</div>
+                            <div className="text-sm text-muted-foreground dark:text-gray-400">
+                                {dayLabel(day.date)}
+                            </div>
                         </div>
+
+                        {/* 2. Total Price Badge */}
+                        {day.stops.length > 0 && (
+                            <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-full">
+                                <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                                    Total: ${dailyPriceTotal.toLocaleString()}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     <button
                         onClick={() => onOpenAdd(selectedDay)}
-                        className="bg-black dark:bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-500"
+                        className="bg-black dark:bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-500 transition-colors"
                     >
                         + Add Stop
                     </button>
