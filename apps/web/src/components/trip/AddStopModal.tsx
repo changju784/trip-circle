@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 // Ensure this path matches where you saved the new Modal wrapper
 import { Modal } from "@/components/ui/Modal";
 import { useForm } from "react-hook-form";
-import { geocodeLocation, geocodeSearch } from "@/lib/geocode";
 import { Button } from "../ui/Button";
 import { Stop } from "@/lib/trips/trips-api";
+import { geocodeLocation, geocodeSearch } from "@/lib/geo/geo-api";
 
 type Props = {
     open: boolean;
@@ -15,6 +15,7 @@ type Props = {
         locationName?: string;
         lat?: number | null;
         lng?: number | null;
+        price?: number | null;
         description?: string;
     }, stopId?: string | null) => void;
     initialStop?: Stop | null;
@@ -113,6 +114,7 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
             locationName: data.locationName,
             lat,
             lng,
+            price: data.price,
             description: data.description,
         }, initialStop?.id ?? null);
 

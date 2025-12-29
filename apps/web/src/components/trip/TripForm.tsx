@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import FormContainer from "@/components/form/FormContainer";
 import { Button } from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
-import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
 import { Upload } from "@/components/ui/Upload";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { searchCities } from "@/lib/geo/geo-api";
 
 export type TripFormValues = {
     title: string;
