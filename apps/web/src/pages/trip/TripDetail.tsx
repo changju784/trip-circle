@@ -21,6 +21,7 @@ import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 import { useGetTripBudgetInfo } from "./hooks/use-get-trip-budget-info";
 import { Progress } from "@/components/ui/Progress";
 import { cn } from "@/lib/utils";
+import { Trip } from "@/lib/trips/trips-api";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -29,7 +30,7 @@ export default function TripDetailPage() {
     const { deleteTrip, forkTrip } = useTripsContext();
     const { user } = useAuth();
 
-    const [trip, setTrip] = useState<any | null>(null);
+    const [trip, setTrip] = useState<Trip | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
     const [selectedDay, setSelectedDay] = useState(0);
     const [openAdd, setOpenAdd] = useState(false);

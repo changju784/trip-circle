@@ -26,6 +26,16 @@ export interface Destination {
     label: string;
 }
 
+export interface Receipt {
+    id: string;
+    name: string;
+    url: string;
+    contentType: string;
+    size: number;
+    uploadedAt: string;
+    dayDate?: string;
+}
+
 export interface Trip {
     _id: string;
     id?: string;
@@ -36,6 +46,7 @@ export interface Trip {
     totalPrice: number | null;
     budget: number | null;
     thumbnail: string | null;
+    receipts: Receipt[];
     startDate: string;
     endDate: string;
     days: DayWithStops[];

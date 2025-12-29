@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { useForm } from "react-hook-form";
 import { geocodeLocation, geocodeSearch } from "@/lib/geocode";
-import { Stop } from "@/lib/tripStorage";
 import { Button } from "../ui/Button";
+import { Stop } from "@/lib/trips/trips-api";
 
 type Props = {
     open: boolean;

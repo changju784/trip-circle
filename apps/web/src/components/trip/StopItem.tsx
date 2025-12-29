@@ -1,9 +1,9 @@
 import React from "react";
-import { Stop } from "../../lib/tripStorage";
 import { Pencil, Trash2, GripVertical } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Stop } from "@/lib/trips/trips-api";
 
 export default function StopItem({ stop, onEdit, onDelete }: { stop: Stop; onEdit?: (id: string) => void; onDelete?: (id: string) => void; }) {
     const {
