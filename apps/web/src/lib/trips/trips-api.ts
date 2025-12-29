@@ -60,6 +60,7 @@ export interface CreateTripInput {
     destinations?: Destination[];
     startDate: string;
     endDate: string;
+    budget?: number | null;
     days?: DayWithStops[];
     isPublic?: boolean;
     thumbnail?: string | null;
