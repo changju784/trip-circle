@@ -18,6 +18,9 @@ import { Avatar } from "@/components/ui/Avatar";
 import { addComment, getPostByTrip, toggleLike, type Post } from "@/lib/posts/posts-api";
 import { Section } from "@/components/ui/Section";
 import { PostActivitySummary } from "@/components/post/PostActivitySummary";
+import { useGetTripBudgetInfo } from "./hooks/use-get-trip-budget-info";
+import { Progress } from "@/components/ui/Progress";
+import { cn } from "@/lib/utils";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -135,6 +138,8 @@ export default function TripDetailPage() {
         }
         return null;
     }, [editingStop, trip]);
+
+    const tripBudgetInfo = useGetTripBudgetInfo(trip);
 
     const refresh = () => {
         setRefreshKey(prev => prev + 1);
@@ -349,6 +354,50 @@ export default function TripDetailPage() {
                             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed italic">
                                 {trip.description}
                             </p>
+                        )}
+
+                        {/* --- NEW BUDGET WIDGET (Owner Only) --- */}
+                        {isOwner && tripBudgetInfo && (
+                            <div className="mt-6 p-5 rounded-xl bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 max-w-2xl shadow-sm">
+                                <div className="flex justify-between items-end mb-3">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+                                            Trip Budget Status
+                                        </p>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                                ${tripBudgetInfo.total.toLocaleString()}
+                                            </span>
+                                            <span className="text-sm text-gray-500">
+                                                spent of ${tripBudgetInfo.limit.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+                                            {tripBudgetInfo.isOverBudget ? "Over Budget" : "Remaining"}
+                                        </p>
+                                        <span className={cn(
+                                            "text-lg font-bold",
+                                            tripBudgetInfo.isOverBudget ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
+                                        )}>
+                                            {tripBudgetInfo.isOverBudget ? "+" : ""}${Math.abs(tripBudgetInfo.remaining).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <Progress
+                                    value={tripBudgetInfo.percentUsed}
+                                    className="h-2"
+                                    indicatorClassName={tripBudgetInfo.isOverBudget ? "bg-red-500" : "bg-emerald-500"}
+                                />
+
+                                {tripBudgetInfo.isOverBudget && (
+                                    <p className="text-[11px] text-red-500 mt-2 font-medium flex items-center gap-1">
+                                        <span>⚠️</span> Careful! You've exceeded your set budget.
+                                    </p>
+                                )}
+                            </div>
                         )}
 
                         <div className="flex items-center gap-4 text-sm">
