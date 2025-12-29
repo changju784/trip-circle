@@ -12,6 +12,7 @@ export interface Stop {
     locationName?: string;
     lat?: number | null;
     lng?: number | null;
+    price?: number | null;
     description?: string;
 }
 
@@ -32,6 +33,8 @@ export interface Trip {
     description: string;
     destinations: Destination[];
     isPublic: boolean;
+    totalPrice: number | null;
+    budget: number | null;
     thumbnail: string | null;
     startDate: string;
     endDate: string;
