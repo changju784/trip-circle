@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 // Ensure this path matches where you saved the new Modal wrapper
 import { Modal } from "@/components/ui/Modal";
 import { useForm } from "react-hook-form";
-import { geocodeLocation, geocodeSearch } from "@/lib/geocode";
-import { Stop } from "@/lib/tripStorage";
 import { Button } from "../ui/Button";
+import { Stop } from "@/lib/trips/trips-api";
+import { geocodeLocation, geocodeSearch } from "@/lib/geo/geo-api";
 
 type Props = {
     open: boolean;
@@ -15,6 +15,7 @@ type Props = {
         locationName?: string;
         lat?: number | null;
         lng?: number | null;
+        price?: number | null;
         description?: string;
     }, stopId?: string | null) => void;
     initialStop?: Stop | null;
@@ -24,6 +25,7 @@ type FormData = {
     title: string;
     time?: string;
     locationName?: string;
+    price?: number;
     description?: string;
 };
 
@@ -68,8 +70,14 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
             setValue("time", initialStop.time || "");
             setValue("locationName", initialStop.locationName || "");
             setValue("description", initialStop.description || "");
+            setValue("price", initialStop.price ?? undefined);
+
             if (initialStop.lat != null && initialStop.lng != null) {
-                setSelectedCoords({ lat: initialStop.lat, lng: initialStop.lng, displayName: initialStop.locationName });
+                setSelectedCoords({
+                    lat: initialStop.lat,
+                    lng: initialStop.lng,
+                    displayName: initialStop.locationName,
+                });
             } else {
                 setSelectedCoords(null);
             }
@@ -106,6 +114,7 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
             locationName: data.locationName,
             lat,
             lng,
+            price: data.price,
             description: data.description,
         }, initialStop?.id ?? null);
 
@@ -152,6 +161,41 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
                                     setSuggestions([]);
                                 }}>{s.displayName}</div>
                             ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Price (USD) */}
+                <div>
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                        Price (USD, Optional)
+                    </label>
+
+                    <div className="relative mt-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                            $
+                        </span>
+
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            step={1}
+                            min={0}
+                            placeholder="e.g., 25"
+                            {...register("price", {
+                                min: { value: 0, message: "Price cannot be negative" },
+                                valueAsNumber: true,
+                            })}
+                            className={`w-full pl-7 pr-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.price
+                                ? "border-red-600 dark:border-red-500"
+                                : "border-gray-300 dark:border-gray-600"
+                                }`}
+                        />
+                    </div>
+
+                    {errors.price && (
+                        <div className="text-red-600 text-xs mt-1">
+                            {errors.price.message}
                         </div>
                     )}
                 </div>

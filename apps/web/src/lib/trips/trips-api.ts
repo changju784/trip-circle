@@ -12,6 +12,7 @@ export interface Stop {
     locationName?: string;
     lat?: number | null;
     lng?: number | null;
+    price?: number | null;
     description?: string;
 }
 
@@ -25,6 +26,16 @@ export interface Destination {
     label: string;
 }
 
+export interface Receipt {
+    id: string;
+    name: string;
+    url: string;
+    contentType: string;
+    size: number;
+    uploadedAt: string;
+    dayDate?: string;
+}
+
 export interface Trip {
     _id: string;
     id?: string;
@@ -32,7 +43,10 @@ export interface Trip {
     description: string;
     destinations: Destination[];
     isPublic: boolean;
+    totalPrice: number | null;
+    budget: number | null;
     thumbnail: string | null;
+    receipts: Receipt[];
     startDate: string;
     endDate: string;
     days: DayWithStops[];
@@ -46,6 +60,7 @@ export interface CreateTripInput {
     destinations?: Destination[];
     startDate: string;
     endDate: string;
+    budget?: number | null;
     days?: DayWithStops[];
     isPublic?: boolean;
     thumbnail?: string | null;

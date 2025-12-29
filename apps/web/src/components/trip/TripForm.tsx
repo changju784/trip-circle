@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import FormContainer from "@/components/form/FormContainer";
 import { Button } from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
-import { searchCities } from "@/lib/citySearch";
 import { Toggle } from "@/components/ui/Toggle";
 import { Upload } from "@/components/ui/Upload";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { searchCities } from "@/lib/geo/geo-api";
 
 export type TripFormValues = {
     title: string;
@@ -15,6 +15,7 @@ export type TripFormValues = {
     description?: string;
     startDate: string;
     endDate: string;
+    budget?: number;
     isPublic?: boolean;
     thumbnail?: string | null;
 };
@@ -49,6 +50,7 @@ export default function TripForm({
             description: "",
             startDate: new Date().toISOString().slice(0, 10),
             endDate: new Date().toISOString().slice(0, 10),
+            budget: 0,
             isPublic: false,
             destinations: [],
             thumbnail: null,
@@ -154,21 +156,42 @@ export default function TripForm({
                     </div>
                 </div>
 
-                {/* Upload */}
-                <Upload
-                    label="Upload Trip Thumbnail (Optional)"
-                    accept="image/*"
-                    onFileSelect={(data) => {
-                        (window as any).__trip_thumbnail = data;
-                        setPreview(data);
-                    }}
-                />
-                {preview && (
-                    <div className="mt-3">
-                        <div className="text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Preview</div>
-                        <img src={preview} alt="preview" className="w-40 h-28 object-cover rounded-lg border border-gray-300 dark:border-gray-600 shadow" />
+                {/* Budget (USD only) */}
+                <div>
+                    <div className="text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">
+                        Budget (USD, Optional)
                     </div>
-                )}
+
+                    <div className="relative">
+                        {/* Dollar prefix */}
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                            $
+                        </span>
+
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            step={1}
+                            min={0}
+                            {...register("budget", {
+                                min: { value: 0, message: "Budget cannot be negative" },
+                                valueAsNumber: true,
+                            })}
+                            placeholder="1500"
+                            className={`w-full pl-7 pr-4 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.budget
+                                ? "border-red-600 dark:border-red-500"
+                                : "border-gray-300 dark:border-gray-600"
+                                }`}
+                        />
+                    </div>
+
+                    {errors.budget && (
+                        <div className="text-red-600 text-xs mt-1">
+                            {errors.budget.message}
+                        </div>
+                    )}
+                </div>
+
 
                 {/* Public Toggle */}
                 <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/80 p-4 rounded-xl border border-gray-100 dark:border-gray-700">

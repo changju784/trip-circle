@@ -44,6 +44,10 @@ export function TripCard({ trip, thumbnailUrl, onClick, footer }: TripCardProps)
                         </p>
                     )}
 
+                    <p className="text-xs font-medium text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-900/30 inline-flex px-2 py-1 rounded-full uppercase tracking-tight border border-emerald-100 dark:border-emerald-800/50">
+                        TOTAL: ${trip.totalPrice?.toLocaleString() ?? 0}
+                    </p>
+
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                         {destinationSummary}
                     </p>

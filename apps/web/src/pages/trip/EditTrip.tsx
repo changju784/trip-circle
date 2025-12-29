@@ -49,6 +49,7 @@ export default function EditTripPage() {
                 startDate: data.startDate,
                 endDate: data.endDate,
                 isPublic: !!data.isPublic,
+                budget: data.budget || null,
                 thumbnail,
                 destinations,
             });
@@ -87,6 +88,7 @@ export default function EditTripPage() {
         description: trip.description || "",
         startDate: trip.startDate.split("T")[0],
         endDate: trip.endDate.split("T")[0],
+        budget: trip.budget || 0,
         isPublic: trip.isPublic ?? false,
         destinations: trip.destinations?.map((d: any) => ({ id: d.id, label: d.label })) ?? [],
         thumbnail: trip.thumbnail

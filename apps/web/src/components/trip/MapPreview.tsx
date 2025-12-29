@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, useMap, Popup } from "react-leaflet";
 import L, { LatLngTuple } from "leaflet";
-import { Stop } from "@/lib/tripStorage";
+import { Stop } from "@/lib/trips/trips-api";
 
 // Setup default Leaflet marker icons from node_modules
 L.Icon.Default.mergeOptions({
