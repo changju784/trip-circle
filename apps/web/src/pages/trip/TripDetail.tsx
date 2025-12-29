@@ -4,7 +4,7 @@ import { Heart, MessageCircle } from "lucide-react";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
-import AddStopModal from "@/components/trip/AddStopModal";
+import StopDetailModal from "@/components/trip/StopDetailModal";
 import ShareTripModal from "@/components/trip/ShareTripModal";
 import Receipts from "@/components/trip/Receipts";
 import { Tabs, TabsContent } from "@/components/ui/Tabs";
@@ -451,6 +451,7 @@ export default function TripDetailPage() {
                                 <DayStopsPanel
                                     days={trip.days}
                                     selectedDay={i}
+                                    isOwner={isOwner}
                                     onOpenAdd={(dayIndex) => {
                                         setSelectedDay(dayIndex);
                                         setEditingStop(null);
@@ -593,7 +594,7 @@ export default function TripDetailPage() {
                 </Section>
 
                 {/* --- MODALS --- */}
-                <AddStopModal open={openAdd} onClose={() => { setOpenAdd(false); setEditingStop(null); }} onSubmit={handleAddStop} initialStop={initialStop} />
+                <StopDetailModal open={openAdd} onClose={() => { setOpenAdd(false); setEditingStop(null); }} onSubmit={handleAddStop} initialStop={initialStop} readOnly={!isOwner} />
                 <ShareTripModal open={shareOpen} onClose={() => setShareOpen(false)} onShare={async (email: string) => { await shareTrip(trip._id, email); setShareOpen(false); refresh(); }} />
                 <Modal title="Delete Trip?" isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
                     <div className="space-y-4">

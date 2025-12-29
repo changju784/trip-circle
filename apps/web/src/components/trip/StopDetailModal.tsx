@@ -19,6 +19,7 @@ type Props = {
         description?: string;
     }, stopId?: string | null) => void;
     initialStop?: Stop | null;
+    readOnly?: boolean;
 };
 
 type FormData = {
@@ -29,7 +30,7 @@ type FormData = {
     description?: string;
 };
 
-export default function AddStopModal({ open, onClose, onSubmit, initialStop = null }: Props) {
+export default function StopDetailModal({ open, onClose, onSubmit, initialStop = null, readOnly = false }: Props) {
     const { register, handleSubmit, reset, formState, setValue, watch } = useForm<FormData>({
         defaultValues: {
             title: "",
@@ -134,21 +135,21 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
                 {/* Title */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Title *</label>
-                    <input {...register("title", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.title ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} placeholder="e.g., Eiffel Tower" />
+                    <input {...register("title", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.title ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} placeholder="e.g., Eiffel Tower" disabled={readOnly} />
                     {errors.title && <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>}
                 </div>
 
                 {/* Time */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Time *</label>
-                    <input {...register("time", { required: "This field is required" })} type="time" className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} />
+                    <input {...register("time", { required: "This field is required" })} type="time" className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} disabled={readOnly} />
                     {errors.time && <div className="text-red-600 text-xs mt-1">{errors.time.message}</div>}
                 </div>
 
                 {/* Location */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Location *</label>
-                    <input {...register("locationName", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.locationName ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} placeholder="e.g., Champ de Mars, Paris" />
+                    <input {...register("locationName", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.locationName ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} placeholder="e.g., Champ de Mars, Paris" disabled={readOnly} />
                     {errors.locationName && <div className="text-red-600 text-xs mt-1">{errors.locationName.message}</div>}
                     {geoError && (<div className="text-red-600 text-xs mt-1">{geoError}</div>)}
 
@@ -181,6 +182,7 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
                             inputMode="numeric"
                             step={1}
                             min={0}
+                            disabled={readOnly}
                             placeholder="e.g., 25"
                             {...register("price", {
                                 min: { value: 0, message: "Price cannot be negative" },
@@ -203,23 +205,25 @@ export default function AddStopModal({ open, onClose, onSubmit, initialStop = nu
                 {/* Description */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Description</label>
-                    <textarea {...register("description")} className="w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border-gray-300 dark:border-gray-600" placeholder="Notes, activities, or details about this stop..." />
+                    <textarea {...register("description")} className="w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border-gray-300 dark:border-gray-600" placeholder="Notes, activities, or details about this stop..." disabled={readOnly} />
                 </div>
 
                 {/* Buttons */}
-                <div className="flex justify-end gap-3">
+                {readOnly ? null : (
+                    <div className="flex justify-end gap-3">
 
-                    <Button variant="outline" type="button" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={loading}
-                    >
-                        {loading ? "Saving..." : initialStop ? "Save" : "Add Stop"}
-                    </Button>
-                </div>
+                        <Button variant="outline" type="button" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={loading}
+                        >
+                            {loading ? "Saving..." : initialStop ? "Save" : "Add Stop"}
+                        </Button>
+                    </div>
+                )}
             </form>
         </Modal>
     );
