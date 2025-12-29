@@ -16,8 +16,17 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { Button } from "../ui/Button";
 
-export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: any) {
+export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: {
+    days: any[];
+    selectedDay: number;
+    isOwner?: boolean;
+    onOpenAdd: (dayIndex: number) => void;
+    onEditStop?: (stopId: string) => void;
+    onDeleteStop?: (stopId: string) => void;
+    onReorderStops?: (dayIndex: number, reorderedStops: any[]) => void;
+}) {
     const day = days[selectedDay];
 
     const dailyPriceTotal = day.stops.reduce((sum: number, stop: any) => {
@@ -93,12 +102,16 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
                         )}
                     </div>
 
-                    <button
-                        onClick={() => onOpenAdd(selectedDay)}
-                        className="bg-black dark:bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-500 transition-colors"
-                    >
-                        + Add Stop
-                    </button>
+                    {/* Add Stop Button */}
+                    {isOwner && (
+                        <Button
+                            variant="dark"
+                            size="sm"
+                            onClick={() => onOpenAdd(selectedDay)}
+                        >
+                            + Add Stop
+                        </Button>
+                    )}
                 </div>
 
                 {day.stops.length === 0 ? (
@@ -121,6 +134,7 @@ export default function DayStopsPanel({ days, selectedDay, onOpenAdd, onEditStop
                                     <StopItem
                                         key={stop.id}
                                         stop={stop}
+                                        isOwner={isOwner}
                                         onEdit={() => onEditStop?.(stop.id)}
                                         onDelete={() => onDeleteStop?.(stop.id)}
                                     />

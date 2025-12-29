@@ -1,11 +1,11 @@
 import React from "react";
-import { Pencil, Trash2, GripVertical } from "lucide-react";
+import { Pencil, Trash2, GripVertical, Eye } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Stop } from "@/lib/trips/trips-api";
 
-export default function StopItem({ stop, onEdit, onDelete }: { stop: Stop; onEdit?: (id: string) => void; onDelete?: (id: string) => void; }) {
+export default function StopItem({ stop, isOwner, onEdit, onDelete }: { stop: Stop; isOwner?: boolean; onEdit?: (id: string) => void; onDelete?: (id: string) => void; }) {
     const {
         attributes,
         listeners,
@@ -62,25 +62,38 @@ export default function StopItem({ stop, onEdit, onDelete }: { stop: Stop; onEdi
 
             {/* Actions */}
             <div className="flex gap-1">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit?.(stop.id)}
-                    className="h-8 w-8 text-muted-foreground dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-                    title="Edit Stop"
-                >
-                    <Pencil className="h-4 w-4" />
-                </Button>
-
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete?.(stop.id)}
-                    className="h-8 w-8 text-muted-foreground dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400"
-                    title="Delete Stop"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                {isOwner ? (
+                    <>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit?.(stop.id)}
+                            className="h-8 w-8 text-muted-foreground dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                            title="Edit Stop"
+                        >
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete?.(stop.id)}
+                            className="h-8 w-8 text-muted-foreground dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                            title="Delete Stop"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </>
+                ) : (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit?.(stop.id)} // Reusing onEdit to open the modal
+                        className="h-8 w-8 text-muted-foreground dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                        title="View Details"
+                    >
+                        <Eye className="h-4 w-4" />
+                    </Button>
+                )}
             </div>
         </div>
     );
