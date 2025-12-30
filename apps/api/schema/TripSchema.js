@@ -20,6 +20,14 @@ const StopSchema = new mongoose.Schema(
         id: { type: String, trim: true },              // frontend-generated id
         title: { type: String, trim: true },           // ← no longer required
         time: { type: String },
+        category: {
+            type: String,
+            enum: [
+                'dining', 'lodging', 'sightseeing', 'activity',
+                'shopping', 'transit', 'nightlife', 'other', 'none'
+            ],
+            default: 'none'
+        },
         locationName: { type: String },
         lat: { type: Number },
         lng: { type: Number },
@@ -53,7 +61,9 @@ const TripSchema = new mongoose.Schema({
     destinations: [
         {
             id: { type: String, trim: true },
-            label: { type: String, trim: true }
+            label: { type: String, trim: true },
+            lat: { type: Number },
+            lng: { type: Number },
         }
     ],
 

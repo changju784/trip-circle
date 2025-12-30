@@ -118,16 +118,34 @@ export async function updateTrip(id, updates) {
         }
     }
 
-    /* ---------- price recalculation ---------- */
+    /* ---------- deep-mapping days and stops ---------- */
     if (updates.days !== undefined) {
-        updates.days = updates.days.map(day => ({
-            ...day,
-            pricePerDay: calculateDayPrice(day)
-        }));
+        updates.days = updates.days.map(day => {
+            const processedStops = (day.stops || []).map(stop => ({
+                id: stop.id,
+                title: stop.title,
+                time: stop.time,
+                category: stop.category || 'none',
+                locationName: stop.locationName,
+                lat: stop.lat,
+                lng: stop.lng,
+                price: stop.price,
+                description: stop.description
+            }));
+
+            const updatedDay = {
+                ...day,
+                stops: processedStops
+            };
+
+            return {
+                ...updatedDay,
+                pricePerDay: calculateDayPrice(updatedDay)
+            };
+        });
 
         updates.totalPrice = calculateTripPrice(updates.days);
     }
-
 
     return Trip.findByIdAndUpdate(id, updates, {
         new: true,

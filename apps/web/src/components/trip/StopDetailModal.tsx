@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
-// Ensure this path matches where you saved the new Modal wrapper
 import { Modal } from "@/components/ui/Modal";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/Button";
-import { Stop } from "@/lib/trips/trips-api";
+import { Destination, Stop, StopCategory } from "@/lib/trips/trips-api";
 import { geocodeLocation, geocodeSearch } from "@/lib/geo/geo-api";
+import Select from "../ui/Select";
+import { STOP_CATEGORIES } from "@/lib/const/stop-categories";
 
-type Props = {
+type StopDetailModalProps = {
     open: boolean;
     onClose: () => void;
     onSubmit: (data: {
         title: string;
+        category?: StopCategory;
         time?: string;
         locationName?: string;
         lat?: number | null;
@@ -18,19 +20,28 @@ type Props = {
         price?: number | null;
         description?: string;
     }, stopId?: string | null) => void;
+    cityContexts?: Destination[];
     initialStop?: Stop | null;
     readOnly?: boolean;
 };
 
 type FormData = {
     title: string;
+    category: StopCategory;
     time?: string;
     locationName?: string;
     price?: number;
     description?: string;
 };
 
-export default function StopDetailModal({ open, onClose, onSubmit, initialStop = null, readOnly = false }: Props) {
+export default function StopDetailModal({
+    open,
+    onClose,
+    onSubmit,
+    cityContexts = [],
+    initialStop = null,
+    readOnly = false
+}: StopDetailModalProps) {
     const { register, handleSubmit, reset, formState, setValue, watch } = useForm<FormData>({
         defaultValues: {
             title: "",
@@ -47,6 +58,7 @@ export default function StopDetailModal({ open, onClose, onSubmit, initialStop =
     const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number; displayName?: string } | null>(null);
 
     const locationValue = watch("locationName");
+    const categoryValue = watch("category");
 
     // fetch suggestions as user types (debounced)
     useEffect(() => {
@@ -56,14 +68,14 @@ export default function StopDetailModal({ open, onClose, onSubmit, initialStop =
             return;
         }
         const t = setTimeout(async () => {
-            const res = await geocodeSearch(locationValue);
+            const res = await geocodeSearch(locationValue, cityContexts);
             if (mounted) setSuggestions(res);
         }, 350);
         return () => {
             mounted = false;
             clearTimeout(t);
         };
-    }, [locationValue]);
+    }, [locationValue, cityContexts]);
 
     useEffect(() => {
         if (initialStop) {
@@ -84,6 +96,7 @@ export default function StopDetailModal({ open, onClose, onSubmit, initialStop =
             }
         } else {
             reset();
+            setSelectedCoords(null);
         }
     }, [initialStop, setValue, reset]);
 
@@ -94,23 +107,26 @@ export default function StopDetailModal({ open, onClose, onSubmit, initialStop =
         let lat = null as number | null;
         let lng = null as number | null;
 
-        // Prefer selected suggestion coords
+        // 1. Use coordinates from the suggestion the user clicked
         if (selectedCoords) {
             lat = selectedCoords.lat;
             lng = selectedCoords.lng;
-        } else if (data.locationName) {
-            const result = await geocodeLocation(data.locationName);
+        }
+        // 2. Fallback: If user didn't click a suggestion, try to geocode the string
+        else if (data.locationName) {
+            const result = await geocodeLocation(data.locationName, cityContexts);
 
             if (result) {
                 lat = result.lat;
                 lng = result.lng;
             } else {
-                setGeoError("Couldn't find this location. Coordinates saved as null.");
+                setGeoError("Location not found within trip area. Saving without coordinates.");
             }
         }
 
         onSubmit({
             title: data.title,
+            category: data.category,
             time: data.time,
             locationName: data.locationName,
             lat,
@@ -131,36 +147,78 @@ export default function StopDetailModal({ open, onClose, onSubmit, initialStop =
             title={initialStop ? "Edit Stop" : "Add Stop"}
         >
             <form onSubmit={handleSubmit(submit)} className="space-y-4">
+                {/* Title & Category Row */}
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-[2]">
+                        <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Title *</label>
+                        <input
+                            {...register("title", { required: "Required" })}
+                            className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.title ? "border-red-600" : "border-gray-300 dark:border-gray-600"}`}
+                            placeholder="e.g., Eiffel Tower"
+                            disabled={readOnly}
+                        />
+                    </div>
 
-                {/* Title */}
-                <div>
-                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Title *</label>
-                    <input {...register("title", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.title ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} placeholder="e.g., Eiffel Tower" disabled={readOnly} />
-                    {errors.title && <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>}
+                    <div className="flex-1">
+                        <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Category</label>
+                        <div className="mt-1">
+                            <Select
+                                value={STOP_CATEGORIES.find(c => c.id === categoryValue) || STOP_CATEGORIES[8]}
+                                onChange={(val) => {
+                                    const option = val as any;
+                                    setValue("category", option.id as StopCategory);
+                                }}
+                                fetchOptions={async (q) =>
+                                    STOP_CATEGORIES.filter(c => c.label.toLowerCase().includes(q.toLowerCase()))
+                                }
+                                showSearchbar={false}
+                                showBadgedropdown={true}
+                                showCheckMark={false}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Time */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Time *</label>
-                    <input {...register("time", { required: "This field is required" })} type="time" className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} disabled={readOnly} />
+                    <input
+                        {...register("time", { required: "This field is required" })}
+                        type="time"
+                        className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+                        disabled={readOnly}
+                    />
                     {errors.time && <div className="text-red-600 text-xs mt-1">{errors.time.message}</div>}
                 </div>
 
                 {/* Location */}
-                <div>
+                <div className="relative">
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Location *</label>
-                    <input {...register("locationName", { required: "This field is required" })} className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.locationName ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`} placeholder="e.g., Champ de Mars, Paris" disabled={readOnly} />
+                    <input
+                        {...register("locationName", { required: "This field is required" })}
+                        className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.locationName ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+                        placeholder="Search for an address..."
+                        disabled={readOnly}
+                        autoComplete="off"
+                    />
                     {errors.locationName && <div className="text-red-600 text-xs mt-1">{errors.locationName.message}</div>}
-                    {geoError && (<div className="text-red-600 text-xs mt-1">{geoError}</div>)}
+                    {geoError && <div className="text-orange-600 text-xs mt-1">{geoError}</div>}
 
+                    {/* Suggestions Dropdown */}
                     {suggestions.length > 0 && (
-                        <div className="border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 mt-2 max-h-40 overflow-auto shadow-sm">
+                        <div className="absolute z-50 w-full border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 mt-1 max-h-40 overflow-auto shadow-lg">
                             {suggestions.map((s, i) => (
-                                <div key={`${s.lat}-${s.lng}-${i}`} className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-gray-100" onClick={() => {
-                                    setValue("locationName", s.displayName);
-                                    setSelectedCoords({ lat: s.lat, lng: s.lng, displayName: s.displayName });
-                                    setSuggestions([]);
-                                }}>{s.displayName}</div>
+                                <div
+                                    key={`${s.lat}-${s.lng}-${i}`}
+                                    className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-gray-100 text-sm border-b last:border-b-0 border-gray-100 dark:border-gray-700"
+                                    onClick={() => {
+                                        setValue("locationName", s.displayName);
+                                        setSelectedCoords({ lat: s.lat, lng: s.lng, displayName: s.displayName });
+                                        setSuggestions([]);
+                                    }}
+                                >
+                                    {s.displayName}
+                                </div>
                             ))}
                         </div>
                     )}
@@ -168,15 +226,9 @@ export default function StopDetailModal({ open, onClose, onSubmit, initialStop =
 
                 {/* Price (USD) */}
                 <div>
-                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                        Price (USD, Optional)
-                    </label>
-
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Price (USD, Optional)</label>
                     <div className="relative mt-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                            $
-                        </span>
-
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
                         <input
                             type="number"
                             inputMode="numeric"
@@ -188,30 +240,26 @@ export default function StopDetailModal({ open, onClose, onSubmit, initialStop =
                                 min: { value: 0, message: "Price cannot be negative" },
                                 valueAsNumber: true,
                             })}
-                            className={`w-full pl-7 pr-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.price
-                                ? "border-red-600 dark:border-red-500"
-                                : "border-gray-300 dark:border-gray-600"
-                                }`}
+                            className={`w-full pl-7 pr-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.price ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
                         />
                     </div>
-
-                    {errors.price && (
-                        <div className="text-red-600 text-xs mt-1">
-                            {errors.price.message}
-                        </div>
-                    )}
+                    {errors.price && <div className="text-red-600 text-xs mt-1">{errors.price.message}</div>}
                 </div>
 
                 {/* Description */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Description</label>
-                    <textarea {...register("description")} className="w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border-gray-300 dark:border-gray-600" placeholder="Notes, activities, or details about this stop..." disabled={readOnly} />
+                    <textarea
+                        {...register("description")}
+                        className="w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border-gray-300 dark:border-gray-600"
+                        placeholder="Notes, activities, or details..."
+                        disabled={readOnly}
+                    />
                 </div>
 
                 {/* Buttons */}
-                {readOnly ? null : (
-                    <div className="flex justify-end gap-3">
-
+                {!readOnly && (
+                    <div className="flex justify-end gap-3 pt-2">
                         <Button variant="outline" type="button" onClick={onClose}>
                             Cancel
                         </Button>
@@ -220,7 +268,7 @@ export default function StopDetailModal({ open, onClose, onSubmit, initialStop =
                             variant="primary"
                             disabled={loading}
                         >
-                            {loading ? "Saving..." : initialStop ? "Save" : "Add Stop"}
+                            {loading ? "Saving..." : initialStop ? "Save Changes" : "Add Stop"}
                         </Button>
                     </div>
                 )}

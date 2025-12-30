@@ -594,7 +594,7 @@ export default function TripDetailPage() {
                 </Section>
 
                 {/* --- MODALS --- */}
-                <StopDetailModal open={openAdd} onClose={() => { setOpenAdd(false); setEditingStop(null); }} onSubmit={handleAddStop} initialStop={initialStop} readOnly={!isOwner} />
+                <StopDetailModal open={openAdd} onClose={() => { setOpenAdd(false); setEditingStop(null); }} onSubmit={handleAddStop} initialStop={initialStop} readOnly={!isOwner} cityContexts={trip?.destinations} />
                 <ShareTripModal open={shareOpen} onClose={() => setShareOpen(false)} onShare={async (email: string) => { await shareTrip(trip._id, email); setShareOpen(false); refresh(); }} />
                 <Modal title="Delete Trip?" isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
                     <div className="space-y-4">

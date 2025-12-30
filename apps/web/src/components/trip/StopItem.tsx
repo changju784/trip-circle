@@ -1,9 +1,12 @@
 import React from "react";
 import { Pencil, Trash2, GripVertical, Eye } from "lucide-react";
 import { Button } from "../ui/Button";
+import { Badge } from "../ui/badge";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Stop } from "@/lib/trips/trips-api";
+import { cn } from "@/lib/utils";
+import { CATEGORY_CONFIG } from "@/lib/const/stop-categories";
 
 export default function StopItem({ stop, isOwner, onEdit, onDelete }: { stop: Stop; isOwner?: boolean; onEdit?: (id: string) => void; onDelete?: (id: string) => void; }) {
     const {
@@ -20,6 +23,9 @@ export default function StopItem({ stop, isOwner, onEdit, onDelete }: { stop: St
         transition,
         opacity: isDragging ? 0.5 : 1,
     };
+
+    const categoryInfo = CATEGORY_CONFIG[stop.category || 'none'];
+    const Icon = categoryInfo.icon;
 
     return (
         <div
@@ -38,9 +44,23 @@ export default function StopItem({ stop, isOwner, onEdit, onDelete }: { stop: St
             </button>
 
             {/* Content */}
-            <div className="flex-1 min-w-0"> {/* added min-w-0 to prevent text overflow issues */}
+            <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                     <div className="font-medium dark:text-gray-100 truncate">{stop.title}</div>
+
+                    {/* Category Badge */}
+                    {stop.category && stop.category !== 'none' && (
+                        <Badge
+                            variant="secondary"
+                            className={cn(
+                                "flex items-center gap-1 px-2 py-0 text-[12px] font-normal border shrink-0",
+                                categoryInfo.color
+                            )}
+                        >
+                            <Icon className="h-4 w-4" />
+                            {categoryInfo.label}
+                        </Badge>
+                    )}
                 </div>
 
                 <div className="text-sm text-muted-foreground dark:text-gray-400 flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
@@ -87,7 +107,7 @@ export default function StopItem({ stop, isOwner, onEdit, onDelete }: { stop: St
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onEdit?.(stop.id)} // Reusing onEdit to open the modal
+                        onClick={() => onEdit?.(stop.id)}
                         className="h-8 w-8 text-muted-foreground dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400"
                         title="View Details"
                     >

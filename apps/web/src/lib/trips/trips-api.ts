@@ -5,9 +5,21 @@
 
 import { apiGet, apiPost, apiPut, apiDelete } from "../api";
 
+export type StopCategory =
+    | 'dining'
+    | 'lodging'
+    | 'sightseeing'
+    | 'activity'
+    | 'shopping'
+    | 'transit'
+    | 'nightlife'
+    | 'other'
+    | 'none';
+
 export interface Stop {
     id: string;
     title: string;
+    category?: StopCategory;
     time?: string;
     locationName?: string;
     lat?: number | null;
