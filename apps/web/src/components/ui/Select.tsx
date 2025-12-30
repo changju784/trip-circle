@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronsUpDown, X, LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
     Command,
@@ -17,25 +17,27 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 
-export type Option = { id: string; label: string };
+export type Option = { id: string; label: string; icon?: LucideIcon; color?: string };
 
 type SelectProps = {
     value?: Option | Option[] | null;
     multiple?: boolean;
     maxSelection?: number;
+    showSearchbar?: boolean;
+    showBadgedropdown?: boolean;
+    showCheckMark?: boolean;
     placeholder?: string;
     onChange?: (v: Option | Option[] | null) => void;
     fetchOptions?: (q: string) => Promise<Option[]>;
 };
 
-// 1. Expanded Color Palette
 const TAG_COLORS = [
     "bg-red-200 text-red-800 hover:bg-red-300",
     "bg-orange-200 text-orange-800 hover:bg-orange-300",
     "bg-amber-200 text-amber-800 hover:bg-amber-300",
     "bg-lime-200 text-lime-800 hover:bg-lime-300",
     "bg-green-200 text-green-800 hover:bg-green-300",
-    "bg-emerald-200 text-emerald-800 hover:bg-emerald-300",
+    "bg-emerald-200 text-emerald-800 hover:bg-emerald-200",
     "bg-teal-200 text-teal-800 hover:bg-teal-300",
     "bg-cyan-200 text-cyan-800 hover:bg-cyan-300",
     "bg-sky-200 text-sky-800 hover:bg-sky-300",
@@ -55,6 +57,9 @@ function getColor(index: number) {
 export default function Select({
     value,
     multiple = false,
+    showSearchbar = true,
+    showBadgedropdown = false,
+    showCheckMark = true,
     placeholder = "Select...",
     onChange,
     fetchOptions,
@@ -65,7 +70,6 @@ export default function Select({
     const [query, setQuery] = React.useState("");
     const [loading, setLoading] = React.useState(false);
 
-    // Handle Async Search
     React.useEffect(() => {
         let mounted = true;
         if (!fetchOptions) return;
@@ -81,35 +85,29 @@ export default function Select({
         return () => { mounted = false; };
     }, [query, fetchOptions]);
 
-    // Handle Selection Logic
     const handleSelect = (option: Option) => {
         if (multiple) {
             const current = Array.isArray(value) ? value : [];
             const exists = current.find((v) => v.id === option.id);
 
             if (exists) {
-                // Remove if exists
                 onChange?.(current.filter((v) => v.id !== option.id));
             } else {
-                // Add if limit not reached
                 if (maxSelection && current.length >= maxSelection) return;
                 onChange?.([...current, option]);
             }
         } else {
-            // Single select
             onChange?.(option);
             setOpen(false);
         }
     };
 
-    // Remove Tag Helper
     const removeTag = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         if (!multiple || !Array.isArray(value)) return;
         onChange?.(value.filter((v) => v.id !== id));
     };
 
-    // Helper to normalize value to array for display
     const selected = Array.isArray(value) ? value : value ? [value] : [];
 
     return (
@@ -119,73 +117,95 @@ export default function Select({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-full justify-between h-auto min-h-[40px] px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+                    className="w-full justify-between h-auto min-h-[40px] px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                     <div className="flex flex-wrap gap-1 items-center text-left">
                         {selected.length > 0 ? (
-                            multiple ? (
-                                selected.map((v, index) => (
-                                    <Badge
-                                        key={v.id}
-                                        variant="secondary"
-                                        className={cn("pr-1 font-normal", getColor(index))}
-                                    >
-                                        {v.label}
+                            selected.map((v, index) => (
+                                <Badge
+                                    key={v.id}
+                                    variant="secondary"
+                                    className={cn(
+                                        "flex items-center gap-1.5 px-2 py-0.5 font-normal transition-all border",
+                                        v.color || getColor(index)
+                                    )}
+                                >
+                                    {v.icon && <v.icon className="h-3.5 w-3.5" />}
+                                    {v.label}
+                                    {multiple && (
                                         <div
                                             role="button"
-                                            className="ml-1 hover:text-red-900 dark:hover:text-red-200 rounded-full p-0.5 cursor-pointer"
                                             onClick={(e) => removeTag(e, v.id)}
+                                            className="ml-1 hover:text-red-900"
                                         >
                                             <X className="h-3 w-3" />
                                         </div>
-                                    </Badge>
-                                ))
-                            ) : (
-                                // Single Value Display
-                                <span className="font-normal text-gray-900 dark:text-gray-100">{selected[0].label}</span>
-                            )
+                                    )}
+                                </Badge>
+                            ))
                         ) : (
-                            // Placeholder
                             <span className="text-gray-500 dark:text-gray-400 font-normal">{placeholder}</span>
                         )}
                     </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 text-gray-500 dark:text-gray-400" />
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 text-gray-500" />
                 </Button>
             </PopoverTrigger>
 
             <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600" align="start">
                 <Command className="bg-white dark:bg-gray-800">
-                    <CommandInput
-                        placeholder="Search..."
-                        onValueChange={setQuery}
-                        value={query}
-                        className="text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-                    />
+                    {showSearchbar && (
+                        <CommandInput
+                            placeholder="Search..."
+                            onValueChange={setQuery}
+                            value={query}
+                            className="text-gray-900 dark:text-gray-100"
+                        />
+                    )}
 
                     <CommandList>
-                        {loading && <div className="p-2 text-sm text-gray-500 dark:text-gray-400 text-center">Loading...</div>}
+                        {loading && <div className="p-2 text-sm text-gray-500 text-center">Loading...</div>}
 
                         {!loading && options.length === 0 && (
-                            <CommandEmpty className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">No results found.</CommandEmpty>
+                            <CommandEmpty className="py-6 text-center text-sm text-gray-500">No results found.</CommandEmpty>
                         )}
 
                         <CommandGroup>
-                            {options.map((option) => {
+                            {options.map((option, index) => {
                                 const isSelected = selected.some((s) => s.id === option.id);
                                 return (
                                     <CommandItem
                                         key={option.id}
                                         value={option.label}
                                         onSelect={() => handleSelect(option)}
-                                        className="text-gray-900 dark:text-gray-100 aria-selected:bg-gray-100 dark:aria-selected:bg-gray-700 aria-selected:text-gray-900 dark:aria-selected:text-gray-100 cursor-pointer"
+                                        className="flex items-center justify-between text-gray-900 dark:text-gray-100 aria-selected:bg-gray-100 cursor-pointer"
                                     >
-                                        <Check
-                                            className={cn(
-                                                "mr-2 h-4 w-4 text-gray-900 dark:text-gray-100",
-                                                isSelected ? "opacity-100" : "opacity-0"
+                                        <div className="flex items-center gap-2">
+                                            {showCheckMark && (
+                                                <Check
+                                                    className={cn(
+                                                        "h-4 w-4",
+                                                        isSelected ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                />
                                             )}
-                                        />
-                                        {option.label}
+                                            {showBadgedropdown ? (
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "font-normal flex items-center gap-1.5 border",
+                                                        option.color || "bg-transparent"
+                                                    )}
+                                                >
+                                                    {option.icon && <option.icon className="h-3.5 w-3.5" />}
+                                                    {option.label}
+                                                </Badge>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    {option.icon && <option.icon className="h-4 w-4 opacity-70" />}
+                                                    <span>{option.label}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </CommandItem>
                                 );
                             })}

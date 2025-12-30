@@ -2,14 +2,17 @@ import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/Button";
-import { Destination, Stop } from "@/lib/trips/trips-api";
+import { Destination, Stop, StopCategory } from "@/lib/trips/trips-api";
 import { geocodeLocation, geocodeSearch } from "@/lib/geo/geo-api";
+import Select from "../ui/Select";
+import { STOP_CATEGORIES } from "@/lib/const/stop-categories";
 
 type StopDetailModalProps = {
     open: boolean;
     onClose: () => void;
     onSubmit: (data: {
         title: string;
+        category?: StopCategory;
         time?: string;
         locationName?: string;
         lat?: number | null;
@@ -24,6 +27,7 @@ type StopDetailModalProps = {
 
 type FormData = {
     title: string;
+    category: StopCategory;
     time?: string;
     locationName?: string;
     price?: number;
@@ -54,6 +58,7 @@ export default function StopDetailModal({
     const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number; displayName?: string } | null>(null);
 
     const locationValue = watch("locationName");
+    const categoryValue = watch("category");
 
     // fetch suggestions as user types (debounced)
     useEffect(() => {
@@ -121,6 +126,7 @@ export default function StopDetailModal({
 
         onSubmit({
             title: data.title,
+            category: data.category,
             time: data.time,
             locationName: data.locationName,
             lat,
@@ -141,16 +147,36 @@ export default function StopDetailModal({
             title={initialStop ? "Edit Stop" : "Add Stop"}
         >
             <form onSubmit={handleSubmit(submit)} className="space-y-4">
-                {/* Title */}
-                <div>
-                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Title *</label>
-                    <input
-                        {...register("title", { required: "This field is required" })}
-                        className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.title ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
-                        placeholder="e.g., Eiffel Tower"
-                        disabled={readOnly}
-                    />
-                    {errors.title && <div className="text-red-600 text-xs mt-1">{errors.title.message}</div>}
+                {/* Title & Category Row */}
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-[2]">
+                        <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Title *</label>
+                        <input
+                            {...register("title", { required: "Required" })}
+                            className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.title ? "border-red-600" : "border-gray-300 dark:border-gray-600"}`}
+                            placeholder="e.g., Eiffel Tower"
+                            disabled={readOnly}
+                        />
+                    </div>
+
+                    <div className="flex-1">
+                        <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Category</label>
+                        <div className="mt-1">
+                            <Select
+                                value={STOP_CATEGORIES.find(c => c.id === categoryValue) || STOP_CATEGORIES[8]}
+                                onChange={(val) => {
+                                    const option = val as any;
+                                    setValue("category", option.id as StopCategory);
+                                }}
+                                fetchOptions={async (q) =>
+                                    STOP_CATEGORIES.filter(c => c.label.toLowerCase().includes(q.toLowerCase()))
+                                }
+                                showSearchbar={false}
+                                showBadgedropdown={true}
+                                showCheckMark={false}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Time */}
