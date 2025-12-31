@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMap, Popup, GeoJSON } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap, GeoJSON, Tooltip } from "react-leaflet";
 import L, { LatLngTuple } from "leaflet";
 import { Stop } from "@/lib/trips/trips-api";
 import { getMapRoute, RouteData } from "@/lib/geo/geo-api";
@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils";
 import { CATEGORY_CONFIG } from "@/lib/const/stop-categories";
 
 // --- Leaflet Icon Fixes ---
-// Note: We are using DivIcons for the stops, but standard Marker fixes 
-// are kept for general Leaflet stability.
 L.Icon.Default.mergeOptions({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -36,9 +34,10 @@ function AutoFitBounds({ points }: { points: LatLngTuple[] }) {
 type MapPreviewProps = {
     stops?: Stop[];
     height?: number;
+    onMarkerClick?: (stop: Stop) => void;
 };
 
-export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps) {
+export default function MapPreview({ stops = [], height = 420, onMarkerClick }: MapPreviewProps) {
     const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
     const [routeData, setRouteData] = useState<RouteData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -85,10 +84,10 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
         return L.divIcon({
             className: "custom-div-icon",
             html: `
-            <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white shadow-md ${bgColorClass}">
-                <span class="text-[10px] font-bold ${textColorClass}">${index + 1}</span>
-            </div>
-        `,
+        <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white shadow-md ${bgColorClass}">
+          <span class="text-[10px] font-bold ${textColorClass}">${index + 1}</span>
+        </div>
+      `,
             iconSize: [24, 24],
             iconAnchor: [12, 12],
             popupAnchor: [0, -12]
@@ -106,7 +105,6 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
         color: isDark ? "#38bdf8" : "#2563eb",
         weight: 5,
         opacity: 0.8,
-        // Visual cue: walking routes are dashed
         dashArray: travelMode === 'walk' ? "5, 10" : "0",
         lineCap: 'round' as const
     });
@@ -132,6 +130,7 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
     const TileLayerAny = TileLayer as any;
     const GeoJSONAny = GeoJSON as any;
     const MarkerAny = Marker as any;
+    const TooltipAny = Tooltip as any;
 
     return (
         <div
@@ -140,7 +139,6 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
         >
             {/* Overlay Group: Mode Switcher & Total Stats */}
             <div className="absolute top-6 right-6 z-[1000] flex flex-col items-end gap-2">
-                {/* Mode Control Panel */}
                 <div className="flex flex-col gap-1.5 bg-white/90 dark:bg-gray-900/90 p-1.5 rounded-md shadow-md border border-border backdrop-blur-md">
                     {[
                         { id: 'walk', icon: Footprints },
@@ -163,7 +161,6 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
                     ))}
                 </div>
 
-                {/* Journey Stats HUD */}
                 {routeData && !isLoading && (
                     <div className="bg-white/90 dark:bg-gray-900/90 p-2 rounded-md shadow-md border border-border backdrop-blur-md flex flex-col gap-1 min-w-[90px]">
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
@@ -178,7 +175,6 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
                 )}
             </div>
 
-            {/* Sync Status Overlay */}
             {isLoading && (
                 <div className="absolute top-6 left-6 z-[1000] flex items-center gap-2 bg-white/90 dark:bg-gray-900/90 px-3 py-1.5 rounded-md border text-[10px] font-bold tracking-widest text-primary shadow-sm">
                     <Loader2 size={12} className="animate-spin" />
@@ -193,20 +189,41 @@ export default function MapPreview({ stops = [], height = 420 }: MapPreviewProps
             >
                 <TileLayerAny url={isDark ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"} />
 
-                {/* Categorical & Numbered Markers */}
                 {stops.map((stop, i) => (
                     stop.lat && stop.lng && (
                         <MarkerAny
                             key={`${stop.id}-${i}`}
                             position={[Number(stop.lat), Number(stop.lng)]}
                             icon={createNumberedIcon(i, stop.category || 'none')}
+                            eventHandlers={{
+                                click: () => onMarkerClick?.(stop),
+                            }}
                         >
-                            <Popup><div className="text-xs font-medium">Stop {i + 1}: {stop.title}</div></Popup>
+                            <TooltipAny
+                                direction="top"
+                                offset={L.point(0, -10)}
+                                opacity={1}
+                                permanent={false}
+                            >
+                                <div className="flex flex-col p-1 min-w-[140px]">
+                                    <span className="font-bold text-sm text-gray-900 dark:text-white border-b pb-1 mb-1">
+                                        {stop.title}
+                                    </span>
+                                    <div className="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-300 gap-4">
+                                        <div className="flex items-center gap-1">
+                                            <Clock size={10} />
+                                            {stop.time || "N/A"}
+                                        </div>
+                                        <div className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                            {stop.price && stop.price > 0 ? `$${stop.price}` : "Free"}
+                                        </div>
+                                    </div>
+                                </div>
+                            </TooltipAny>
                         </MarkerAny>
                     )
                 ))}
 
-                {/* Road-snapped Journey Legs */}
                 {routeData?.geometry?.features?.[0] && (
                     <>
                         {routeData.geometry.features[0].properties.legs.map((leg: any, idx: number) => {

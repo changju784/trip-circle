@@ -78,7 +78,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
             {/* Map Preview for this day's stops */}
             <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3">
                 <h3 className="text-black dark:text-gray-100 font-medium mb-2">🗺️ Route Preview</h3>
-                <MapPreview stops={day.stops} height={350} />
+                <MapPreview stops={day.stops} height={350} onMarkerClick={(stop) => onEditStop?.(stop.id)} />
             </div>
 
             {/* Day header and stops */}
