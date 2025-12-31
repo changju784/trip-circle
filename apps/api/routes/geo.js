@@ -1,5 +1,6 @@
 import express from 'express';
 import { searchLocations, searchCities } from '../services/geoService.js';
+import { mapRouteService } from '../services/mapRouteService.js';
 
 const router = express.Router();
 
@@ -30,6 +31,46 @@ router.get('/search', async (req, res) => {
     } catch (error) {
         console.error("Search Route Error:", error);
         res.status(500).json({ error: 'Search failed' });
+    }
+});
+
+router.get('/reverse', async (req, res) => {
+    const { lat, lng } = req.query;
+
+    if (!lat || !lng) {
+        return res.status(400).json({ error: "Missing coordinates" });
+    }
+
+    try {
+        const result = await reverseGeocode(parseFloat(lat), parseFloat(lng));
+        if (!result) {
+            return res.status(404).json({ error: "Location not found" });
+        }
+        res.json(result);
+    } catch (error) {
+        console.error("Reverse Route Error:", error);
+        res.status(500).json({ error: 'Reverse geocoding failed' });
+    }
+});
+
+// map route endpoint
+router.post('/route', async (req, res) => {
+    try {
+        const { stops, mode } = req.body;
+
+        if (!stops || stops.length < 2) {
+            return res.status(400).json({ error: "At least two stops are required." });
+        }
+
+        const routeData = await mapRouteService.getRoute(stops, mode);
+
+        if (!routeData) {
+            return res.status(500).json({ error: "Failed to fetch route" });
+        }
+
+        res.json(routeData);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
