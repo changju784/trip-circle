@@ -5,8 +5,9 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "../ui/Button";
 import { reverseGeocode, RouteData } from "@/lib/geo/geo-api";
-import { Clock, MapPin, Maximize2 } from "lucide-react";
+import { Clock, ExternalLink, MapPin, Maximize2 } from "lucide-react";
 import FullMapView from "./FullMapView";
+import { useOpenInGoogleMaps } from "@/pages/trip/hooks/use-open-in-google-map";
 
 export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: {
     days: any[];
@@ -20,6 +21,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
     const day = days[selectedDay];
     const [activeRoute, setActiveRoute] = useState<RouteData | null>(null);
     const [isFullMapOpen, setIsFullMapOpen] = useState(false);
+    const { openDirections } = useOpenInGoogleMaps();
 
     const dailyPriceTotal = day.stops.reduce((sum: number, stop: any) => {
         return sum + (Number(stop.price) || 0);
@@ -124,6 +126,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                                 {day.stops.map((stop, index) => {
                                     // Get the travel info for the segment AFTER this stop
                                     const leg = activeRoute?.geometry?.features?.[0]?.properties?.legs?.[index];
+                                    const nextStop = day.stops[index + 1];
 
                                     return (
                                         <React.Fragment key={stop.id}>
@@ -135,21 +138,34 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                                             />
 
                                             {/* TRAVEL INDICATOR */}
-                                            {index < day.stops.length - 1 && leg && (
-                                                <div className="relative ml-6 my-[-4px] z-0">
+                                            {index < day.stops.length - 1 && leg && nextStop && (
+                                                <div className="relative ml-6 my-1 z-10">
                                                     {/* Dashed Line Connector */}
                                                     <div className="absolute left-[-11px] top-0 bottom-0 w-px border-l-2 border-dashed border-gray-300 dark:border-gray-600" />
 
-                                                    {/* Travel Info Badge */}
-                                                    <div className="flex items-center gap-3 pl-4 py-4 text-[11px] text-gray-500 dark:text-gray-400">
-                                                        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm">
+                                                    <div className="flex items-center gap-2 pl-4 py-4">
+                                                        {/* Time Badge */}
+                                                        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm text-[11px] text-gray-500 dark:text-gray-400">
                                                             <Clock size={12} />
                                                             {Math.round(leg.time / 60)} mins
                                                         </div>
-                                                        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm">
+
+                                                        {/* Distance Badge */}
+                                                        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm text-[11px] text-gray-500 dark:text-gray-400">
                                                             <MapPin size={12} />
                                                             {(leg.distance / 1000).toFixed(1)} km
                                                         </div>
+
+                                                        {/* NEW: External Link Button placed directly next to badges */}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm hover:text-indigo-600 transition-all active:scale-90 ml-1"
+                                                            onClick={() => openDirections(stop, nextStop, activeRoute?.mode)}
+                                                            title="View Directions in Google Maps"
+                                                        >
+                                                            <ExternalLink size={12} />
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             )}
