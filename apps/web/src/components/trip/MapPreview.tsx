@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMap, GeoJSON, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap, GeoJSON, Tooltip, useMapEvents } from "react-leaflet";
 import L, { LatLngTuple } from "leaflet";
 import { Stop } from "@/lib/trips/trips-api";
 import { getMapRoute, RouteData } from "@/lib/geo/geo-api";
@@ -24,6 +24,16 @@ function MapInvalidator() {
     return null;
 }
 
+function MapClickHandler({ isAddingPin, onMapClick }) {
+    useMapEvents({
+        click: (e) => {
+            if (!isAddingPin) return;
+            onMapClick(e.latlng); // Returns {lat, lng}
+        },
+    });
+    return null;
+}
+
 function AutoFitBounds({ points }: { points: LatLngTuple[] }) {
     const map = useMap();
     useEffect(() => {
@@ -41,12 +51,14 @@ function AutoFitBounds({ points }: { points: LatLngTuple[] }) {
 type MapPreviewProps = {
     stops?: (Stop & { displayLabel?: string })[];
     height?: number;
+    showRoute?: boolean;
+    isAddingPin?: boolean;
     onMarkerClick?: (stop: Stop) => void;
     onRouteFetched?: (data: RouteData | null) => void;
-    showRoute?: boolean;
+    onMapClick?: (coords: { lat: number; lng: number }) => void;
 };
 
-export default function MapPreview({ stops = [], height, showRoute = true, onMarkerClick, onRouteFetched }: MapPreviewProps) {
+export default function MapPreview({ stops = [], height, showRoute = true, isAddingPin = false, onMarkerClick, onRouteFetched, onMapClick }: MapPreviewProps) {
     const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
     const [routeData, setRouteData] = useState<RouteData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -184,7 +196,7 @@ export default function MapPreview({ stops = [], height, showRoute = true, onMar
             >
                 <TileLayerAny url={isDark ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"} />
                 <MapInvalidator />
-
+                <MapClickHandler isAddingPin={isAddingPin} onMapClick={onMapClick} />
                 {stops.map((stop, i) => (
                     stop.lat && stop.lng && (
                         <MarkerAny

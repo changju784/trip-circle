@@ -87,7 +87,7 @@ export default function StopDetailModal({
             setValue("locationName", initialStop.locationName || "");
             setValue("description", initialStop.description || "");
             setValue("price", initialStop.price ?? undefined);
-            setValue("category", initialStop.category as StopCategory || "none");
+            setValue("category", (initialStop.category as StopCategory) || "none");
 
             if (initialStop.lat != null && initialStop.lng != null) {
                 setSelectedCoords({

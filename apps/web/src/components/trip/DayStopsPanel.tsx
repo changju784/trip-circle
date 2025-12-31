@@ -4,7 +4,7 @@ import MapPreview from "./MapPreview";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "../ui/Button";
-import { RouteData } from "@/lib/geo/geo-api";
+import { reverseGeocode, RouteData } from "@/lib/geo/geo-api";
 import { Clock, MapPin, Maximize2 } from "lucide-react";
 import FullMapView from "./FullMapView";
 
@@ -12,7 +12,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
     days: any[];
     selectedDay: number;
     isOwner?: boolean;
-    onOpenAdd: (dayIndex: number) => void;
+    onOpenAdd: (dayIndex: number, prefilledData?: any) => void;
     onEditStop?: (stopId: string) => void;
     onDeleteStop?: (stopId: string) => void;
     onReorderStops?: (dayIndex: number, reorderedStops: any[]) => void;
@@ -29,6 +29,23 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
+
+    const handleAddStopAtCoords = async (dayIndex: number, coords: { lat: number, lng: number }) => {
+        try {
+            const locationData = await reverseGeocode(coords.lat, coords.lng);
+            const prefilledStop = {
+                title: "",
+                locationName: locationData?.displayName || "",
+                lat: coords.lat,
+                lng: coords.lng,
+                category: 'none'
+            };
+
+            onOpenAdd(dayIndex, prefilledStop);
+        } catch (error) {
+            console.error("Failed to reverse geocode:", error);
+        }
+    };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
@@ -75,6 +92,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                 days={days}
                 initialDayIndex={selectedDay}
                 onEditStop={onEditStop}
+                onAddStopAtCoords={handleAddStopAtCoords}
             />
 
             <div className="bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded-lg p-6">
