@@ -53,7 +53,7 @@ export default function StopItem({ stop, isOwner, onEdit, onDelete }: { stop: St
                         <Badge
                             variant="secondary"
                             className={cn(
-                                "flex items-center gap-1 px-2 py-0 text-[12px] font-normal border shrink-0",
+                                "hidden md:flex items-center gap-1 px-2 py-0 text-[12px] font-normal border shrink-0",
                                 categoryInfo.color
                             )}
                         >

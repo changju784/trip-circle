@@ -63,8 +63,8 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                             <div className="text-sm text-muted-foreground dark:text-gray-400">{dayLabel(day.date)}</div>
                         </div>
                         {day.stops.length > 0 && (
-                            <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-full">
-                                <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                            <div className="px-2 py-0.5 md:px-3 md:py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-full shrink-0">
+                                <span className="text-[10px] md:text-xs font-semibold text-indigo-700 dark:text-indigo-300 whitespace-nowrap">
                                     Total: ${dailyPriceTotal.toLocaleString()}
                                 </span>
                             </div>
