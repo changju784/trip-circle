@@ -87,3 +87,46 @@ export async function searchCities(query) {
         return [];
     }
 }
+
+/**
+ * 3. Reverse Geocoding (Photon API)
+ * Converts [lat, lng] from a map click into a human-readable address.
+ */
+export async function reverseGeocode(lat, lng) {
+    try {
+        // Photon reverse endpoint
+        const url = `${PHOTON_BASE_URL}/reverse?lat=${lat}&lon=${lng}`;
+        const res = await fetch(url);
+
+        if (!res.ok) {
+            console.error("Photon Reverse API error:", res.statusText);
+            return null;
+        }
+
+        const data = await res.json();
+        const feature = data.features?.[0]; // Get the most relevant match
+
+        if (!feature) return null;
+
+        const p = feature.properties;
+
+        // Construct a clean display name using the same logic as searchLocations
+        const labelParts = [
+            p.name,
+            p.street ? `${p.housenumber || ''} ${p.street}`.trim() : null,
+            p.city,
+            p.state,
+            p.country
+        ].filter(Boolean);
+
+        return {
+            lat: feature.geometry.coordinates[1],
+            lng: feature.geometry.coordinates[0],
+            displayName: labelParts.join(', '),
+            rawAddress: p
+        };
+    } catch (err) {
+        console.error("Photon Reverse Error:", err);
+        return null;
+    }
+}

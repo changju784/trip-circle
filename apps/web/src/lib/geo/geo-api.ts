@@ -57,6 +57,19 @@ export async function searchCities(query: string): Promise<CityOption[]> {
 }
 
 /**
+ * Reverse geocode a location from coordinates
+ * Converts [lat, lng] into a human-readable address
+ */
+export async function reverseGeocode(lat: number, lng: number): Promise<GeoLocation | null> {
+    try {
+        return await apiGet<GeoLocation>(`/api/geo/reverse?lat=${lat}&lng=${lng}`);
+    } catch (error) {
+        console.error("Reverse Geocode Error:", error);
+        return null;
+    }
+}
+
+/**
  * Fetch routing data between stops
  * @param stops - Array of lat/lng coordinates
  * @param mode - 'walk', 'drive', or 'transit'

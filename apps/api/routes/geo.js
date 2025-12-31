@@ -34,6 +34,25 @@ router.get('/search', async (req, res) => {
     }
 });
 
+router.get('/reverse', async (req, res) => {
+    const { lat, lng } = req.query;
+
+    if (!lat || !lng) {
+        return res.status(400).json({ error: "Missing coordinates" });
+    }
+
+    try {
+        const result = await reverseGeocode(parseFloat(lat), parseFloat(lng));
+        if (!result) {
+            return res.status(404).json({ error: "Location not found" });
+        }
+        res.json(result);
+    } catch (error) {
+        console.error("Reverse Route Error:", error);
+        res.status(500).json({ error: 'Reverse geocoding failed' });
+    }
+});
+
 // map route endpoint
 router.post('/route', async (req, res) => {
     try {
