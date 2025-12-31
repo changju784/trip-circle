@@ -51,7 +51,8 @@ export default function StopDetailModal({
         },
     });
 
-    const { errors } = formState;
+    // Destructure dirtyFields to track user interaction
+    const { errors, dirtyFields } = formState;
     const [loading, setLoading] = useState(false);
     const [geoError, setGeoError] = useState("");
     const [suggestions, setSuggestions] = useState<{ lat: number; lng: number; displayName: string }[]>([]);
@@ -63,19 +64,21 @@ export default function StopDetailModal({
     // fetch suggestions as user types (debounced)
     useEffect(() => {
         let mounted = true;
-        if (!locationValue || locationValue.length < 2) {
+        if (!locationValue || locationValue.length < 2 || !dirtyFields.locationName) {
             setSuggestions([]);
             return;
         }
+
         const t = setTimeout(async () => {
             const res = await geocodeSearch(locationValue, cityContexts);
             if (mounted) setSuggestions(res);
-        }, 350);
+        }, 100);
+
         return () => {
             mounted = false;
             clearTimeout(t);
         };
-    }, [locationValue, cityContexts]);
+    }, [locationValue, cityContexts, dirtyFields.locationName]);
 
     useEffect(() => {
         if (initialStop) {
@@ -109,15 +112,11 @@ export default function StopDetailModal({
         let lat = null as number | null;
         let lng = null as number | null;
 
-        // 1. Use coordinates from the suggestion the user clicked
         if (selectedCoords) {
             lat = selectedCoords.lat;
             lng = selectedCoords.lng;
-        }
-        // 2. Fallback: If user didn't click a suggestion, try to geocode the string
-        else if (data.locationName) {
+        } else if (data.locationName) {
             const result = await geocodeLocation(data.locationName, cityContexts);
-
             if (result) {
                 lat = result.lat;
                 lng = result.lng;
@@ -138,6 +137,7 @@ export default function StopDetailModal({
         }, initialStop?.id ?? null);
 
         setLoading(false);
+        setSuggestions([]);
         reset();
         onClose();
     };
@@ -149,7 +149,6 @@ export default function StopDetailModal({
             title={initialStop ? "Edit Stop" : "Add Stop"}
         >
             <form onSubmit={handleSubmit(submit)} className="space-y-4">
-                {/* Title & Category Row */}
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-[2]">
                         <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Title *</label>
@@ -181,7 +180,6 @@ export default function StopDetailModal({
                     </div>
                 </div>
 
-                {/* Time */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Time *</label>
                     <input
@@ -193,7 +191,6 @@ export default function StopDetailModal({
                     {errors.time && <div className="text-red-600 text-xs mt-1">{errors.time.message}</div>}
                 </div>
 
-                {/* Location */}
                 <div className="relative">
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Location *</label>
                     <input
@@ -206,7 +203,6 @@ export default function StopDetailModal({
                     {errors.locationName && <div className="text-red-600 text-xs mt-1">{errors.locationName.message}</div>}
                     {geoError && <div className="text-orange-600 text-xs mt-1">{geoError}</div>}
 
-                    {/* Suggestions Dropdown */}
                     {suggestions.length > 0 && (
                         <div className="absolute z-50 w-full border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 mt-1 max-h-40 overflow-auto shadow-lg">
                             {suggestions.map((s, i) => (
@@ -214,7 +210,7 @@ export default function StopDetailModal({
                                     key={`${s.lat}-${s.lng}-${i}`}
                                     className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-gray-100 text-sm border-b last:border-b-0 border-gray-100 dark:border-gray-700"
                                     onClick={() => {
-                                        setValue("locationName", s.displayName);
+                                        setValue("locationName", s.displayName, { shouldDirty: false }); // Select should not trigger suggestions again
                                         setSelectedCoords({ lat: s.lat, lng: s.lng, displayName: s.displayName });
                                         setSuggestions([]);
                                     }}
@@ -226,7 +222,6 @@ export default function StopDetailModal({
                     )}
                 </div>
 
-                {/* Price (USD) */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Price (USD, Optional)</label>
                     <div className="relative mt-1">
@@ -248,7 +243,6 @@ export default function StopDetailModal({
                     {errors.price && <div className="text-red-600 text-xs mt-1">{errors.price.message}</div>}
                 </div>
 
-                {/* Description */}
                 <div>
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Description</label>
                     <textarea
@@ -259,7 +253,6 @@ export default function StopDetailModal({
                     />
                 </div>
 
-                {/* Buttons */}
                 {!readOnly && (
                     <div className="flex justify-end gap-3 pt-2">
                         <Button variant="outline" type="button" onClick={onClose}>
