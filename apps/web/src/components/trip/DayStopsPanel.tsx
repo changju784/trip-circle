@@ -1,21 +1,8 @@
 import React, { useState } from "react";
 import StopItem from "./StopItem";
 import MapPreview from "./MapPreview";
-import {
-    DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragEndEvent,
-} from "@dnd-kit/core";
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "../ui/Button";
 import { RouteData } from "@/lib/geo/geo-api";
 import { Clock, MapPin } from "lucide-react";
@@ -30,7 +17,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
     onReorderStops?: (dayIndex: number, reorderedStops: any[]) => void;
 }) {
     const day = days[selectedDay];
-    const [routeInfo, setRouteInfo] = useState<RouteData | null>(null);
+    const [activeRoute, setActiveRoute] = useState<RouteData | null>(null);
 
     const dailyPriceTotal = day.stops.reduce((sum: number, stop: any) => {
         return sum + (Number(stop.price) || 0);
@@ -38,64 +25,43 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
 
     const sensors = useSensors(
         useSensor(PointerSensor),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-
         if (over && active.id !== over.id) {
             const oldIndex = day.stops.findIndex((s: any) => s.id === active.id);
             const newIndex = day.stops.findIndex((s: any) => s.id === over.id);
-
             const reordered = arrayMove(day.stops, oldIndex, newIndex);
             onReorderStops?.(selectedDay, reordered);
         }
     };
 
     const dayLabel = (iso: string) => {
-        // accept either full ISO (with time) or date-only (YYYY-MM-DD)
-        let d: Date;
-        try {
-            if (String(iso).includes("T")) {
-                d = new Date(iso);
-            } else {
-                d = new Date(`${iso}T00:00:00`);
-            }
-        } catch {
-            d = new Date(iso);
-        }
-
-        return d.toLocaleDateString(undefined, {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-        } as const);
+        let d = new Date(iso.includes("T") ? iso : `${iso}T00:00:00`);
+        return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
     };
-
 
     return (
         <div className="space-y-4">
-            {/* Map Preview for this day's stops */}
             <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3">
                 <h3 className="text-black dark:text-gray-100 font-medium mb-2">🗺️ Route Preview</h3>
-                <MapPreview stops={day.stops} height={350} onMarkerClick={(stop) => onEditStop?.(stop.id)} onRouteFetched={setRouteInfo} />
+                <MapPreview
+                    stops={day.stops}
+                    height={350}
+                    onMarkerClick={(stop) => onEditStop?.(stop.id)}
+                    onRouteFetched={setActiveRoute}
+                />
             </div>
 
-            {/* Day header and stops */}
             <div className="bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded-lg p-6">
                 <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4"> {/* Flex container for date + total */}
+                    <div className="flex items-center gap-4">
                         <div>
                             <div className="text-sm font-medium">Day {selectedDay + 1}</div>
-                            <div className="text-sm text-muted-foreground dark:text-gray-400">
-                                {dayLabel(day.date)}
-                            </div>
+                            <div className="text-sm text-muted-foreground dark:text-gray-400">{dayLabel(day.date)}</div>
                         </div>
-
-                        {/* 2. Total Price Badge */}
                         {day.stops.length > 0 && (
                             <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-full">
                                 <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
@@ -104,38 +70,31 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                             </div>
                         )}
                     </div>
-
-                    {/* Add Stop Button */}
                     {isOwner && (
-                        <Button
-                            variant="dark"
-                            size="sm"
-                            onClick={() => onOpenAdd(selectedDay)}
-                        >
-                            + Add Stop
-                        </Button>
+                        <Button variant="dark" size="sm" onClick={() => onOpenAdd(selectedDay)}>+ Add Stop</Button>
                     )}
                 </div>
 
                 {day.stops.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400">No stops planned.</div>
+                    <div className="text-center text-muted-foreground py-12">No stops planned yet.</div>
                 ) : (
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <SortableContext items={day.stops.map(s => s.id)}>
-                            <div className="flex flex-col"> {/* Use flex-col to remove default spacing gaps */}
+                        <SortableContext items={day.stops.map((s: any) => s.id)} strategy={verticalListSortingStrategy}>
+                            <div className="flex flex-col">
                                 {day.stops.map((stop, index) => {
-                                    // Extract leg data for this specific gap (Stop 1 to Stop 2 is index 0)
-                                    const leg = routeInfo?.geometry?.features?.[0]?.properties?.legs?.[index];
+                                    // Get the travel info for the segment AFTER this stop
+                                    const leg = activeRoute?.geometry?.features?.[0]?.properties?.legs?.[index];
 
                                     return (
                                         <React.Fragment key={stop.id}>
                                             <StopItem
                                                 stop={stop}
+                                                isOwner={isOwner}
                                                 onEdit={() => onEditStop?.(stop.id)}
                                                 onDelete={() => onDeleteStop?.(stop.id)}
                                             />
 
-                                            {/* Show indicator ONLY if not the last item and data exists */}
+                                            {/* TRAVEL INDICATOR */}
                                             {index < day.stops.length - 1 && leg && (
                                                 <div className="relative ml-6 my-[-4px] z-0">
                                                     {/* Dashed Line Connector */}
