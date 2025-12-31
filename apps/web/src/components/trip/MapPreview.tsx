@@ -28,9 +28,10 @@ type MapPreviewProps = {
     stops?: Stop[];
     height?: number;
     onMarkerClick?: (stop: Stop) => void;
+    onRouteFetched?: (data: RouteData | null) => void;
 };
 
-export default function MapPreview({ stops = [], height = 420, onMarkerClick }: MapPreviewProps) {
+export default function MapPreview({ stops = [], height = 420, onMarkerClick, onRouteFetched }: MapPreviewProps) {
     const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
     const [routeData, setRouteData] = useState<RouteData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -53,14 +54,16 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
                 const formattedStops = validStops.map((s) => ({ lat: Number(s.lat), lng: Number(s.lng) }));
                 const data = await getMapRoute(formattedStops, travelMode);
                 setRouteData(data);
+                onRouteFetched?.(data);
             } catch (error) {
                 setRouteData(null);
+                onRouteFetched?.(null);
             } finally {
                 setIsLoading(false);
             }
         };
         fetchRoute();
-    }, [stops, travelMode]);
+    }, [onRouteFetched, stops, travelMode]);
 
     const createNumberedIcon = (index: number, categoryId: string): L.DivIcon => {
         const config = CATEGORY_CONFIG[categoryId as keyof typeof CATEGORY_CONFIG] || CATEGORY_CONFIG.none;

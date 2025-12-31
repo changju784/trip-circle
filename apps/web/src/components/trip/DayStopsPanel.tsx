@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import StopItem from "./StopItem";
 import MapPreview from "./MapPreview";
 import {
@@ -17,6 +17,8 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Button } from "../ui/Button";
+import { RouteData } from "@/lib/geo/geo-api";
+import { Clock, MapPin } from "lucide-react";
 
 export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: {
     days: any[];
@@ -28,6 +30,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
     onReorderStops?: (dayIndex: number, reorderedStops: any[]) => void;
 }) {
     const day = days[selectedDay];
+    const [routeInfo, setRouteInfo] = useState<RouteData | null>(null);
 
     const dailyPriceTotal = day.stops.reduce((sum: number, stop: any) => {
         return sum + (Number(stop.price) || 0);
@@ -78,7 +81,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
             {/* Map Preview for this day's stops */}
             <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3">
                 <h3 className="text-black dark:text-gray-100 font-medium mb-2">🗺️ Route Preview</h3>
-                <MapPreview stops={day.stops} height={350} onMarkerClick={(stop) => onEditStop?.(stop.id)} />
+                <MapPreview stops={day.stops} height={350} onMarkerClick={(stop) => onEditStop?.(stop.id)} onRouteFetched={setRouteInfo} />
             </div>
 
             {/* Day header and stops */}
@@ -115,30 +118,45 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                 </div>
 
                 {day.stops.length === 0 ? (
-                    <div className="text-center text-muted-foreground dark:text-gray-400 py-12">
-                        No stops planned yet.
-                        <br />Add your first stop.
-                    </div>
+                    <div className="text-center py-12 text-gray-400">No stops planned.</div>
                 ) : (
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <SortableContext
-                            items={day.stops.map((s: any) => s.id)}
-                            strategy={verticalListSortingStrategy}
-                        >
-                            <div>
-                                {day.stops.map((stop) => (
-                                    <StopItem
-                                        key={stop.id}
-                                        stop={stop}
-                                        isOwner={isOwner}
-                                        onEdit={() => onEditStop?.(stop.id)}
-                                        onDelete={() => onDeleteStop?.(stop.id)}
-                                    />
-                                ))}
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={day.stops.map(s => s.id)}>
+                            <div className="flex flex-col"> {/* Use flex-col to remove default spacing gaps */}
+                                {day.stops.map((stop, index) => {
+                                    // Extract leg data for this specific gap (Stop 1 to Stop 2 is index 0)
+                                    const leg = routeInfo?.geometry?.features?.[0]?.properties?.legs?.[index];
+
+                                    return (
+                                        <React.Fragment key={stop.id}>
+                                            <StopItem
+                                                stop={stop}
+                                                onEdit={() => onEditStop?.(stop.id)}
+                                                onDelete={() => onDeleteStop?.(stop.id)}
+                                            />
+
+                                            {/* Show indicator ONLY if not the last item and data exists */}
+                                            {index < day.stops.length - 1 && leg && (
+                                                <div className="relative ml-6 my-[-4px] z-0">
+                                                    {/* Dashed Line Connector */}
+                                                    <div className="absolute left-[-11px] top-0 bottom-0 w-px border-l-2 border-dashed border-gray-300 dark:border-gray-600" />
+
+                                                    {/* Travel Info Badge */}
+                                                    <div className="flex items-center gap-3 pl-4 py-4 text-[11px] text-gray-500 dark:text-gray-400">
+                                                        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm">
+                                                            <Clock size={12} />
+                                                            {Math.round(leg.time / 60)} mins
+                                                        </div>
+                                                        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm">
+                                                            <MapPin size={12} />
+                                                            {(leg.distance / 1000).toFixed(1)} km
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
                             </div>
                         </SortableContext>
                     </DndContext>

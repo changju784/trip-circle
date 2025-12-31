@@ -31,7 +31,7 @@ export default function StopItem({ stop, isOwner, onEdit, onDelete }: { stop: St
         <div
             ref={setNodeRef}
             style={style}
-            className="border border-border dark:border-gray-600 rounded-lg p-3 mb-3 bg-white dark:bg-gray-600 flex items-center gap-2"
+            className="border border-border dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-600 flex items-center gap-2"
         >
             {/* Drag Handle */}
             <button
