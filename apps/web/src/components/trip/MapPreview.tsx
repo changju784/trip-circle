@@ -14,19 +14,12 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-/**
- * Auto-fit map bounds when stops change
- */
 function AutoFitBounds({ points }: { points: LatLngTuple[] }) {
     const map = useMap();
     useEffect(() => {
         if (points.length === 0) return;
-        if (points.length === 1) {
-            map.setView(points[0], 14);
-        } else {
-            const bounds = L.latLngBounds(points);
-            map.fitBounds(bounds, { padding: [40, 40] });
-        }
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [40, 40] });
     }, [points, map]);
     return null;
 }
@@ -43,7 +36,6 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
     const [isLoading, setIsLoading] = useState(false);
     const [travelMode, setTravelMode] = useState<'walk' | 'drive' | 'transit' | 'bicycle'>('walk');
 
-    // Watch for theme changes
     useEffect(() => {
         const observer = new MutationObserver(() => {
             setIsDark(document.documentElement.classList.contains("dark"));
@@ -52,19 +44,16 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
         return () => observer.disconnect();
     }, []);
 
-    // Fetch route whenever stops or mode changes
     useEffect(() => {
         const fetchRoute = async () => {
             const validStops = stops.filter((s) => s.lat != null && s.lng != null);
             if (validStops.length < 2) { setRouteData(null); return; }
-
             setIsLoading(true);
             try {
                 const formattedStops = validStops.map((s) => ({ lat: Number(s.lat), lng: Number(s.lng) }));
                 const data = await getMapRoute(formattedStops, travelMode);
                 setRouteData(data);
             } catch (error) {
-                console.error("Routing Error:", error);
                 setRouteData(null);
             } finally {
                 setIsLoading(false);
@@ -73,9 +62,6 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
         fetchRoute();
     }, [stops, travelMode]);
 
-    /**
-     * Creates a numbered marker using Tailwind colors from CATEGORY_CONFIG
-     */
     const createNumberedIcon = (index: number, categoryId: string): L.DivIcon => {
         const config = CATEGORY_CONFIG[categoryId as keyof typeof CATEGORY_CONFIG] || CATEGORY_CONFIG.none;
         const bgColorClass = config.color.split(' ')[0];
@@ -98,9 +84,6 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
         .filter((s) => s.lat != null && s.lng != null)
         .map((s) => [Number(s.lat), Number(s.lng)] as LatLngTuple);
 
-    /**
-     * Mode-aware line styling
-     */
     const getLegStyle = () => ({
         color: isDark ? "#38bdf8" : "#2563eb",
         weight: 5,
@@ -116,7 +99,7 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
                 l.setStyle({ weight: 8, color: '#f59e0b', opacity: 1 });
                 const dist = (legInfo.distance / 1000).toFixed(1);
                 const mins = Math.round(legInfo.time / 60);
-                l.bindTooltip(`<b>${mins} mins</b> (${dist} km)`, { sticky: true }).openTooltip();
+                l.bindTooltip(`<b>${mins} mins</b> (${dist} km)`, { sticky: true, className: 'dark:bg-slate-800 dark:text-white dark:border-slate-700' }).openTooltip();
             },
             mouseout: (e: any) => {
                 const l = e.target;
@@ -137,7 +120,6 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
             className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 border border-gray-200 dark:border-gray-700 relative"
             style={{ height, zIndex: 1 }}
         >
-            {/* Overlay Group: Mode Switcher & Total Stats */}
             <div className="absolute top-6 right-6 z-[1000] flex flex-col items-end gap-2">
                 <div className="flex flex-col gap-1.5 bg-white/90 dark:bg-gray-900/90 p-1.5 rounded-md shadow-md border border-border backdrop-blur-md">
                     {[
@@ -151,9 +133,7 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
                             onClick={() => setTravelMode(m.id as any)}
                             className={cn(
                                 "p-1.5 rounded-sm transition-all",
-                                travelMode === m.id
-                                    ? "bg-primary text-primary-foreground shadow-sm"
-                                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                travelMode === m.id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                             )}
                         >
                             <m.icon size={16} />
@@ -204,17 +184,18 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick }: 
                                 offset={L.point(0, -10)}
                                 opacity={1}
                                 permanent={false}
+                                className="!bg-white dark:!bg-slate-900 !border-gray-200 dark:!border-slate-700 !rounded-md !shadow-xl !p-0"
                             >
-                                <div className="flex flex-col p-1 min-w-[140px]">
-                                    <span className="font-bold text-sm text-gray-900 dark:text-white border-b pb-1 mb-1">
+                                <div className="flex flex-col p-2 min-w-[140px] bg-white dark:bg-slate-900 rounded-md">
+                                    <span className="font-bold text-xs text-slate-900 dark:text-slate-100 border-b border-gray-100 dark:border-slate-700 pb-1 mb-1 truncate">
                                         {stop.title}
                                     </span>
-                                    <div className="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-300 gap-4">
+                                    <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 gap-3">
                                         <div className="flex items-center gap-1">
-                                            <Clock size={10} />
+                                            <Clock size={10} className="text-indigo-500" />
                                             {stop.time || "N/A"}
                                         </div>
-                                        <div className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                        <div className="font-bold text-emerald-600 dark:text-emerald-400 uppercase">
                                             {stop.price && stop.price > 0 ? `$${stop.price}` : "Free"}
                                         </div>
                                     </div>
