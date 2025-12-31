@@ -204,7 +204,7 @@ export default function StopDetailModal({
                     {geoError && <div className="text-orange-600 text-xs mt-1">{geoError}</div>}
 
                     {suggestions.length > 0 && (
-                        <div className="absolute z-50 w-full border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 mt-1 max-h-40 overflow-auto shadow-lg">
+                        <div className="absolute z-100 w-full border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 mt-1 max-h-40 overflow-auto shadow-lg">
                             {suggestions.map((s, i) => (
                                 <div
                                     key={`${s.lat}-${s.lng}-${i}`}

@@ -7,31 +7,46 @@ import { Footprints, Car, Bus, Bike, Loader2, Clock, MapPin } from "lucide-react
 import { cn } from "@/lib/utils";
 import { CATEGORY_CONFIG } from "@/lib/const/stop-categories";
 
-// --- Leaflet Icon Fixes ---
 L.Icon.Default.mergeOptions({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+function MapInvalidator() {
+    const map = useMap();
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [map]);
+    return null;
+}
+
 function AutoFitBounds({ points }: { points: LatLngTuple[] }) {
     const map = useMap();
     useEffect(() => {
         if (points.length === 0) return;
-        const bounds = L.latLngBounds(points);
-        map.fitBounds(bounds, { padding: [40, 40] });
+        if (points.length === 1) {
+            map.setView(points[0], 14);
+        } else {
+            const bounds = L.latLngBounds(points);
+            map.fitBounds(bounds, { padding: [40, 40] });
+        }
     }, [points, map]);
     return null;
 }
 
 type MapPreviewProps = {
-    stops?: Stop[];
+    stops?: (Stop & { displayLabel?: string })[];
     height?: number;
     onMarkerClick?: (stop: Stop) => void;
     onRouteFetched?: (data: RouteData | null) => void;
+    showRoute?: boolean;
 };
 
-export default function MapPreview({ stops = [], height = 420, onMarkerClick, onRouteFetched }: MapPreviewProps) {
+export default function MapPreview({ stops = [], height, showRoute = true, onMarkerClick, onRouteFetched }: MapPreviewProps) {
     const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
     const [routeData, setRouteData] = useState<RouteData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +63,11 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick, on
     useEffect(() => {
         const fetchRoute = async () => {
             const validStops = stops.filter((s) => s.lat != null && s.lng != null);
-            if (validStops.length < 2) { setRouteData(null); return; }
+            if (!showRoute || validStops.length < 2) {
+                setRouteData(null);
+                onRouteFetched?.(null);
+                return;
+            }
             setIsLoading(true);
             try {
                 const formattedStops = validStops.map((s) => ({ lat: Number(s.lat), lng: Number(s.lng) }));
@@ -63,23 +82,25 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick, on
             }
         };
         fetchRoute();
-    }, [onRouteFetched, stops, travelMode]);
+    }, [onRouteFetched, showRoute, stops, travelMode]);
 
-    const createNumberedIcon = (index: number, categoryId: string): L.DivIcon => {
+    const createNumberedIcon = (stop: any, index: number, categoryId: string): L.DivIcon => {
         const config = CATEGORY_CONFIG[categoryId as keyof typeof CATEGORY_CONFIG] || CATEGORY_CONFIG.none;
         const bgColorClass = config.color.split(' ')[0];
         const textColorClass = config.color.split(' ')[1];
 
+        const label = stop.displayLabel || (index + 1).toString();
+
         return L.divIcon({
             className: "custom-div-icon",
             html: `
-        <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white shadow-md ${bgColorClass}">
-          <span class="text-[10px] font-bold ${textColorClass}">${index + 1}</span>
-        </div>
-      `,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12],
-            popupAnchor: [0, -12]
+                <div class="flex items-center justify-center w-7 h-7 rounded-full border-2 border-white shadow-md ${bgColorClass}">
+                    <span class="text-[9px] font-bold ${textColorClass}">${label}</span>
+                </div>
+            `,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14]
         });
     };
 
@@ -119,11 +140,9 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick, on
     const TooltipAny = Tooltip as any;
 
     return (
-        <div
-            className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 border border-gray-200 dark:border-gray-700 relative"
-            style={{ height, zIndex: 1 }}
-        >
-            <div className="absolute top-6 right-6 z-[1000] flex flex-col items-end gap-2">
+        <div className="w-full h-full relative" style={height ? { height } : { height: "100%" }}>
+            {/* Travel Mode Controls */}
+            <div className="absolute top-6 right-6 z-10 flex flex-col items-end gap-2">
                 <div className="flex flex-col gap-1.5 bg-white/90 dark:bg-gray-900/90 p-1.5 rounded-md shadow-md border border-border backdrop-blur-md">
                     {[
                         { id: 'walk', icon: Footprints },
@@ -158,26 +177,20 @@ export default function MapPreview({ stops = [], height = 420, onMarkerClick, on
                 )}
             </div>
 
-            {isLoading && (
-                <div className="absolute top-6 left-6 z-[1000] flex items-center gap-2 bg-white/90 dark:bg-gray-900/90 px-3 py-1.5 rounded-md border text-[10px] font-bold tracking-widest text-primary shadow-sm">
-                    <Loader2 size={12} className="animate-spin" />
-                    SYNCING ROUTE...
-                </div>
-            )}
-
             <MapContainerAny
                 center={coords[0] || [0, 0]}
                 zoom={13}
-                style={{ width: "100%", height: "100%", borderRadius: 6, zIndex: 0 }}
+                style={{ width: "100%", height: "100%", borderRadius: height ? 6 : 0, zIndex: 0 }}
             >
                 <TileLayerAny url={isDark ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"} />
+                <MapInvalidator />
 
                 {stops.map((stop, i) => (
                     stop.lat && stop.lng && (
                         <MarkerAny
                             key={`${stop.id}-${i}`}
                             position={[Number(stop.lat), Number(stop.lng)]}
-                            icon={createNumberedIcon(i, stop.category || 'none')}
+                            icon={createNumberedIcon(stop, i, stop.category || 'none')}
                             eventHandlers={{
                                 click: () => onMarkerClick?.(stop),
                             }}

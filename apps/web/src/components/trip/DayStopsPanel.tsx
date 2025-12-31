@@ -5,7 +5,8 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "../ui/Button";
 import { RouteData } from "@/lib/geo/geo-api";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, Maximize2 } from "lucide-react";
+import FullMapView from "./FullMapView";
 
 export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: {
     days: any[];
@@ -18,6 +19,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
 }) {
     const day = days[selectedDay];
     const [activeRoute, setActiveRoute] = useState<RouteData | null>(null);
+    const [isFullMapOpen, setIsFullMapOpen] = useState(false);
 
     const dailyPriceTotal = day.stops.reduce((sum: number, stop: any) => {
         return sum + (Number(stop.price) || 0);
@@ -46,7 +48,20 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
     return (
         <div className="space-y-4">
             <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3">
-                <h3 className="text-black dark:text-gray-100 font-medium mb-2">🗺️ Route Preview</h3>
+                <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-black dark:text-gray-100 font-medium flex items-center gap-2">
+                        🗺️ Route Preview
+                    </h3>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-xs text-muted-foreground hover:text-primary"
+                        onClick={() => setIsFullMapOpen(true)}
+                    >
+                        <Maximize2 className="w-4 h-4 mr-1" />
+                        Full View
+                    </Button>
+                </div>
                 <MapPreview
                     stops={day.stops}
                     height={350}
@@ -54,6 +69,13 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                     onRouteFetched={setActiveRoute}
                 />
             </div>
+            <FullMapView
+                isOpen={isFullMapOpen}
+                onClose={() => setIsFullMapOpen(false)}
+                days={days}
+                initialDayIndex={selectedDay}
+                onEditStop={onEditStop}
+            />
 
             <div className="bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded-lg p-6">
                 <div className="flex items-start justify-between mb-4">
