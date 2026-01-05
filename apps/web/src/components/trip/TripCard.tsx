@@ -1,18 +1,21 @@
 import { Card } from "@/components/ui/Card";
 import { Trip } from "@/lib/trips/trips-api";
 import { buildDestinationSummary, formatDateRange } from "@/lib/trips/util";
+import { Avatar } from "@/components/ui/Avatar";
+import { useGetTripOwners } from "@/pages/trip/hooks/use-get-trip-owners";
 
 interface TripCardProps {
     trip: Trip;
     thumbnailUrl?: string | null;
     onClick?: () => void;
-    /** Content to render at the bottom of the card (Buttons, Socials, etc) */
     footer?: React.ReactNode;
 }
 
 export function TripCard({ trip, thumbnailUrl, onClick, footer }: TripCardProps) {
     const dateRange = formatDateRange(trip.startDate, trip.endDate);
     const destinationSummary = buildDestinationSummary(trip);
+
+    const { owner } = useGetTripOwners(trip);
 
     return (
         <Card
@@ -34,9 +37,19 @@ export function TripCard({ trip, thumbnailUrl, onClick, footer }: TripCardProps)
             {/* Content Section */}
             <div className="p-5 flex flex-col justify-between flex-1">
                 <div className="space-y-2 text-left">
-                    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 line-clamp-1">
-                        {trip.title}
-                    </h3>
+                    <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 line-clamp-1 flex-1">
+                            {trip.title}
+                        </h3>
+                        {owner && (
+                            <Avatar
+                                user={owner}
+                                size={24}
+                                showPopover={true}
+                                className="ring-2 ring-white dark:ring-gray-700 shrink-0"
+                            />
+                        )}
+                    </div>
 
                     {dateRange && (
                         <p className="text-xs font-medium text-sky-700 bg-sky-50 dark:text-sky-200 dark:bg-sky-900/40 inline-flex px-2 py-1 rounded-full">
