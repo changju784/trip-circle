@@ -20,6 +20,8 @@ import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
 import RootRedirect from "./components/RootDirect";
 import MainLayout from "./MainLayout";
+import MyTripsSection from "./pages/dashboard/MyTripsSection";
+import ExploreSection from "./pages/dashboard/ExploreSection";
 
 function App() {
     return (
@@ -27,41 +29,47 @@ function App() {
             <AuthProvider>
                 <TripsProvider>
                     <Routes>
-                    <Route path="/trip-circle">
+                        <Route path="/trip-circle">
 
-                        {/* --- PUBLIC ROUTES --- */}
-                        <Route index element={<RootRedirect />} />
+                            {/* --- PUBLIC ROUTES --- */}
+                            <Route index element={<RootRedirect />} />
 
-                        <Route path="auth" element={
-                            <AuthLayout>
-                                <AuthTabs />
-                            </AuthLayout>
-                        } />
+                            <Route path="auth" element={
+                                <AuthLayout>
+                                    <AuthTabs />
+                                </AuthLayout>
+                            } />
 
-                        <Route path="auth/callback" element={<AuthCallbackPage />} />
+                            <Route path="auth/callback" element={<AuthCallbackPage />} />
 
-                        {/* --- PROTECTED APP ROUTES (With Navbar & Footer) --- */}
-                        {/* We wrap these routes in ProtectedRoute AND MainLayout.
+                            {/* --- PROTECTED APP ROUTES (With Navbar & Footer) --- */}
+                            {/* We wrap these routes in ProtectedRoute AND MainLayout.
                             This applies the Navbar/Footer to all of them automatically.
                         */}
-                        <Route element={
-                            <ProtectedRoute>
-                                <MainLayout />
-                            </ProtectedRoute>
-                        }>
-                            <Route path="dashboard" element={<Dashboard />} />
-                            <Route path="profile" element={<ProfilePage />} />
-                            <Route path="trip/new" element={<NewTripPage />} />
-                            <Route path="trip/:id" element={<TripDetailPage />} />
-                            <Route path="trip/:id/edit" element={<EditTripPage />} />
-                            <Route path="setup-username" element={<UsernameSetup />} />
+                            <Route element={
+                                <ProtectedRoute>
+                                    <MainLayout />
+                                </ProtectedRoute>
+                            }>
+                                <Route path="dashboard" element={<Dashboard />}>
+                                    {/* /trip-circle/dashboard/ (Default) */}
+                                    <Route index element={<MyTripsSection />} />
+
+                                    {/* /trip-circle/dashboard/explore */}
+                                    <Route path="explore" element={<ExploreSection />} />
+                                </Route>
+                                <Route path="profile" element={<ProfilePage />} />
+                                <Route path="trip/new" element={<NewTripPage />} />
+                                <Route path="trip/:id" element={<TripDetailPage />} />
+                                <Route path="trip/:id/edit" element={<EditTripPage />} />
+                                <Route path="setup-username" element={<UsernameSetup />} />
+                            </Route>
+
                         </Route>
 
-                    </Route>
-
-                    {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/trip-circle" replace />} />
-                </Routes>
+                        {/* Fallback */}
+                        <Route path="*" element={<Navigate to="/trip-circle" replace />} />
+                    </Routes>
                 </TripsProvider>
             </AuthProvider>
         </BrowserRouter>
