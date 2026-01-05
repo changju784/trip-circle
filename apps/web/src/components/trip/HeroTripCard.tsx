@@ -5,6 +5,7 @@ import { ArrowRight, Calendar, CheckCircle2, Plus, Compass } from 'lucide-react'
 import { format } from 'date-fns';
 import { Avatar } from '../ui/Avatar';
 import { useGetTripOwners } from '@/pages/trip/hooks/use-get-trip-owners';
+import emptyHero from '@/assets/empty_hero.png';
 
 interface HeroTripCardProps {
     trip?: Trip & {
@@ -25,8 +26,8 @@ export const HeroTripCard: React.FC<HeroTripCardProps> = ({ trip }) => {
         return (
             <div className="relative w-full min-h-[500px] md:h-[500px] rounded-[32px] overflow-hidden bg-gray-900 border border-white/10 shadow-2xl">
                 <img
-                    src="https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=2070"
-                    className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay"
+                    src={emptyHero}
+                    className="absolute inset-0 w-full h-full object-cover opacity-60 "
                     alt="Start your journey"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
