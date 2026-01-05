@@ -22,9 +22,15 @@ export default function MyTripsSection() {
 
     const heroTrip = useGetHeroTrip(trips);
 
-    const gridTrips = useMemo(() => {
-        return trips.filter(t => t._id !== heroTrip?._id);
+    const sortedGridTrips = useMemo(() => {
+        return [...trips]
+            .sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime())
+            .filter(t => t._id !== heroTrip?._id);
     }, [trips, heroTrip]);
+
+    const sortedAllTrips = useMemo(() => {
+        return [...trips].sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
+    }, [trips]);
 
     useEffect(() => {
         async function loadSocialStats() {
@@ -113,7 +119,7 @@ export default function MyTripsSection() {
                         <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Your Collections</h2>
                         <p className="text-black/60 dark:text-white/40 text-sm">Manage your past and future collections</p>
                     </div>
-                    {gridTrips.length > 0 && (
+                    {sortedGridTrips.length > 0 && (
                         <Button
                             variant="ghost"
                             size={"sm"}
@@ -140,7 +146,7 @@ export default function MyTripsSection() {
                             ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3"
                             : "flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x"
                     }>
-                        {(isExpanded ? trips : gridTrips).map(renderTripCard)}
+                        {(isExpanded ? sortedAllTrips : sortedGridTrips).map(renderTripCard)}
                     </div>
                 )}
             </div>
