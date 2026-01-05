@@ -100,7 +100,7 @@ export default function MyTripsSection() {
             <div className="space-y-4">
                 <div className="px-2">
                     <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Up Next</h2>
-                    <p className="text-black/60 dark:text-white/40 text-xs">
+                    <p className="text-black/60 dark:text-white/40 text-sm">
                         {trips.length > 0 ? "Your most imminent travel plan" : "Your world is waiting"}
                     </p>
                 </div>

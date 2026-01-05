@@ -61,7 +61,7 @@ export function NavbarActions({ mobile = false, onItemClick }: NavbarActionsProp
 
             {/* Logout Button */}
             <Button
-                variant="ghost" // Changed to ghost for a cleaner look next to Profile
+                variant="ghost"
                 size={size}
                 className={`${fullWidth} rounded-full flex items-center justify-start gap-3 px-6 hover:bg-destructive/10 hover:text-destructive transition-all font-semibold`}
                 onClick={handleLogout}
