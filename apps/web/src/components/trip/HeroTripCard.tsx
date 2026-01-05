@@ -58,7 +58,7 @@ export const HeroTripCard: React.FC<HeroTripCardProps> = ({ trip }) => {
                             <Plus size={16} strokeWidth={3} /> Start Planning
                         </button>
                         <button
-                            onClick={() => navigate('/explore')}
+                            onClick={() => navigate('/trip-circle/dashboard/explore')}
                             className="flex-1 md:w-48 bg-white/10 backdrop-blur-md text-white border border-white/20 py-4 px-6 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:bg-white/20 transition-all active:scale-95"
                         >
                             <Compass size={16} /> Explore Trips
