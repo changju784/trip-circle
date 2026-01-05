@@ -76,14 +76,10 @@ export default function MyTripsSection() {
                             onLike={() => handleLike(trip._id)}
                             onCommentClick={() => navigate(`/trip-circle/trip/${trip._id}`)}
                         />
-                        <Button
-                            variant="secondary"
-                            className="w-full bg-white/5 hover:bg-white/10 border-white/10 text-white font-bold"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/trip-circle/trip/${trip._id}`);
-                            }}
-                        >
+                        <Button className="w-full" onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/trip-circle/trip/${trip._id}`);
+                        }}>
                             Edit Itinerary
                         </Button>
                     </div>
