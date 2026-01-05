@@ -59,8 +59,8 @@ export default function MyTripsSection() {
         }
     };
 
-    if (isLoading) return <div className="p-20 text-center opacity-50">Loading adventures...</div>;
-    if (error) return <div className="p-20 text-center text-red-500">Error: {error}</div>;
+    if (isLoading) return <div className="p-20 text-center opacity-50 font-black uppercase tracking-widest text-xs">Loading adventures...</div>;
+    if (error) return <div className="p-20 text-center text-red-500 font-bold uppercase text-xs">Error: {error}</div>;
 
     const renderTripCard = (trip: any) => {
         const thumb = trip.thumbnail || thumbnails[trip._id] || null;
@@ -71,7 +71,7 @@ export default function MyTripsSection() {
                 trip={trip}
                 thumbnailUrl={thumb}
                 onClick={() => navigate(`/trip-circle/trip/${trip._id}`)}
-                className={!isExpanded ? "min-w-[300px] md:min-w-[350px]" : ""}
+                className={!isExpanded ? "min-w-[300px] md:min-w-[350px] snap-center" : ""}
                 footer={
                     <div className="space-y-4 pt-2">
                         <PostActivitySummary
@@ -97,59 +97,51 @@ export default function MyTripsSection() {
     return (
         <section className="space-y-12">
             {/* HERO SECTION */}
-            {!isExpanded && heroTrip && (
-                <div className="space-y-4">
-                    <div className="px-2">
-                        <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Up Next</h2>
-                        <p className="text-black/60 dark:text-white/40 text-xs">Your most imminent travel plan</p>
-                    </div>
-                    <HeroTripCard
-                        trip={{
-                            ...heroTrip,
-                            thumbnail: heroTrip.thumbnail || thumbnails[heroTrip._id] || null
-                        }}
-                    />
+            <div className="space-y-4">
+                <div className="px-2">
+                    <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Up Next</h2>
+                    <p className="text-black/60 dark:text-white/40 text-xs">
+                        {trips.length > 0 ? "Your most imminent travel plan" : "Your world is waiting"}
+                    </p>
                 </div>
-            )}
+                <HeroTripCard
+                    trip={heroTrip ? {
+                        ...heroTrip,
+                        thumbnail: heroTrip.thumbnail || thumbnails[heroTrip._id] || null
+                    } : undefined}
+                />
+            </div>
 
             {/* LIBRARY SECTION */}
-            <div className="space-y-6">
-                <div className="flex justify-between items-end px-2">
-                    <div>
-                        <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Your Collections</h2>
-                        <p className="text-black/60 dark:text-white/40 text-sm">Manage your past and future collections</p>
+            {trips.length > 0 && (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-end px-2">
+                        <div>
+                            <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Your Collections</h2>
+                            <p className="text-black/60 dark:text-white/40 text-sm">Manage your past and future collections</p>
+                        </div>
+                        {sortedGridTrips.length > 0 && (
+                            <Button
+                                variant="ghost"
+                                size={"sm"}
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="text-xs uppercase tracking-widest font-bold"
+                            >
+                                {isExpanded ? "Close" : "Show All"}
+                                {!isExpanded && <ChevronRight size={16} />}
+                            </Button>
+                        )}
                     </div>
-                    {sortedGridTrips.length > 0 && (
-                        <Button
-                            variant="ghost"
-                            size={"sm"}
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            className="text-xs uppercase tracking-widest font-bold"
-                        >
-                            {isExpanded ? "Close" : "Show All"}
-                            {!isExpanded && <ChevronRight size={16} />}
-                        </Button>
-                    )}
-                </div>
 
-                {trips.length === 0 ? (
-                    <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-20 text-center space-y-4">
-                        <div className="text-5xl">✈️</div>
-                        <h2 className="text-xl font-bold text-black dark:text-white">No trips planned yet</h2>
-                        <Button onClick={() => navigate("/trip-circle/trip/new")}>
-                            Start your first journey
-                        </Button>
-                    </div>
-                ) : (
                     <div className={
                         isExpanded
                             ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-                            : "flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x"
+                            : "flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x px-2"
                     }>
                         {(isExpanded ? sortedAllTrips : sortedGridTrips).map(renderTripCard)}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </section>
     );
 }
