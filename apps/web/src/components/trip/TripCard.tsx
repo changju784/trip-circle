@@ -3,23 +3,27 @@ import { Trip } from "@/lib/trips/trips-api";
 import { buildDestinationSummary, formatDateRange } from "@/lib/trips/util";
 import { Avatar } from "@/components/ui/Avatar";
 import { useGetTripOwners } from "@/pages/trip/hooks/use-get-trip-owners";
+import { cn } from "@/lib/utils";
 
 interface TripCardProps {
     trip: Trip;
     thumbnailUrl?: string | null;
     onClick?: () => void;
     footer?: React.ReactNode;
+    className?: string; // Added to support horizontal scroll width
 }
 
-export function TripCard({ trip, thumbnailUrl, onClick, footer }: TripCardProps) {
+export function TripCard({ trip, thumbnailUrl, onClick, footer, className }: TripCardProps) {
     const dateRange = formatDateRange(trip.startDate, trip.endDate);
     const destinationSummary = buildDestinationSummary(trip);
-
     const { owner } = useGetTripOwners(trip);
 
     return (
         <Card
-            className="flex flex-col overflow-hidden cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+            className={cn(
+                "flex flex-col overflow-hidden cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.35)]",
+                className
+            )}
             onClick={onClick}
         >
             {/* Thumbnail Section */}

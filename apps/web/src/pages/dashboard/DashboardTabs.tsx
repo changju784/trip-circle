@@ -18,7 +18,9 @@ export default function DashboardTabs({ mytrips, explore, onNewTrip }: Dashboard
                     <TabsTrigger value="explore">🧭 Explore</TabsTrigger>
                 </TabsList>
 
-                <Button variant={"dark"} onClick={onNewTrip}>+ New Trip</Button>
+                <Button variant="ghost" size="sm" onClick={onNewTrip} className="text-xs uppercase tracking-widest font-bold">
+                    + New Trip
+                </Button>
             </div>
 
             <TabsContent value="mytrips">
