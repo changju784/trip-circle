@@ -10,6 +10,7 @@ type FullMapViewProps = {
     onClose: () => void;
     days: { date: string; stops: Stop[] }[];
     initialDayIndex: number;
+    isOwner?: boolean;
     onEditStop?: (stopId: string) => void;
     onAddStopAtCoords?: (dayIndex: number, coords: { lat: number, lng: number }) => void;
 };
@@ -19,6 +20,7 @@ export default function FullMapView({
     onClose,
     days,
     initialDayIndex,
+    isOwner = false,
     onEditStop,
     onAddStopAtCoords
 }: FullMapViewProps) {
@@ -85,7 +87,7 @@ export default function FullMapView({
                     ))}
 
                     {/* Integrated "Drop Pin" Button */}
-                    {!isAllDaysView && (
+                    {!isAllDaysView && isOwner && (
                         <>
                             {/* Visual Separator */}
                             <div className="w-px h-4 bg-border mx-1" />
