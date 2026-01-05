@@ -27,6 +27,7 @@ type SelectProps = {
     showBadgedropdown?: boolean;
     showCheckMark?: boolean;
     placeholder?: string;
+    disabled?: boolean;
     onChange?: (v: Option | Option[] | null) => void;
     fetchOptions?: (q: string) => Promise<Option[]>;
 };
@@ -61,6 +62,7 @@ export default function Select({
     showBadgedropdown = false,
     showCheckMark = true,
     placeholder = "Select...",
+    disabled = false,
     onChange,
     fetchOptions,
     maxSelection,
@@ -118,6 +120,7 @@ export default function Select({
                     role="combobox"
                     aria-expanded={open}
                     className="w-full justify-between h-auto min-h-[40px] px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    disabled={disabled}
                 >
                     <div className="flex flex-wrap gap-1 items-center text-left">
                         {selected.length > 0 ? (

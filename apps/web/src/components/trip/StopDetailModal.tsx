@@ -175,6 +175,7 @@ export default function StopDetailModal({
                                 showSearchbar={false}
                                 showBadgedropdown={true}
                                 showCheckMark={false}
+                                disabled={readOnly}
                             />
                         </div>
                     </div>
