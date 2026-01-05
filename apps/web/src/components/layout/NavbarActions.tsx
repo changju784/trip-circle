@@ -1,5 +1,5 @@
 import { Button } from "../ui/Button";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/hook/use-auth";
 import { useDarkMode } from "./hooks/use-dark-mode";
@@ -48,24 +48,26 @@ export function NavbarActions({ mobile = false, onItemClick }: NavbarActionsProp
                 {mobile && <span className="ml-2">{isDark ? "Light Mode" : "Dark Mode"}</span>}
             </Button>
 
-            {/* Profile */}
+            {/* Profile Button */}
             <Button
                 variant="secondary"
                 size={size}
-                className={fullWidth}
+                className={`${fullWidth} rounded-full flex items-center justify-start gap-3 px-6 hover:bg-secondary/80 transition-all font-semibold`}
                 onClick={handleProfile}
             >
-                👤 Profile
+                <User size={18} className="text-blue-500" />
+                <span>Profile</span>
             </Button>
 
-            {/* Logout */}
+            {/* Logout Button */}
             <Button
-                variant="secondary"
+                variant="ghost" // Changed to ghost for a cleaner look next to Profile
                 size={size}
-                className={fullWidth}
+                className={`${fullWidth} rounded-full flex items-center justify-start gap-3 px-6 hover:bg-destructive/10 hover:text-destructive transition-all font-semibold`}
                 onClick={handleLogout}
             >
-                🚪 Logout
+                <LogOut size={18} className="text-muted-foreground group-hover:text-destructive" />
+                <span>Logout</span>
             </Button>
         </div>
     );

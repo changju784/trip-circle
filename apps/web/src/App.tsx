@@ -52,10 +52,8 @@ function App() {
                                 </ProtectedRoute>
                             }>
                                 <Route path="dashboard" element={<Dashboard />}>
-                                    {/* /trip-circle/dashboard/ (Default) */}
                                     <Route index element={<MyTripsSection />} />
 
-                                    {/* /trip-circle/dashboard/explore */}
                                     <Route path="explore" element={<ExploreSection />} />
                                 </Route>
                                 <Route path="profile" element={<ProfilePage />} />
