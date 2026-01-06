@@ -93,6 +93,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                 onClose={() => setIsFullMapOpen(false)}
                 days={days}
                 initialDayIndex={selectedDay}
+                isOwner={isOwner}
                 onEditStop={onEditStop}
                 onAddStopAtCoords={handleAddStopAtCoords}
             />

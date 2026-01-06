@@ -1,6 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import NiceAvatar, { type NiceAvatarProps, type Sex, type EarSize, type HairStyle, type HatStyle, type EyeStyle, type GlassesStyle, type NoseStyle, type MouthStyle, type ShirtStyle } from "react-nice-avatar";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 
 type AvatarUser = {
     id?: string;
@@ -13,6 +14,7 @@ type AvatarProps = {
     user?: AvatarUser | null;
     size?: number;
     className?: string;
+    showPopover?: boolean;
 };
 
 // Acceptable option pools
@@ -80,13 +82,53 @@ function buildConfig(seed: string): NiceAvatarProps {
     };
 }
 
-export function Avatar({ user, size = 56, className }: AvatarProps) {
+export function Avatar({ user, size = 56, className, showPopover = false }: AvatarProps) {
+    const [isOpen, setIsOpen] = useState(false);
     const seed = user?.id || user?.email || user?.username || user?.name || "traveler";
     const config = useMemo(() => buildConfig(seed), [seed]);
 
-    return (
-        <div className={cn("inline-flex items-center justify-center", className)} style={{ width: size, height: size }}>
+    const avatarBase = (
+        <div
+            className={cn(
+                "inline-flex items-center justify-center rounded-full overflow-hidden shrink-0",
+                className
+            )}
+            style={{ width: size, height: size }}
+        >
             <NiceAvatar style={{ width: size, height: size }} {...config} />
         </div>
+    );
+
+    if (!showPopover) {
+        return avatarBase;
+    }
+
+    const displayName = user?.username || user?.name || user?.email || "Unknown User";
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger
+                asChild
+                onMouseEnter={() => setIsOpen(true)}
+                onMouseLeave={() => setIsOpen(false)}
+            >
+                <div
+                    role="button"
+                    tabIndex={0}
+                    className="cursor-help outline-none focus-visible:ring-2 ring-primary ring-offset-2 rounded-full p-0 m-0 border-none bg-transparent block leading-[0]"
+                >
+                    {avatarBase}
+                </div>
+            </PopoverTrigger>
+            <PopoverContent
+                side="top"
+                align="center"
+                className="w-auto min-w-0 px-3 py-1.5 text-xs font-medium shadow-lg"
+                onMouseEnter={() => setIsOpen(true)}
+                onMouseLeave={() => setIsOpen(false)}
+            >
+                {displayName}
+            </PopoverContent>
+        </Popover>
     );
 }

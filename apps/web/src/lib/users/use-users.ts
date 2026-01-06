@@ -132,7 +132,7 @@ export function useUsers() {
         ...state,
         getUser,
         getUserTrips,
-        searchUsers,   // ⭐ NEW
+        searchUsers,
         clearCache,
     };
 }

@@ -19,6 +19,7 @@ import { addComment, getPostByTrip, toggleLike, type Post } from "@/lib/posts/po
 import { Section } from "@/components/ui/Section";
 import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 import { useGetTripBudgetInfo } from "./hooks/use-get-trip-budget-info";
+import { useGetTripOwners } from "./hooks/use-get-trip-owners";
 import { Progress } from "@/components/ui/Progress";
 import { cn } from "@/lib/utils";
 import { Trip } from "@/lib/trips/trips-api";
@@ -31,19 +32,18 @@ export default function TripDetailPage() {
     const { user } = useAuth();
 
     const [trip, setTrip] = useState<Trip | null>(null);
+    const { owner, contributors } = useGetTripOwners(trip);
     const [refreshKey, setRefreshKey] = useState(0);
     const [selectedDay, setSelectedDay] = useState(0);
     const [openAdd, setOpenAdd] = useState(false);
     const [editingStop, setEditingStop] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [shareOpen, setShareOpen] = useState(false);
-    const [ownerName, setOwnerName] = useState<string | null>(null);
-    const [contributors, setContributors] = useState<{ id: string; name: string; email?: string }[]>([]);
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
     const [loadingTrip, setLoadingTrip] = useState(true);
     const [post, setPost] = useState<Post | null>(null);
     const [loadingPost, setLoadingPost] = useState(false);
-    const [postError, setPostError] = useState<string | null>(null);
+    const [, setPostError] = useState<string | null>(null);
     const [commentText, setCommentText] = useState("");
     const [commentSubmitting, setCommentSubmitting] = useState(false);
 
@@ -68,60 +68,6 @@ export default function TripDetailPage() {
         load();
         return () => { cancelled = true; };
     }, [id, getTrip, refreshKey]);
-
-    // ---------------- LOAD OWNER ----------------
-    useEffect(() => {
-        if (!trip || !trip.members || !trip.members.length) {
-            setOwnerName(null);
-            return;
-        }
-        const ownerId = trip?.members?.[0];
-        let cancelled = false;
-        (async () => {
-            try {
-                const user = await getUser(ownerId);
-                if (!cancelled) setOwnerName(user.username);
-            } catch (err) {
-                if (!cancelled) setOwnerName(null);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [trip]);
-
-    // ---------------- LOAD CONTRIBUTORS ----------------
-    useEffect(() => {
-        let cancelled = false;
-        const loadContributors = async () => {
-            const memberIds: string[] = (trip?.members || []).map((m: any) => String(m));
-            if (memberIds.length === 0) {
-                setContributors([]);
-                return;
-            }
-
-            const uniqueIds: string[] = Array.from(new Set(memberIds));
-            try {
-                const users = await Promise.all(uniqueIds.map(async (uid) => {
-                    try {
-                        const user = await getUser(uid);
-                        return {
-                            id: user.id || uid,
-                            name: user.username || user.email || "Unknown",
-                            email: user.email,
-                        };
-                    } catch {
-                        return { id: uid, name: "Unknown" };
-                    }
-                }));
-                if (!cancelled) setContributors(users as { id: string; name: string; email?: string }[]);
-            } catch (err) {
-                console.error("Failed to load contributors", err);
-                if (!cancelled) setContributors(uniqueIds.map((id) => ({ id, name: "Unknown" })));
-            }
-        };
-
-        loadContributors();
-        return () => { cancelled = true; };
-    }, [trip?.members]);
 
     // ---------------- HELPER VARS ----------------
     const isOwner = Boolean(
@@ -421,18 +367,27 @@ export default function TripDetailPage() {
                             </div>
                         )}
 
-                        <div className="flex items-center gap-4 text-sm">
-                            <p>Owned by <span className="font-medium text-gray-900 dark:text-gray-100">{ownerName || "Unknown"}</span></p>
-                            {contributors.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-500">Contributors:</span>
-                                    <div className="flex -space-x-2">
-                                        {contributors.map((c) => (
-                                            <Avatar key={c.id} user={{ id: c.id, username: c.name }} size={28} className="border-2 border-white dark:border-gray-900" />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                        <div className="flex items-center gap-3 text-sm">
+                            <span className="text-gray-500 font-medium">Contributors:</span>
+                            <div className="flex -space-x-2 isolate">
+                                {owner && (
+                                    <Avatar
+                                        user={owner}
+                                        size={28}
+                                        className="ring-2 ring-white dark:ring-gray-900 z-30"
+                                        showPopover={true}
+                                    />
+                                )}
+                                {contributors.map((c) => (
+                                    <Avatar
+                                        key={c.id}
+                                        user={c}
+                                        size={28}
+                                        className="ring-2 ring-white dark:ring-gray-900 z-20 hover:z-40 transition-all"
+                                        showPopover={true}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </Section>
