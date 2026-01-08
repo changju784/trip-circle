@@ -23,6 +23,8 @@ import { useGetTripOwners } from "./hooks/use-get-trip-owners";
 import { Progress } from "@/components/ui/Progress";
 import { cn } from "@/lib/utils";
 import { Trip } from "@/lib/trips/trips-api";
+import { TAG_CONFIG } from "@/lib/const/trip-tags";
+import { Badge } from "@/components/ui/badge";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -301,6 +303,30 @@ export default function TripDetailPage() {
                             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed italic">
                                 {trip.description}
                             </p>
+                        )}
+
+                        {/* --- TRIP TAGS --- */}
+                        {trip.tags && trip.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-4">
+                                {trip.tags.map((tagId) => {
+                                    const config = TAG_CONFIG[tagId as keyof typeof TAG_CONFIG];
+                                    if (!config) return null;
+                                    const Icon = config.icon;
+
+                                    return (
+                                        <Badge
+                                            key={tagId}
+                                            variant="outline"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-white/5 bg-zinc-900/40 backdrop-blur-sm text-white/80 hover:text-white transition-colors"
+                                        >
+                                            <Icon size={12} className="text-blue-400" />
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">
+                                                {config.label}
+                                            </span>
+                                        </Badge>
+                                    );
+                                })}
+                            </div>
                         )}
 
                         {/* --- BUDGET/PRICE WIDGET --- */}
