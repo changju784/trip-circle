@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Heart, MessageCircle } from "lucide-react";
+import { Copy, Edit3, Heart, MessageCircle, Share, Trash2 } from "lucide-react";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
@@ -237,26 +237,63 @@ export default function TripDetailPage() {
                 <Section
                     title={trip.title}
                     rightElement={
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-end">
                             {isOwner ? (
                                 <>
-                                    <Button variant="secondary" onClick={() => setShareOpen(true)}>Share</Button>
+                                    {/* SHARE BUTTON */}
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="rounded-full h-9 px-4 flex gap-2 items-center transition-all"
+                                        onClick={() => setShareOpen(true)}
+                                    >
+                                        <Share size={15} strokeWidth={2.5} />
+                                        <span className="hidden sm:inline">Share</span>
+                                    </Button>
+
+                                    {/* EDIT BUTTON */}
                                     <Link to={`/trip-circle/trip/${trip._id}/edit`}>
-                                        <Button variant="outline">Edit Trip</Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-full h-9 px-4 border border-white/10 hover:border-blue-500/50 transition-all flex gap-2 items-center"
+                                        >
+                                            <Edit3 size={15} strokeWidth={2.5} />
+                                            <span className="hidden sm:inline">Edit</span>
+                                        </Button>
                                     </Link>
-                                    <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>Delete</Button>
+
+                                    {/* DELETE BUTTON */}
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        className="rounded-full h-9 px-4 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all flex gap-2 items-center"
+                                        onClick={() => setOpenDeleteModal(true)}
+                                    >
+                                        <Trash2 size={15} strokeWidth={2.5} />
+                                        <span className="hidden sm:inline">Delete</span>
+                                    </Button>
                                 </>
                             ) : (
                                 trip.isPublic && user && (
-                                    <Button variant="dark" onClick={async () => {
-                                        try {
-                                            const newTrip = await forkTrip(trip._id, user.id);
-                                            navigate(`/trip-circle/trip/${newTrip._id}`);
-                                        } catch (err) {
-                                            console.error(err);
-                                            alert("Failed to copy trip.");
-                                        }
-                                    }}>Copy Trip</Button>
+                                    /* COPY TRIP BUTTON */
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        className="rounded-full h-10 px-6 shadow-lg shadow-blue-500/20 font-black uppercase text-[10px] tracking-widest flex gap-2 items-center"
+                                        onClick={async () => {
+                                            try {
+                                                const newTrip = await forkTrip(trip._id, user.id);
+                                                navigate(`/trip-circle/trip/${newTrip._id}`);
+                                            } catch (err) {
+                                                console.error(err);
+                                                alert("Failed to copy trip.");
+                                            }
+                                        }}
+                                    >
+                                        <Copy size={16} strokeWidth={3} />
+                                        Copy Trip
+                                    </Button>
                                 )
                             )}
                         </div>
