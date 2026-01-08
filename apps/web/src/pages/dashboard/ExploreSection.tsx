@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState, useCallback, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import debounce from "lodash.debounce";
+import { useEffect, useMemo, useState, useContext } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Flame, ChevronRight } from "lucide-react";
 
 import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
 import type { Option } from "../../components/ui/Select";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 import {
@@ -26,29 +25,24 @@ const SORT_OPTIONS: Option[] = [
 export default function ExploreSection() {
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
+    const [searchParams] = useSearchParams();
 
-    const [query, setQuery] = useState("");
-    const [debouncedQuery, setDebouncedQuery] = useState("");
+    const query = searchParams.get("q") || "";
+
+    const [debouncedQuery, setDebouncedQuery] = useState(query);
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [, setError] = useState<string | null>(null);
-
-    // Manage sort option as a single Option object
+    const [error, setError] = useState<string | null>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [sortOption, setSortOption] = useState<Option>(SORT_OPTIONS[0]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const debouncedSearch = useCallback(
-        debounce((value: string) => {
-            setDebouncedQuery(value);
-        }, 300),
-        []
-    );
-
-    const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setQuery(value);
-        debouncedSearch(value);
-    };
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedQuery(query);
+            if (query) setIsExpanded(true);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [query]);
 
     useEffect(() => {
         let cancelled = false;
@@ -56,27 +50,22 @@ export default function ExploreSection() {
             try {
                 setIsLoading(true);
                 setError(null);
-
                 const result = debouncedQuery
                     ? await searchPosts(debouncedQuery)
                     : await getPosts();
 
-                if (!cancelled) {
-                    setPosts(result);
-                }
+                if (!cancelled) setPosts(result);
             } catch (err) {
                 if (!cancelled) {
                     setPosts([]);
-                    setError("Failed to load");
+                    setError("Failed to load trips.");
                 }
             } finally {
                 if (!cancelled) setIsLoading(false);
             }
         }
         loadPosts();
-        return () => {
-            cancelled = true;
-        };
+        return () => { cancelled = true; };
     }, [debouncedQuery]);
 
     const handleLike = async (postId: string) => {
@@ -91,138 +80,135 @@ export default function ExploreSection() {
         }
     };
 
-    const trips = posts.map((p) => p.tripId);
-    const thumbnails = useSplashThumbnails(trips);
+    const trendingTrips = useMemo(() => {
+        if (debouncedQuery) return [];
+        return [...posts]
+            .sort((a, b) => {
+                const scoreA = (a.likeCount || 0) + (a.commentCount || 0) * 2;
+                const scoreB = (b.likeCount || 0) + (b.commentCount || 0) * 2;
+                return scoreB - scoreA;
+            })
+            .slice(0, 3);
+    }, [posts, debouncedQuery]);
 
-    const filteredPosts = useMemo(() => {
-        const sorted = [...posts];
+    const libraryPosts = useMemo(() => {
+        const trendingIds = new Set(trendingTrips.map(t => t._id));
+        let filtered = posts.filter(p => !trendingIds.has(p._id));
+
         switch (sortOption.id) {
             case "likes":
-                sorted.sort(
-                    (a, b) => (b.likeCount || 0) - (a.likeCount || 0)
-                );
+                filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
                 break;
             case "forks":
-                sorted.sort(
-                    (a, b) => (b.forkCount || 0) - (a.forkCount || 0)
-                );
+                filtered.sort((a, b) => (b.forkCount || 0) - (a.forkCount || 0));
                 break;
             case "name":
-                sorted.sort((a, b) =>
-                    (a.tripId?.title || "").localeCompare(
-                        b.tripId?.title || ""
-                    )
-                );
+                filtered.sort((a, b) => (a.tripId?.title || "").localeCompare(b.tripId?.title || ""));
                 break;
-            default:
-                break; // recent
+            default: break;
         }
-        return sorted;
-    }, [posts, sortOption]);
+        return filtered;
+    }, [posts, sortOption, trendingTrips]);
+
+    const thumbnails = useSplashThumbnails(posts.map(p => p.tripId));
+
+    const renderCard = (post: Post, isTrending = false) => {
+        const trip = post.tripId;
+        const thumb = trip.thumbnail || thumbnails[trip._id] || null;
+        const isLiked = user?.id ? post.likes?.includes(user.id) : false;
+
+        return (
+            <TripCard
+                key={post._id}
+                trip={trip}
+                thumbnailUrl={thumb}
+                onClick={() => navigate(`/trip-circle/trip/${trip._id}`)}
+                className={!isExpanded && !isTrending ? "min-w-[300px] md:min-w-[350px] snap-center" : ""}
+                footer={
+                    <div className="space-y-3">
+                        <PostActivitySummary
+                            likeCount={post.likeCount}
+                            forkCount={post.forkCount}
+                            commentCount={post.commentCount}
+                            isLiked={isLiked}
+                            onLike={() => handleLike(post._id)}
+                        />
+                        <Button className="w-full" onClick={() => navigate(`/trip-circle/trip/${trip._id}`)}>
+                            View Trip
+                        </Button>
+                    </div>
+                }
+            />
+        );
+    };
+
+    if (isLoading) return <div className="p-20 text-center opacity-50 font-black uppercase tracking-widest text-xs">Loading the world...</div>;
 
     return (
-        <div className="space-y-6">
-            {/* Header + controls */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-12">
+            {/* CLEANER HEADER */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
                 <div className="text-left">
-                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                        Explore trips
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                        Browse public trip ideas and adapt them for your own
-                        plans.
-                    </p>
+                    <h2 className="text-3xl font-black text-white tracking-tight">Explore</h2>
+                    <p className="text-white/40 text-sm">Discover and remix public itineraries</p>
                 </div>
-                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                    <Input
-                        placeholder="Search by city, destination, or trip title"
-                        className="md:w-80 border-2 border-sky-100 dark:border-gray-600 focus-visible:ring-sky-500 shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                        value={query}
-                        onChange={handleQueryChange}
-                    />
-
+                <div className="flex gap-3 w-full md:w-auto">
                     <select
                         value={sortOption.id}
-                        onChange={(e) => {
-                            const selected = SORT_OPTIONS.find(
-                                (opt) => opt.id === e.target.value
-                            );
-                            if (selected) setSortOption(selected);
-                        }}
-                        className="h-10 rounded-md border-2 border-sky-100 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 text-sm shadow-sm text-gray-900 dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                        onChange={(e) => setSortOption(SORT_OPTIONS.find(o => o.id === e.target.value)!)}
+                        className="h-10 rounded-full border-2 border-white/10 bg-zinc-900 px-4 text-[10px] font-bold uppercase tracking-widest text-white outline-none focus:border-blue-500/50 transition-colors"
                     >
-                        {SORT_OPTIONS.map((opt) => (
-                            <option key={opt.id} value={opt.id}>
-                                {opt.label}
-                            </option>
-                        ))}
+                        {SORT_OPTIONS.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
                     </select>
                 </div>
             </div>
 
-            {/* Loading state */}
-            {isLoading && (
-                <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm text-gray-600 dark:text-gray-400">
-                    Loading trips...
-                </div>
+            {/* TRENDING SECTION */}
+            {!isExpanded && trendingTrips.length > 0 && (
+                <section className="space-y-6">
+                    <div className="flex items-center gap-2 px-2">
+                        <Flame className="w-5 h-5 text-orange-500 fill-orange-500/20" />
+                        <h3 className="text-xl font-black uppercase tracking-tighter">Trending Now</h3>
+                    </div>
+                    <div className="grid gap-6 md:grid-cols-3 px-2">
+                        {trendingTrips.map(post => renderCard(post, true))}
+                    </div>
+                </section>
             )}
 
-            {/* Results grid */}
-            {!isLoading && filteredPosts.length > 0 && (
-                <div className="grid gap-4 md:grid-cols-3">
-                    {filteredPosts.map((post) => {
-                        const trip = post.tripId;
-                        const thumb =
-                            trip.thumbnail || thumbnails[trip._id] || null;
-                        const isLiked = user?.id
-                            ? post.likes.includes(user.id)
-                            : false;
-
-                        return (
-                            <TripCard
-                                key={post._id}
-                                trip={trip}
-                                thumbnailUrl={thumb}
-                                onClick={() =>
-                                    navigate(`/trip-circle/trip/${trip._id}`)
-                                }
-                                footer={
-                                    <div className="space-y-3">
-                                        <PostActivitySummary
-                                            likeCount={post.likeCount}
-                                            forkCount={post.forkCount}
-                                            commentCount={post.commentCount}
-                                            isLiked={isLiked}
-                                            onLike={() => handleLike(post._id)}
-                                        />
-
-                                        <Button className="w-full" onClick={() => navigate(`/trip-circle/trip/${trip._id}`)}>
-                                            View this trip
-                                        </Button>
-                                    </div>
-                                }
-                            />
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* Empty state */}
-            {!isLoading && filteredPosts.length === 0 && (
-                <div className="p-8 text-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 shadow-sm">
-                    {query ? (
-                        <>
-                            No trips match{" "}
-                            <span className="font-medium text-gray-900 dark:text-gray-100">
-                                "{query}"
-                            </span>
-                            . Try another search term.
-                        </>
-                    ) : (
-                        "No public trips available yet."
+            {/* MAIN LIBRARY SECTION */}
+            <section className="space-y-6">
+                <div className="flex justify-between items-end px-2">
+                    <div>
+                        <h3 className="text-xl font-black uppercase tracking-tighter">
+                            {debouncedQuery ? `Results for "${debouncedQuery}"` : "Public Trips"}
+                        </h3>
+                    </div>
+                    {!debouncedQuery && libraryPosts.length > 0 && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="text-xs uppercase tracking-widest font-bold text-white/60 hover:text-white"
+                        >
+                            {isExpanded ? "Show Less" : "See All"}
+                            {!isExpanded && <ChevronRight className="ml-1 w-4 h-4" />}
+                        </Button>
                     )}
                 </div>
-            )}
+
+                <div className={
+                    isExpanded
+                        ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3 px-2"
+                        : "flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x px-2"
+                }>
+                    {libraryPosts.length > 0 ? (
+                        libraryPosts.map(post => renderCard(post))
+                    ) : (
+                        <p className="px-2 text-white/40 italic">No trips found matching your search.</p>
+                    )}
+                </div>
+            </section>
         </div>
     );
 }
