@@ -14,6 +14,11 @@ const ReceiptSchema = new mongoose.Schema(
     { _id: false }
 );
 
+const StopCategoryEnum = [
+    'dining', 'lodging', 'sightseeing', 'activity',
+    'shopping', 'transit', 'nightlife', 'other', 'none'
+];
+
 // --- STOP SUBSCHEMA ---
 const StopSchema = new mongoose.Schema(
     {
@@ -22,10 +27,7 @@ const StopSchema = new mongoose.Schema(
         time: { type: String },
         category: {
             type: String,
-            enum: [
-                'dining', 'lodging', 'sightseeing', 'activity',
-                'shopping', 'transit', 'nightlife', 'other', 'none'
-            ],
+            enum: StopCategoryEnum,
             default: 'none'
         },
         locationName: { type: String },
