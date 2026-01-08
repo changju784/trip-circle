@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState, useCallback, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import debounce from "lodash.debounce";
-import { Flame, ChevronRight, Search } from "lucide-react";
+import { useEffect, useMemo, useState, useContext } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Flame, ChevronRight } from "lucide-react";
 
 import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
 import type { Option } from "../../components/ui/Select";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 import {
@@ -27,29 +25,24 @@ const SORT_OPTIONS: Option[] = [
 export default function ExploreSection() {
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
+    const [searchParams] = useSearchParams();
 
-    const [query, setQuery] = useState("");
-    const [debouncedQuery, setDebouncedQuery] = useState("");
+    const query = searchParams.get("q") || "";
+
+    const [debouncedQuery, setDebouncedQuery] = useState(query);
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const [sortOption, setSortOption] = useState<Option>(SORT_OPTIONS[0]);
 
-    const debouncedSearch = useCallback(
-        debounce((value: string) => {
-            setDebouncedQuery(value);
-            // Auto-expand if user is searching to show all results
-            if (value) setIsExpanded(true);
-        }, 300),
-        []
-    );
-
-    const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setQuery(value);
-        debouncedSearch(value);
-    };
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedQuery(query);
+            if (query) setIsExpanded(true);
+        }, 300);
+        return () => clearTimeout(handler);
+    }, [query]);
 
     useEffect(() => {
         let cancelled = false;
@@ -87,7 +80,6 @@ export default function ExploreSection() {
         }
     };
 
-    // Calculate Trending (Mixed score of likes and comments)
     const trendingTrips = useMemo(() => {
         if (debouncedQuery) return [];
         return [...posts]
@@ -99,7 +91,6 @@ export default function ExploreSection() {
             .slice(0, 3);
     }, [posts, debouncedQuery]);
 
-    // Library Feed (deduplicated from trending)
     const libraryPosts = useMemo(() => {
         const trendingIds = new Set(trendingTrips.map(t => t._id));
         let filtered = posts.filter(p => !trendingIds.has(p._id));
@@ -155,26 +146,17 @@ export default function ExploreSection() {
 
     return (
         <div className="space-y-12">
-            {/* Header + Search */}
+            {/* CLEANER HEADER */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
                 <div className="text-left">
-                    <h2 className="text-3xl font-black text-black dark:text-white tracking-tight">Explore</h2>
-                    <p className="text-black/60 dark:text-white/40 text-sm">Discover and remix public itineraries</p>
+                    <h2 className="text-3xl font-black text-white tracking-tight">Explore</h2>
+                    <p className="text-white/40 text-sm">Discover and remix public itineraries</p>
                 </div>
-                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40 dark:text-white/40" />
-                        <Input
-                            placeholder="Search destination..."
-                            className="pl-10 md:w-72 border-2 border-black/5 dark:border-white/10"
-                            value={query}
-                            onChange={handleQueryChange}
-                        />
-                    </div>
+                <div className="flex gap-3 w-full md:w-auto">
                     <select
                         value={sortOption.id}
                         onChange={(e) => setSortOption(SORT_OPTIONS.find(o => o.id === e.target.value)!)}
-                        className="h-10 rounded-md border-2 border-black/5 dark:border-white/10 bg-white dark:bg-zinc-900 px-3 text-sm font-bold uppercase tracking-widest"
+                        className="h-10 rounded-full border-2 border-white/10 bg-zinc-900 px-4 text-[10px] font-bold uppercase tracking-widest text-white outline-none focus:border-blue-500/50 transition-colors"
                     >
                         {SORT_OPTIONS.map((opt) => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
                     </select>
@@ -207,7 +189,7 @@ export default function ExploreSection() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="text-xs uppercase tracking-widest font-bold"
+                            className="text-xs uppercase tracking-widest font-bold text-white/60 hover:text-white"
                         >
                             {isExpanded ? "Show Less" : "See All"}
                             {!isExpanded && <ChevronRight className="ml-1 w-4 h-4" />}
@@ -223,7 +205,7 @@ export default function ExploreSection() {
                     {libraryPosts.length > 0 ? (
                         libraryPosts.map(post => renderCard(post))
                     ) : (
-                        <p className="px-2 text-black/40 dark:text-white/40 italic">No trips found here yet.</p>
+                        <p className="px-2 text-white/40 italic">No trips found matching your search.</p>
                     )}
                 </div>
             </section>
