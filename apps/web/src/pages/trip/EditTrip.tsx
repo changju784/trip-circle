@@ -50,6 +50,7 @@ export default function EditTripPage() {
                 endDate: data.endDate,
                 isPublic: !!data.isPublic,
                 budget: data.budget || null,
+                tags: data.tags,
                 thumbnail,
                 destinations,
             });

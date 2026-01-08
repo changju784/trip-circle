@@ -48,12 +48,23 @@ export interface Receipt {
     dayDate?: string;
 }
 
+export const TripTagsEnum = [
+    'spring', 'summer', 'fall', 'winter',
+    'solo', 'couple', 'family', 'friends',
+    'budget', 'luxury', 'adventure',
+    'nature', 'city break', 'beach', 'foodie',
+    'relaxing', 'photography', 'hiking', 'historic'
+] as const;
+
+export type TripTag = (typeof TripTagsEnum)[number];
+
 export interface Trip {
     _id: string;
     id?: string;
     title: string;
     description: string;
     destinations: Destination[];
+    tags: TripTag[];
     isPublic: boolean;
     totalPrice: number | null;
     budget: number | null;
@@ -75,6 +86,7 @@ export interface CreateTripInput {
     budget?: number | null;
     days?: DayWithStops[];
     isPublic?: boolean;
+    tags?: TripTag[];
     thumbnail?: string | null;
     members?: string[];
 }
