@@ -18,7 +18,22 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
         immutable: true
-    }
+    },
+    // Gamification Stats
+    gamification: {
+        tripScore: { type: Number, default: 0 },
+        totalLikesReceived: { type: Number, default: 0 },
+        tripsForked: { type: Number, default: 0 },
+        stopsAdded: { type: Number, default: 0 }
+    },
+    badges: [
+        {
+            id: { type: String, required: true },
+            name: { type: String, required: true },
+            icon: { type: String, default: '🏆' },
+            dateEarned: { type: Date, default: Date.now }
+        }
+    ]
 });
 
 // Export Model Schema

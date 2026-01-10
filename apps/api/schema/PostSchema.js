@@ -39,7 +39,8 @@ const PostSchema = new mongoose.Schema({
 
 // Index for faster queries
 PostSchema.index({ dateCreated: -1 });
-PostSchema.index({ tripId: 1 });
+// tripId index is already defined by unique: true in schema definition
+// PostSchema.index({ tripId: 1 });
 
 // Export Model Schema
 export default mongoose.model('Post', PostSchema);

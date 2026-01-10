@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Post from '../schema/PostSchema.js';
 import Trip from '../schema/TripSchema.js';
+import { updateUserGamification } from '../services/gamificationService.js';
 
 const router = express.Router();
 
@@ -29,6 +30,29 @@ router.get('/', async (req, res) => {
     res.json(validPosts);
   } catch (err) {
     console.error('Get posts error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/posts/liked - Get posts liked by a specific user
+router.get('/liked', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ error: 'userId required' });
+    }
+
+    const posts = await Post.find({ likes: userId })
+      .populate('userId', 'username email')
+      .populate('tripId')
+      .sort({ dateCreated: -1 })
+      .lean();
+
+    const validPosts = posts.filter(post => post.tripId && post.tripId.isPublic);
+
+    res.json(validPosts);
+  } catch (err) {
+    console.error('Get liked posts error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -223,6 +247,9 @@ router.post('/:id/like', async (req, res) => {
     }
 
     await post.save();
+
+    // Update gamification stats for the post author (trip owner)
+    await updateUserGamification(post.userId);
 
     const updatedPost = await Post.findById(postId)
       .populate('userId', 'username email')

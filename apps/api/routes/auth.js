@@ -64,6 +64,14 @@ router.post("/register", async (req, res) => {
             },
         });
     } catch (error) {
+        if (error.code === 11000) {
+            if (error.keyPattern?.username) {
+                return res.status(409).json({ message: "Username already taken" });
+            }
+            if (error.keyPattern?.email) {
+                return res.status(409).json({ message: "Email already registered" });
+            }
+        }
         logger.error("Registration error:", error);
         res.status(500).json({ message: "Server error during registration" });
     }
