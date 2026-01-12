@@ -14,12 +14,12 @@ const ReceiptSchema = new mongoose.Schema(
     { _id: false }
 );
 
+// --- STOP SUBSCHEMA ---
 const StopCategoryEnum = [
     'dining', 'lodging', 'sightseeing', 'activity',
     'shopping', 'transit', 'nightlife', 'other', 'none'
 ];
 
-// --- STOP SUBSCHEMA ---
 const StopSchema = new mongoose.Schema(
     {
         id: { type: String, trim: true },              // frontend-generated id
@@ -49,6 +49,14 @@ const DaySchema = new mongoose.Schema(
 );
 
 // --- TRIP SCHEMA ---
+const TripTagsEnum = [
+    'spring', 'summer', 'fall', 'winter',           // season
+    'solo', 'couple', 'family', 'friends',          // group type
+    'budget', 'luxury', 'adventure',                // style
+    'nature', 'city break', 'beach', 'foodie',      // vibe
+    'relaxing', 'photography', 'hiking', 'historic' // activity
+];
+
 const TripSchema = new mongoose.Schema({
     members: [
         {
@@ -68,6 +76,13 @@ const TripSchema = new mongoose.Schema({
             lng: { type: Number },
         }
     ],
+
+    tags: {
+        type: [String],
+        enum: TripTagsEnum,
+        default: [],
+        index: true
+    },
 
     isPublic: { type: Boolean, default: false, index: true },
     thumbnail: { type: String, default: null },
@@ -100,13 +115,15 @@ TripSchema.index(
     {
         title: 'text',
         description: 'text',
-        'destinations.label': 'text'
+        'destinations.label': 'text',
+        tags: 'text'
     },
     {
         weights: {
             title: 10,
             'destinations.label': 5,
-            description: 1
+            description: 1,
+            tags: 3,
         },
         name: 'trip_search_index'
     }

@@ -29,7 +29,8 @@ export async function createTrip(payload) {
         thumbnail,
         startDate,
         endDate,
-        members
+        members,
+        tags
     } = payload;
 
     const days = generateDays(startDate, endDate).map(day => ({
@@ -47,7 +48,8 @@ export async function createTrip(payload) {
         totalPrice: 0,
         startDate,
         endDate,
-        members
+        members,
+        tags: tags || []
     });
 
     await trip.save();

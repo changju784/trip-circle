@@ -32,6 +32,7 @@ export default function NewTripPage() {
                 startDate: data.startDate,
                 endDate: data.endDate,
                 budget: data.budget || null,
+                tags: data.tags || [],
                 isPublic: !!data.isPublic,
                 thumbnail,
                 members: [user.id],
