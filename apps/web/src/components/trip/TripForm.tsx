@@ -201,7 +201,7 @@ export default function TripForm({
                             </div>
                             <div>
                                 <FieldLabel>Tags</FieldLabel>
-                                <div className="bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/50">
+                                <div className="bg-zinc-100 dark:bg-zinc-900/30 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800/50 transition-colors">
                                     <Controller
                                         control={control}
                                         name="tags"
@@ -218,13 +218,16 @@ export default function TripForm({
 
                 {/* --- FOOTER: VISIBILITY & ACTIONS --- */}
                 <div className="pt-6 border-t border-white/5 space-y-4">
-                    <div className="flex items-center justify-between bg-zinc-900/50 p-4 rounded-xl border border-white/5">
+                    <div className="flex items-center justify-between p-4 rounded-xl border transition-all
+    bg-zinc-100 border-zinc-200 
+    dark:bg-zinc-900/50 dark:border-white/5"
+                    >
                         <div className="flex flex-col">
-                            <div className="flex items-center gap-2 font-bold text-sm">
+                            <div className="flex items-center gap-2 font-black text-sm dark:text-white text-zinc-900 uppercase tracking-tight">
                                 <span>{watch("isPublic") ? "🌍" : "🔒"}</span>
                                 {watch("isPublic") ? "Public Trip" : "Private Trip"}
                             </div>
-                            <span className="text-[10px] text-white/40 uppercase tracking-wider">
+                            <span className="text-[10px] dark:text-white/40 text-zinc-500 font-bold uppercase tracking-wider">
                                 {watch("isPublic") ? "Visible in Explore" : "Only you can edit"}
                             </span>
                         </div>
