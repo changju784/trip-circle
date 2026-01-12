@@ -2,17 +2,15 @@ import Trip from '../schema/TripSchema.js';
 
 /**
  * Explores public trips with optional text search and tag filtering.
- * Automatically handles pagination and search scoring.
+ * Adjusted to ensure tag-only searches don't get filtered by score.
  */
 export async function exploreTrips({ q, tags = [], limitNum = 20, skipNum = 0 }) {
     const searchQuery = q?.trim();
 
-    // Ensure tags is always an array (handles comma-strings from query params or arrays)
     const tagArray = Array.isArray(tags)
         ? tags
         : (tags ? String(tags).split(',').filter(Boolean) : []);
 
-    // 1. DEFAULT VIEW: No search query and no tags selected
     if (!searchQuery && tagArray.length === 0) {
         return Trip.find({ isPublic: true })
             .sort({ dateCreated: -1 })
@@ -22,30 +20,26 @@ export async function exploreTrips({ q, tags = [], limitNum = 20, skipNum = 0 })
             .lean();
     }
 
-    // 2. SEARCH MODE: Construct Atlas Search Pipeline
-    const minScore = searchQuery?.length <= 3 ? 0.5 : 1;
+    const searchCompound = {
+        filter: [{ equals: { path: 'isPublic', value: true } }],
+        should: [],
+        minimumShouldMatch: (searchQuery || tagArray.length > 0) ? 1 : 0
+    };
 
-    // Mandatory filter: Trip must be public
-    const filterClauses = [{ equals: { path: 'isPublic', value: true } }];
-
-    // Add hashtags to mandatory filter (matches ALL selected tags)
     if (tagArray.length > 0) {
         tagArray.forEach(tag => {
-            filterClauses.push({
-                text: { query: tag, path: 'tags' }
+            searchCompound.should.push({
+                text: {
+                    query: tag,
+                    path: 'tags',
+                    score: { boost: { value: 5 } }
+                }
             });
         });
     }
 
-    const searchCompound = {
-        filter: filterClauses,
-        should: [],
-        minimumShouldMatch: searchQuery ? 1 : 0
-    };
-
-    // Add text search conditions if query exists
     if (searchQuery) {
-        searchCompound.should = [
+        searchCompound.should.push(
             {
                 autocomplete: {
                     query: searchQuery,
@@ -60,16 +54,11 @@ export async function exploreTrips({ q, tags = [], limitNum = 20, skipNum = 0 })
                     path: 'destinations.label',
                     score: { boost: { value: 5 } }
                 }
-            },
-            {
-                text: {
-                    query: searchQuery,
-                    path: 'title',
-                    score: { boost: { value: 8 } }
-                }
             }
-        ];
+        );
     }
+
+    const effectiveMinScore = searchQuery ? (searchQuery.length <= 3 ? 0.5 : 1) : 0;
 
     return Trip.aggregate([
         {
@@ -79,8 +68,7 @@ export async function exploreTrips({ q, tags = [], limitNum = 20, skipNum = 0 })
             }
         },
         { $addFields: { score: { $meta: 'searchScore' } } },
-        // If searching text, enforce minScore; if only filtering tags, score 0 is fine
-        { $match: { score: { $gte: searchQuery ? minScore : 0 } } },
+        { $match: { score: { $gte: effectiveMinScore } } },
         { $limit: limitNum + skipNum },
         { $skip: skipNum },
         {
