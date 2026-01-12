@@ -2,20 +2,35 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Post from '../schema/PostSchema.js';
 import Trip from '../schema/TripSchema.js';
+import { exploreTrips } from '../services/tripSearchService.js';
 
 const router = express.Router();
 
 // GET /api/posts - Get all posts (for explore feed)
 router.get('/', async (req, res) => {
   try {
-    const { limit = 20, skip = 0, sort = 'recent' } = req.query;
+    const { limit = 20, skip = 0, sort = 'recent', tags } = req.query;
+    const tagArray = tags ? String(tags).split(',').filter(Boolean) : [];
 
-    let sortOption = { dateCreated: -1 }; // Default: most recent
+    let postQuery = {};
+
+    // Filter by tags if present
+    if (tagArray.length > 0) {
+      const matchingTrips = await Trip.find({
+        tags: { $all: tagArray },
+        isPublic: true
+      }).select('_id');
+
+      const tripIds = matchingTrips.map(t => t._id);
+      postQuery.tripId = { $in: tripIds };
+    }
+
+    let sortOption = { dateCreated: -1 };
     if (sort === 'popular') {
       sortOption = { likeCount: -1, dateCreated: -1 };
     }
 
-    const posts = await Post.find()
+    const posts = await Post.find(postQuery)
       .populate('userId', 'username email')
       .populate('tripId')
       .sort(sortOption)
@@ -23,9 +38,7 @@ router.get('/', async (req, res) => {
       .skip(parseInt(skip))
       .lean();
 
-    // Filter out posts where trip doesn't exist or isn't public
     const validPosts = posts.filter(post => post.tripId && post.tripId.isPublic);
-
     res.json(validPosts);
   } catch (err) {
     console.error('Get posts error:', err);
@@ -33,107 +46,26 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/posts/search?q=... - Search posts via associated trip fields
+// GET /api/posts/search?q=... - Search posts via associated trip fields and tags
 router.get('/search', async (req, res) => {
   try {
-    const { q, limit = 20, skip = 0 } = req.query;
-    const query = String(q || '').trim();
+    const { q, tags, limit = 20, skip = 0 } = req.query;
     const limitNum = parseInt(String(limit));
     const skipNum = parseInt(String(skip));
 
-    if (!query) {
+    // Use the optimized tripSearchService
+    const tripResults = await exploreTrips({
+      q,
+      tags,
+      limitNum,
+      skipNum
+    });
+
+    if (!tripResults || tripResults.length === 0) {
       return res.json([]);
     }
-
-    // dynamic score threshold: lower for short queries, higher for long ones
-    const minScore = query.length <= 3 ? 0.5 : 1;
-
-    // Search trips (public only) using Atlas Search, then fetch posts for those trips
-    const tripResults = await Trip.aggregate([
-      {
-        $search: {
-          index: 'trip_search',
-          compound: {
-            should: [
-              {
-                autocomplete: {
-                  query,
-                  path: 'title',
-                  score: { boost: { value: 10 } },
-                  fuzzy: { maxEdits: 1 }
-                }
-              },
-              {
-                autocomplete: {
-                  query,
-                  path: 'destinations.label',
-                  score: { boost: { value: 5 } },
-                  fuzzy: { maxEdits: 1 }
-                }
-              },
-              {
-                autocomplete: {
-                  query,
-                  path: 'description',
-                  score: { boost: { value: 1 } },
-                  fuzzy: { maxEdits: 1 }
-                }
-              },
-              {
-                text: {
-                  query,
-                  path: 'title',
-                  score: { boost: { value: 8 } },
-                  fuzzy: { maxEdits: 2 }
-                }
-              },
-              {
-                text: {
-                  query,
-                  path: 'destinations.label',
-                  score: { boost: { value: 4 } },
-                  fuzzy: { maxEdits: 2 }
-                }
-              },
-              {
-                text: {
-                  query,
-                  path: 'description',
-                  score: { boost: { value: 0.5 } },
-                  fuzzy: { maxEdits: 2 }
-                }
-              }
-            ],
-            filter: [
-              { equals: { path: 'isPublic', value: true } }
-            ],
-            minimumShouldMatch: 1
-          }
-        }
-      },
-      { $addFields: { score: { $meta: 'searchScore' } } },
-      { $match: { score: { $gte: minScore } } },
-      { $limit: limitNum + skipNum },
-      { $skip: skipNum },
-      {
-        $project: {
-          title: 1,
-          description: 1,
-          destinations: 1,
-          startDate: 1,
-          endDate: 1,
-          thumbnail: 1,
-          dateCreated: 1,
-          members: 1
-        }
-      }
-    ]);
 
     const tripIds = tripResults.map(t => t._id);
-    if (tripIds.length === 0) {
-      return res.json([]);
-    }
-
     const orderMap = new Map(tripIds.map((id, idx) => [String(id), idx]));
 
     const posts = await Post.find({ tripId: { $in: tripIds } })
@@ -141,6 +73,7 @@ router.get('/search', async (req, res) => {
       .populate('tripId')
       .lean();
 
+    // Maintain search relevance order from the aggregation result
     const validPosts = posts
       .filter(p => p.tripId && p.tripId.isPublic)
       .sort((a, b) => {
@@ -164,10 +97,7 @@ router.get('/:id', async (req, res) => {
       .populate('tripId')
       .populate('comments.userId', 'username');
 
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
-
+    if (!post) return res.status(404).json({ error: 'Post not found' });
     res.json(post);
   } catch (err) {
     console.error('Get post error:', err);
@@ -183,10 +113,7 @@ router.get('/trip/:tripId', async (req, res) => {
       .populate('tripId')
       .populate('comments.userId', 'username');
 
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
-
+    if (!post) return res.status(404).json({ error: 'Post not found' });
     res.json(post);
   } catch (err) {
     console.error('Get post by trip error:', err);
@@ -205,19 +132,15 @@ router.post('/:id/like', async (req, res) => {
     }
 
     const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
+    if (!post) return res.status(404).json({ error: 'Post not found' });
 
     const userIdObj = new mongoose.Types.ObjectId(userId);
     const likeIndex = post.likes.findIndex(id => id.equals(userIdObj));
 
     if (likeIndex > -1) {
-      // Unlike
       post.likes.splice(likeIndex, 1);
       post.likeCount = Math.max(0, post.likeCount - 1);
     } else {
-      // Like
       post.likes.push(userIdObj);
       post.likeCount = post.likes.length;
     }
@@ -236,24 +159,18 @@ router.post('/:id/like', async (req, res) => {
   }
 });
 
-// POST /api/posts/:id/comments - Add a comment to a post
+// POST /api/posts/:id/comments - Add a comment
 router.post('/:id/comments', async (req, res) => {
   try {
     const postId = req.params.id;
     const { userId, commentText } = req.body;
 
-    if (!userId || !commentText) {
-      return res.status(400).json({ error: 'userId and commentText required' });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ error: 'Valid userId required' });
+    if (!userId || !commentText || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'Valid userId and commentText required' });
     }
 
     const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
+    if (!post) return res.status(404).json({ error: 'Post not found' });
 
     const comment = {
       userId: new mongoose.Types.ObjectId(userId),
@@ -277,32 +194,23 @@ router.post('/:id/comments', async (req, res) => {
   }
 });
 
-// DELETE /api/posts/:id/comments/:commentId - Delete a comment from a post
+// DELETE /api/posts/:id/comments/:commentId - Delete a comment
 router.delete('/:id/comments/:commentId', async (req, res) => {
   try {
     const { id: postId, commentId } = req.params;
     const { userId } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'userId required' });
-    }
+    if (!userId) return res.status(400).json({ error: 'userId required' });
 
     const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
+    if (!post) return res.status(404).json({ error: 'Post not found' });
 
-    const commentIndex = post.comments.findIndex(
-      c => c._id.toString() === commentId
-    );
+    const commentIndex = post.comments.findIndex(c => c._id.toString() === commentId);
 
-    if (commentIndex === -1) {
-      return res.status(404).json({ error: 'Comment not found' });
-    }
+    if (commentIndex === -1) return res.status(404).json({ error: 'Comment not found' });
 
-    // Check if user owns the comment
     if (post.comments[commentIndex].userId.toString() !== userId) {
-      return res.status(403).json({ error: 'Unauthorized to delete this comment' });
+      return res.status(403).json({ error: 'Unauthorized' });
     }
 
     post.comments.splice(commentIndex, 1);
