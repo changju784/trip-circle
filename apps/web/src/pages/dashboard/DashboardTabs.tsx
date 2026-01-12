@@ -52,9 +52,8 @@ export default function DashboardTabs({ onNewTrip }: DashboardTabsProps) {
                 </Tabs>
 
                 {/* 2. Search Bar */}
-                {/* 2. New Roundy Search Bar */}
                 <div className="relative flex-1 max-w-md w-full group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 z-10 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-white/40 z-10 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
 
                     <Input
                         placeholder="Search destinations, trips..."
@@ -62,10 +61,16 @@ export default function DashboardTabs({ onNewTrip }: DashboardTabsProps) {
                         onChange={(e) => handleSearch(e.target.value)}
                         className="
             pl-12 pr-4 h-12 w-full rounded-full 
-            border-2 border-white/10 bg-zinc-900/50 backdrop-blur-md 
-            focus:bg-zinc-900/80 focus:border-blue-500/50 
-            transition-all duration-300 text-white 
-            placeholder:text-white/40 outline-none
+            /* Light Mode: Subtle grey border/bg matching your header */
+            border-2 border-zinc-200 bg-zinc-100 text-zinc-900
+            
+            /* Dark Mode: Maintaining the premium zinc look */
+            dark:border-white/10 dark:bg-zinc-900/50 dark:text-white
+            
+            /* Interaction States */
+            backdrop-blur-md transition-all duration-300 outline-none
+            focus:border-blue-500/50 focus:bg-white dark:focus:bg-zinc-900/80
+            placeholder:text-zinc-400 dark:placeholder:text-white/40
         "
                     />
                 </div>

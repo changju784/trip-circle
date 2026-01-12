@@ -354,10 +354,14 @@ export default function TripDetailPage() {
                                         <Badge
                                             key={tagId}
                                             variant="outline"
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-white/5 bg-zinc-900/40 backdrop-blur-sm text-white/80 hover:text-white transition-colors"
+                                            className={cn(
+                                                "flex items-center w-fit gap-1.5 px-3 py-1.5 rounded-full border-2 transition-all",
+                                                "bg-zinc-100 border-zinc-200 text-zinc-700",
+                                                "dark:bg-zinc-900/40 dark:border-white/5 dark:text-white/80 dark:hover:text-white"
+                                            )}
                                         >
-                                            <Icon size={12} className="text-blue-400" />
-                                            <span className="text-[10px] font-bold uppercase tracking-wider">
+                                            <Icon size={12} className="text-blue-500 dark:text-blue-400" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">
                                                 {config.label}
                                             </span>
                                         </Badge>
