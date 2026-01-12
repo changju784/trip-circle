@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Heart, MessageCircle } from "lucide-react";
+import { Copy, Edit3, Heart, MessageCircle, Share, Trash2 } from "lucide-react";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
@@ -23,6 +23,8 @@ import { useGetTripOwners } from "./hooks/use-get-trip-owners";
 import { Progress } from "@/components/ui/Progress";
 import { cn } from "@/lib/utils";
 import { Trip } from "@/lib/trips/trips-api";
+import { TAG_CONFIG } from "@/lib/const/trip-tags";
+import { Badge } from "@/components/ui/badge";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -235,26 +237,63 @@ export default function TripDetailPage() {
                 <Section
                     title={trip.title}
                     rightElement={
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-end">
                             {isOwner ? (
                                 <>
-                                    <Button variant="secondary" onClick={() => setShareOpen(true)}>Share</Button>
+                                    {/* SHARE BUTTON */}
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="rounded-full h-9 px-4 flex gap-2 items-center transition-all"
+                                        onClick={() => setShareOpen(true)}
+                                    >
+                                        <Share size={15} strokeWidth={2.5} />
+                                        <span className="hidden sm:inline">Share</span>
+                                    </Button>
+
+                                    {/* EDIT BUTTON */}
                                     <Link to={`/trip-circle/trip/${trip._id}/edit`}>
-                                        <Button variant="outline">Edit Trip</Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-full h-9 px-4 border border-white/10 hover:border-blue-500/50 transition-all flex gap-2 items-center"
+                                        >
+                                            <Edit3 size={15} strokeWidth={2.5} />
+                                            <span className="hidden sm:inline">Edit</span>
+                                        </Button>
                                     </Link>
-                                    <Button variant="destructive" onClick={() => setOpenDeleteModal(true)}>Delete</Button>
+
+                                    {/* DELETE BUTTON */}
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        className="rounded-full h-9 px-4 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all flex gap-2 items-center"
+                                        onClick={() => setOpenDeleteModal(true)}
+                                    >
+                                        <Trash2 size={15} strokeWidth={2.5} />
+                                        <span className="hidden sm:inline">Delete</span>
+                                    </Button>
                                 </>
                             ) : (
                                 trip.isPublic && user && (
-                                    <Button variant="dark" onClick={async () => {
-                                        try {
-                                            const newTrip = await forkTrip(trip._id, user.id);
-                                            navigate(`/trip-circle/trip/${newTrip._id}`);
-                                        } catch (err) {
-                                            console.error(err);
-                                            alert("Failed to copy trip.");
-                                        }
-                                    }}>Copy Trip</Button>
+                                    /* COPY TRIP BUTTON */
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        className="rounded-full h-10 px-6 shadow-lg shadow-blue-500/20 font-black uppercase text-[10px] tracking-widest flex gap-2 items-center"
+                                        onClick={async () => {
+                                            try {
+                                                const newTrip = await forkTrip(trip._id, user.id);
+                                                navigate(`/trip-circle/trip/${newTrip._id}`);
+                                            } catch (err) {
+                                                console.error(err);
+                                                alert("Failed to copy trip.");
+                                            }
+                                        }}
+                                    >
+                                        <Copy size={16} strokeWidth={3} />
+                                        Copy Trip
+                                    </Button>
                                 )
                             )}
                         </div>
@@ -301,6 +340,34 @@ export default function TripDetailPage() {
                             <p className="text-sm text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed italic">
                                 {trip.description}
                             </p>
+                        )}
+
+                        {/* --- TRIP TAGS --- */}
+                        {trip.tags && trip.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-4">
+                                {trip.tags.map((tagId) => {
+                                    const config = TAG_CONFIG[tagId as keyof typeof TAG_CONFIG];
+                                    if (!config) return null;
+                                    const Icon = config.icon;
+
+                                    return (
+                                        <Badge
+                                            key={tagId}
+                                            variant="outline"
+                                            className={cn(
+                                                "flex items-center w-fit gap-1.5 px-3 py-1.5 rounded-full border-2 transition-all",
+                                                "bg-zinc-100 border-zinc-200 text-zinc-700",
+                                                "dark:bg-zinc-900/40 dark:border-white/5 dark:text-white/80 dark:hover:text-white"
+                                            )}
+                                        >
+                                            <Icon size={12} className="text-blue-500 dark:text-blue-400" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">
+                                                {config.label}
+                                            </span>
+                                        </Badge>
+                                    );
+                                })}
+                            </div>
                         )}
 
                         {/* --- BUDGET/PRICE WIDGET --- */}
