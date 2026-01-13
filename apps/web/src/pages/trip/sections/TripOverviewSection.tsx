@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Copy, Edit3, Share, Trash2 } from "lucide-react";
+import { Copy, Edit3, Share, Trash2, Loader2, Cloud } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 import { useGetTripBudgetInfo } from "../hooks/use-get-trip-budget-info";
 import { useGetTripOwners } from "../hooks/use-get-trip-owners";
+import { useWeather } from "@/lib/weather/use-weather";
 import { TAG_CONFIG } from "@/lib/const/trip-tags";
 import { cn } from "@/lib/utils";
 import { Trip } from "@/lib/trips/trips-api";
@@ -26,6 +27,11 @@ interface TripOverviewSectionProps {
 export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDelete, onLikeToggle, onFork }: TripOverviewSectionProps) {
     const { owner, contributors } = useGetTripOwners(trip);
     const tripBudgetInfo = useGetTripBudgetInfo(trip);
+
+    const { data: weatherData, loading: weatherLoading } = useWeather(
+        trip.destinations?.[0]?.label,
+        trip.startDate
+    );
 
     return (
         <Section
@@ -65,12 +71,27 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
                             </div>
                         ))}
                     </div>
+
                     <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2" />
+
                     <div className="flex items-center gap-2">📅 {new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}</div>
+
+                    {weatherLoading ? (
+                        <Loader2 className="animate-spin size-3 text-zinc-400" />
+                    ) : weatherData?.status === 'success' && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400">
+                                {weatherData.condition} {Math.round(weatherData.temp || 0)}°
+                            </span>
+                        </div>
+                    )}
+
                     <div className={`px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1 ${trip.isPublic ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
                         <span>{trip.isPublic ? "🌍" : "🔒"}</span> {trip.isPublic ? "Public" : "Private"}
                     </div>
+
                     <div className="hidden md:block w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2" />
+
                     {trip.isPublic && (
                         <PostActivitySummary
                             likeCount={post?.likeCount} forkCount={post?.forkCount} commentCount={post?.commentCount}

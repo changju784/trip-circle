@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Cloud, CloudRain, Sun, CloudLightning, Snowflake, CloudFog, HelpCircle, Loader2 } from "lucide-react";
-import { getTripWeather, WeatherData } from "@/lib/weather/weather-api";
 import { Modal } from "@/components/ui/Modal";
+import { useWeather } from "@/lib/weather/use-weather";
 
 interface WeatherBadgeProps {
     city: string;
@@ -9,18 +9,8 @@ interface WeatherBadgeProps {
 }
 
 export function WeatherBadge({ city, date }: WeatherBadgeProps) {
-    const [data, setData] = useState<WeatherData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { data, loading } = useWeather(city, date);
     const [showDetail, setShowDetail] = useState(false);
-
-    useEffect(() => {
-        async function fetchWeather() {
-            const res = await getTripWeather(city, date);
-            setData(res);
-            setLoading(false);
-        }
-        fetchWeather();
-    }, [city, date]);
 
     const formattedDate = new Date(date).toLocaleDateString(undefined, {
         weekday: 'long',
