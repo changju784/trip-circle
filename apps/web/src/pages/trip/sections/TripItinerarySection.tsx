@@ -4,7 +4,7 @@ import DayTabs from "@/components/trip/DayTabs";
 import DayStopsPanel from "@/components/trip/DayStopsPanel";
 import { Trip } from "@/lib/trips/trips-api";
 
-interface Props {
+interface TripItinerarySectionProps {
     trip: Trip;
     isOwner: boolean;
     selectedDay: number;
@@ -17,7 +17,8 @@ interface Props {
 
 export function TripItinerarySection({
     trip, isOwner, selectedDay, setSelectedDay, onOpenAdd, onEditStop, onDeleteStop, onReorderStops
-}: Props) {
+}: TripItinerarySectionProps) {
+    const primaryCity = trip.destinations?.[0]?.label || "";
     return (
         <Section title="Itinerary">
             <Tabs value={`day-${selectedDay}`} onValueChange={(v) => setSelectedDay(Number(v.replace("day-", "")))} className="mb-4">
@@ -26,6 +27,7 @@ export function TripItinerarySection({
                     <TabsContent key={d.date || i} value={`day-${i}`}>
                         <DayStopsPanel
                             days={trip.days} selectedDay={i} isOwner={isOwner}
+                            primaryCity={primaryCity}
                             onOpenAdd={() => onOpenAdd(i)}
                             onEditStop={onEditStop}
                             onDeleteStop={onDeleteStop}

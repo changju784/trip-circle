@@ -4,7 +4,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Trip } from "@/lib/trips/trips-api";
 
-interface Props {
+interface TripDiscussionSectionProps {
     trip: Trip;
     user: any;
     post: any;
@@ -18,7 +18,7 @@ interface Props {
 
 export function TripDiscussionSection({
     trip, user, post, loadingPost, commentText, setCommentText, onAddComment, onLikeToggle, commentSubmitting
-}: Props) {
+}: TripDiscussionSectionProps) {
     return (
         <Section
             title="Discussion"

@@ -12,7 +12,7 @@ import { TAG_CONFIG } from "@/lib/const/trip-tags";
 import { cn } from "@/lib/utils";
 import { Trip } from "@/lib/trips/trips-api";
 
-interface Props {
+interface TripOverviewSectionProps {
     trip: Trip;
     isOwner: boolean;
     user: any;
@@ -23,7 +23,7 @@ interface Props {
     onFork: () => void;
 }
 
-export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDelete, onLikeToggle, onFork }: Props) {
+export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDelete, onLikeToggle, onFork }: TripOverviewSectionProps) {
     const { owner, contributors } = useGetTripOwners(trip);
     const tripBudgetInfo = useGetTripBudgetInfo(trip);
 
