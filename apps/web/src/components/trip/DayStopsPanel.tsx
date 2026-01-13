@@ -114,7 +114,7 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                         )}
                     </div>
                     {isOwner && (
-                        <Button variant="dark" size="sm" onClick={() => onOpenAdd(selectedDay)}>+ Add Stop</Button>
+                        <Button variant="primary" size="sm" onClick={() => onOpenAdd(selectedDay)}>+ Add Stop</Button>
                     )}
                 </div>
 
