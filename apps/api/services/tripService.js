@@ -84,6 +84,7 @@ export async function updateTrip(id, updates) {
     const oldTrip = await Trip.findById(id);
     if (!oldTrip) return null;
 
+    // 1. Handle Member Updates
     if (updates.members !== undefined) {
         const oldMembers = oldTrip.members.map(String);
         const newMembers = updates.members.map(String);
@@ -99,9 +100,9 @@ export async function updateTrip(id, updates) {
         );
     }
 
+    // 2. Handle Public/Post Visibility 
     if (updates.isPublic !== undefined && updates.isPublic !== oldTrip.isPublic) {
         const members = updates.members || oldTrip.members;
-
         if (updates.isPublic && members.length) {
             const exists = await Post.findOne({ tripId: id });
             if (!exists) {
@@ -120,31 +121,25 @@ export async function updateTrip(id, updates) {
         }
     }
 
-    /* ---------- deep-mapping days and stops ---------- */
-    if (updates.days !== undefined) {
+    // SYNC LOGIC: If 'days' are provided, they dictate the startDate and endDate
+    if (updates.days !== undefined && updates.days.length > 0) {
         updates.days = updates.days.map(day => {
-            const processedStops = (day.stops || []).map(stop => ({
-                id: stop.id,
-                title: stop.title,
-                time: stop.time,
-                category: stop.category || 'none',
-                locationName: stop.locationName,
-                lat: stop.lat,
-                lng: stop.lng,
-                price: stop.price,
-                description: stop.description
-            }));
-
             const updatedDay = {
                 ...day,
-                stops: processedStops
+                stops: (day.stops || []).map(stop => ({
+                    ...stop,
+                    category: stop.category || 'none',
+                    price: stop.price || 0
+                }))
             };
-
             return {
                 ...updatedDay,
                 pricePerDay: calculateDayPrice(updatedDay)
             };
         });
+
+        updates.startDate = updates.days[0].date;
+        updates.endDate = updates.days[updates.days.length - 1].date;
 
         updates.totalPrice = calculateTripPrice(updates.days);
     }
