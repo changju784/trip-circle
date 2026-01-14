@@ -84,6 +84,7 @@ export async function updateTrip(id, updates) {
     const oldTrip = await Trip.findById(id);
     if (!oldTrip) return null;
 
+    // 1. Handle Member Updates
     if (updates.members !== undefined) {
         const oldMembers = oldTrip.members.map(String);
         const newMembers = updates.members.map(String);
@@ -99,9 +100,9 @@ export async function updateTrip(id, updates) {
         );
     }
 
+    // 2. Handle Public/Post Visibility
     if (updates.isPublic !== undefined && updates.isPublic !== oldTrip.isPublic) {
         const members = updates.members || oldTrip.members;
-
         if (updates.isPublic && members.length) {
             const exists = await Post.findOne({ tripId: id });
             if (!exists) {
@@ -120,7 +121,7 @@ export async function updateTrip(id, updates) {
         }
     }
 
-    /* ---------- deep-mapping days and stops ---------- */
+    // 3. RECONCILIATION & SYNC LOGIC
     if (updates.days !== undefined) {
         updates.days = updates.days.map(day => {
             const processedStops = (day.stops || []).map(stop => ({
@@ -131,8 +132,8 @@ export async function updateTrip(id, updates) {
                 locationName: stop.locationName,
                 lat: stop.lat,
                 lng: stop.lng,
-                price: stop.price,
-                description: stop.description
+                price: stop.price || 0,
+                description: stop.description || ''
             }));
 
             const updatedDay = {
@@ -146,9 +147,40 @@ export async function updateTrip(id, updates) {
             };
         });
 
+        if (updates.days.length > 0) {
+            updates.startDate = updates.days[0].date;
+            updates.endDate = updates.days[updates.days.length - 1].date;
+        }
+
         updates.totalPrice = calculateTripPrice(updates.days);
     }
 
+    else if (updates.startDate || updates.endDate) {
+        const newStart = updates.startDate || oldTrip.startDate;
+        const newEnd = updates.endDate || oldTrip.endDate;
+
+        const newSkeleton = generateDays(newStart, newEnd);
+
+        updates.days = newSkeleton.map(skeletonDay => {
+            const existingDay = oldTrip.days.find(d =>
+                new Date(d.date).getTime() === new Date(skeletonDay.date).getTime()
+            );
+
+            const dayData = {
+                ...skeletonDay,
+                stops: existingDay ? existingDay.stops : [],
+            };
+
+            return {
+                ...dayData,
+                pricePerDay: calculateDayPrice(dayData)
+            };
+        });
+
+        updates.totalPrice = calculateTripPrice(updates.days);
+    }
+
+    // 4. Final Save
     return Trip.findByIdAndUpdate(id, updates, {
         new: true,
         runValidators: true
