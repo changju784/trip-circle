@@ -100,7 +100,7 @@ export async function updateTrip(id, updates) {
         );
     }
 
-    // 2. Handle Public/Post Visibility
+    // 2. Handle Public/Post Visibility 
     if (updates.isPublic !== undefined && updates.isPublic !== oldTrip.isPublic) {
         const members = updates.members || oldTrip.members;
         if (updates.isPublic && members.length) {
@@ -121,66 +121,29 @@ export async function updateTrip(id, updates) {
         }
     }
 
-    // 3. RECONCILIATION & SYNC LOGIC
-    if (updates.days !== undefined) {
+    // SYNC LOGIC: If 'days' are provided, they dictate the startDate and endDate
+    if (updates.days !== undefined && updates.days.length > 0) {
         updates.days = updates.days.map(day => {
-            const processedStops = (day.stops || []).map(stop => ({
-                id: stop.id,
-                title: stop.title,
-                time: stop.time,
-                category: stop.category || 'none',
-                locationName: stop.locationName,
-                lat: stop.lat,
-                lng: stop.lng,
-                price: stop.price || 0,
-                description: stop.description || ''
-            }));
-
             const updatedDay = {
                 ...day,
-                stops: processedStops
+                stops: (day.stops || []).map(stop => ({
+                    ...stop,
+                    category: stop.category || 'none',
+                    price: stop.price || 0
+                }))
             };
-
             return {
                 ...updatedDay,
                 pricePerDay: calculateDayPrice(updatedDay)
             };
         });
 
-        if (updates.days.length > 0) {
-            updates.startDate = updates.days[0].date;
-            updates.endDate = updates.days[updates.days.length - 1].date;
-        }
+        updates.startDate = updates.days[0].date;
+        updates.endDate = updates.days[updates.days.length - 1].date;
 
         updates.totalPrice = calculateTripPrice(updates.days);
     }
 
-    else if (updates.startDate || updates.endDate) {
-        const newStart = updates.startDate || oldTrip.startDate;
-        const newEnd = updates.endDate || oldTrip.endDate;
-
-        const newSkeleton = generateDays(newStart, newEnd);
-
-        updates.days = newSkeleton.map(skeletonDay => {
-            const existingDay = oldTrip.days.find(d =>
-                new Date(d.date).getTime() === new Date(skeletonDay.date).getTime()
-            );
-
-            const dayData = {
-                ...skeletonDay,
-                stops: existingDay ? existingDay.stops : [],
-            };
-
-            return {
-                ...dayData,
-                pricePerDay: calculateDayPrice(dayData)
-            };
-        });
-
-        updates.totalPrice = calculateTripPrice(updates.days);
-    }
-
-    // 4. Final Save
     return Trip.findByIdAndUpdate(id, updates, {
         new: true,
         runValidators: true
