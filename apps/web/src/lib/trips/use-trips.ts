@@ -142,17 +142,29 @@ export function useTrips() {
         }
     }, []);
 
-    const forkTrip = useCallback(async (tripId: string, userId: string): Promise<Trip> => {
+    const forkTrip = useCallback(async (
+        tripId: string,
+        userId: string,
+        payload?: {
+            startDate: string;
+            endDate: string;
+            decisions: Record<string, string | "delete">
+        }
+    ): Promise<Trip> => {
         try {
             setState((prev) => ({ ...prev, isLoading: true, error: null }));
-            const result = await forkTripApi(tripId, userId);
+
+            const result = await forkTripApi(tripId, userId, payload);
             const newTrip = result.trip;
+
             tripCache.set(newTrip._id, newTrip);
+
             setState((prev) => ({
                 ...prev,
                 trips: new Map(tripCache),
                 isLoading: false,
             }));
+
             return newTrip;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fork trip";

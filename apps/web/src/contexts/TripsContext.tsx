@@ -11,7 +11,15 @@ interface TripsContextValue {
     createTrip: (input: CreateTripInput) => Promise<Trip>;
     updateTrip: (tripId: string, updates: Partial<CreateTripInput>) => Promise<Trip>;
     deleteTrip: (tripId: string) => Promise<void>;
-    forkTrip: (tripId: string, userId: string) => Promise<Trip>;
+    forkTrip: (
+        tripId: string,
+        userId: string,
+        payload?: {
+            startDate: string;
+            endDate: string;
+            decisions: Record<string, string | "delete">
+        }
+    ) => Promise<Trip>;
 }
 
 const TripsContext = createContext<TripsContextValue | undefined>(undefined);
@@ -96,9 +104,9 @@ export function TripsProvider({ children }: { children: React.ReactNode }) {
 
     // Fork trip and refresh list
     const forkTrip = useCallback(
-        async (tripId: string, userId: string): Promise<Trip> => {
-            const trip = await tripsApi.forkTrip(tripId, userId);
-            await refreshUserTrips(); // Refresh to get updated list
+        async (tripId: string, userId: string, payload?: any): Promise<Trip> => {
+            const trip = await tripsApi.forkTrip(tripId, userId, payload); //
+            await refreshUserTrips();
             return trip;
         },
         [tripsApi, refreshUserTrips]
