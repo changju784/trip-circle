@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Input } from "@/components/ui/Input";
 import { Compass, Plane, Plus, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface DashboardTabsProps {
     onNewTrip: () => void;

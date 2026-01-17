@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, Send } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";

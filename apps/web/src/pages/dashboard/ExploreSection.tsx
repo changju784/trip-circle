@@ -60,7 +60,7 @@ export default function ExploreSection() {
         }
         loadPosts();
         return () => { cancelled = true; };
-    }, [query, activeTags]);
+    }, [query, activeTags, isFiltering]);
 
     const handleSortUpdate = (id: string) => {
         const selected = SORT_OPTIONS.find(o => o.id === id)!;
