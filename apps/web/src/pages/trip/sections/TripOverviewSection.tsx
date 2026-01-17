@@ -92,7 +92,13 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
 
                         <div className="flex items-center gap-2">
                             <Calendar size={14} className="opacity-70" />
-                            <span>{new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}</span>
+                            <span>
+                                {isOwner ? (
+                                    `${new Date(trip.startDate).toLocaleDateString()} — ${new Date(trip.endDate).toLocaleDateString()}`
+                                ) : (
+                                    `${Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} days`
+                                )}
+                            </span>
                         </div>
 
                         {weatherLoading ? (
