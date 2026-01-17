@@ -108,7 +108,7 @@ router.post('/share', async (req, res) => {
 });
 
 router.post('/fork', async (req, res) => {
-  const trip = await forkTrip(req.body.tripId, req.user.userId);
+  const trip = await forkTrip(req.body.tripId, req.user.userId, req.body);
   if (!trip) return res.status(404).json({ error: 'Trip not found' });
   res.status(201).json({ message: 'Trip forked successfully', trip });
 });
