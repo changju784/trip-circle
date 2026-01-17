@@ -22,13 +22,13 @@ const SORT_OPTIONS: Option[] = [
     { id: "name", label: "Name (A-Z)" },
 ];
 
-const getCurrentSeason = () => {
-    const month = new Date().getMonth();
-    if (month >= 2 && month <= 4) return "spring";
-    if (month >= 5 && month <= 7) return "summer";
-    if (month >= 8 && month <= 10) return "fall";
-    return "winter";
-};
+// const getCurrentSeason = () => {
+//     const month = new Date().getMonth();
+//     if (month >= 2 && month <= 4) return "spring";
+//     if (month >= 5 && month <= 7) return "summer";
+//     if (month >= 8 && month <= 10) return "fall";
+//     return "winter";
+// };
 
 export default function ExploreSection() {
     const navigate = useNavigate();
