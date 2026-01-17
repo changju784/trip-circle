@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import { useTrips } from "@/lib/trips/use-trips";
 import { useTripsContext } from "@/contexts/TripsContext";
@@ -22,7 +22,7 @@ export default function TripDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { getTrip, updateTrip, shareTrip } = useTrips();
-    const { deleteTrip, forkTrip } = useTripsContext();
+    const { deleteTrip } = useTripsContext();
     const { user } = useAuth();
 
     const [trip, setTrip] = useState<Trip | null>(null);
@@ -156,10 +156,6 @@ export default function TripDetailPage() {
                     onShare={() => setShareOpen(true)}
                     onDelete={() => setOpenDeleteModal(true)}
                     onLikeToggle={handleLikeToggle}
-                    onFork={async () => {
-                        const newTrip = await forkTrip(trip._id, user!.id);
-                        navigate(`/trip-circle/trip/${newTrip._id}`);
-                    }}
                 />
 
                 <TripItinerarySection

@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap, GeoJSON, Tooltip, useMapEvents
 import L, { LatLngTuple } from "leaflet";
 import { Stop } from "@/lib/trips/trips-api";
 import { getMapRoute, RouteData } from "@/lib/geo/geo-api";
-import { Footprints, Car, Bus, Bike, Loader2, Clock, MapPin } from "lucide-react";
+import { Footprints, Car, Bus, Bike, Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CATEGORY_CONFIG } from "@/lib/const/stop-categories";
 

@@ -196,18 +196,59 @@ export async function shareTrip({ tripId, email, resendApiKey }) {
 
 /* ---------- fork ---------- */
 
-export async function forkTrip(tripId, userId) {
+export async function forkTrip(tripId, userId, payload) {
+    const { startDate, endDate, decisions } = payload;
+
     const originalTrip = await Trip.findById(tripId);
     if (!originalTrip) return null;
 
     const data = originalTrip.toObject();
-    delete data._id;
 
+    // 1. Basic Metadata Overrides
     data.isPublic = false;
     data.receipts = [];
     data.members = [userId];
     data.title = `${data.title} (Copy)`;
+    data.startDate = startDate;
+    data.endDate = endDate;
 
+    // 2. Reconstruct the Days/Stops based on decisions
+    // generateDays creates the skeleton (e.g., [{ date: '2025-01-01', stops: [] }, ...])
+    const newDays = generateDays(startDate, endDate).map(day => ({
+        ...day,
+        pricePerDay: 0,
+        stops: []
+    }));
+
+    // 3. Map original stops into their new dates
+    // decisions looks like: { "original_stop_id": "2025-06-01" OR "delete" }
+    originalTrip.days.forEach(oldDay => {
+        oldDay.stops.forEach(stop => {
+            const decision = decisions[stop._id.toString()];
+
+            if (decision && decision !== 'delete') {
+                // Find the day in our new range that matches the chosen date
+                const targetDay = newDays.find(d => d.date === decision);
+                if (targetDay) {
+                    // Clone the stop and push it into the new day
+                    targetDay.stops.push({
+                        ...stop,
+                        _id: new mongoose.Types.ObjectId() // Give it a fresh ID
+                    });
+                }
+            }
+        });
+    });
+
+    // 4. Recalculate prices for the new structure
+    data.days = newDays.map(day => ({
+        ...day,
+        pricePerDay: calculateDayPrice(day)
+    }));
+    data.totalPrice = calculateTripPrice(data.days);
+
+    // 5. Save and Cleanup
+    delete data._id;
     const newTrip = await Trip.create(data);
 
     await User.findByIdAndUpdate(

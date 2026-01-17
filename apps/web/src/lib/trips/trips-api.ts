@@ -125,8 +125,12 @@ export async function deleteTrip(tripId: string): Promise<{ message: string; id:
 /**
  * Fork a trip (create a copy with current user as member)
  */
-export async function forkTrip(tripId: string, userId: string): Promise<{ message: string; trip: Trip }> {
-    return apiPost(`/api/trips/fork`, { tripId, userId });
+export async function forkTrip(
+    tripId: string,
+    userId: string,
+    payload?: any // New parameter for dates/decisions
+): Promise<{ message: string; trip: Trip }> {
+    return apiPost(`/api/trips/fork`, { tripId, userId, ...payload }); //
 }
 
 /**

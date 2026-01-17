@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Copy, Edit3, Share, Trash2, Loader2, Wallet, Calendar, MapPin, Globe, Lock } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +14,8 @@ import { TAG_CONFIG } from "@/lib/const/trip-tags";
 import { cn } from "@/lib/utils";
 import { Trip } from "@/lib/trips/trips-api";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import CopyTripModal from "@/components/trip/CopyTripModal";
+import { useTripsContext } from "@/contexts/TripsContext";
 
 interface TripOverviewSectionProps {
     trip: Trip;
@@ -22,13 +25,36 @@ interface TripOverviewSectionProps {
     onShare: () => void;
     onDelete: () => void;
     onLikeToggle: () => void;
-    onFork: () => void;
 }
 
-export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDelete, onLikeToggle, onFork }: TripOverviewSectionProps) {
+export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDelete, onLikeToggle }: TripOverviewSectionProps) {
+    const navigate = useNavigate();
+    const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
     const { owner, contributors } = useGetTripOwners(trip);
     const tripBudgetInfo = useGetTripBudgetInfo(trip);
+    const { forkTrip } = useTripsContext();
     const { data: weatherData, loading: weatherLoading } = useWeather(trip.destinations?.[0]?.label, trip.startDate);
+
+    const allStops = trip.days.flatMap(day =>
+        day.stops.map(stop => ({ id: stop.id, title: stop.title }))
+    );
+
+    const handleForkSubmit = async (reconciliationData: {
+        startDate: string;
+        endDate: string;
+        decisions: Record<string, string | "delete">
+    }) => {
+        try {
+            const newTrip = await forkTrip(trip._id, user.id, reconciliationData);
+
+            if (newTrip?._id) {
+                setIsCopyModalOpen(false);
+                navigate(`/trip-circle/trip/${newTrip._id}/edit`);
+            }
+        } catch (error) {
+            console.error("Forking failed:", error);
+        }
+    };
 
     return (
         <TooltipProvider delayDuration={200}>
@@ -71,7 +97,7 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
                             trip.isPublic && user && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button onClick={onFork} size="sm" className="rounded-full px-6 shadow-lg shadow-blue-500/20 font-black uppercase text-[10px] tracking-widest flex gap-2 items-center">
+                                        <Button onClick={() => setIsCopyModalOpen(true)} size="sm" className="rounded-full px-6 shadow-lg shadow-blue-500/20 font-black uppercase text-[10px] tracking-widest flex gap-2 items-center">
                                             <Copy size={14} /> Copy Trip
                                         </Button>
                                     </TooltipTrigger>
@@ -83,7 +109,7 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
                 }
             >
                 <div className="space-y-6">
-                    {/* 1. PRIMARY METADATA ROW */}
+                    {/* PRIMARY METADATA ROW */}
                     <div className="flex flex-wrap items-center gap-y-3 gap-x-6 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
                             <MapPin size={14} className="text-sky-500" />
@@ -92,7 +118,13 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
 
                         <div className="flex items-center gap-2">
                             <Calendar size={14} className="opacity-70" />
-                            <span>{new Date(trip.startDate).toLocaleDateString()} — {new Date(trip.endDate).toLocaleDateString()}</span>
+                            <span>
+                                {isOwner ? (
+                                    `${new Date(trip.startDate).toLocaleDateString()} — ${new Date(trip.endDate).toLocaleDateString()}`
+                                ) : (
+                                    `${Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} days`
+                                )}
+                            </span>
                         </div>
 
                         {weatherLoading ? (
@@ -121,14 +153,14 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
                         )}
                     </div>
 
-                    {/* 2. DESCRIPTION */}
+                    {/* DESCRIPTION */}
                     {trip.description && (
                         <p className="text-base text-muted-foreground/80 max-w-3xl font-light italic leading-relaxed">
                             "{trip.description}"
                         </p>
                     )}
 
-                    {/* 3. RE-DESIGNED BUDGET STATS */}
+                    {/* BUDGET STATS */}
                     {tripBudgetInfo && (
                         <div className="max-w-xl space-y-3 pt-2">
                             <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest">
@@ -148,7 +180,7 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
                         </div>
                     )}
 
-                    {/* 4. TAGS & CONTRIBUTORS */}
+                    {/* TAGS & CONTRIBUTORS */}
                     <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
                         <div className="flex flex-wrap gap-2">
                             {trip.tags?.map((tagId) => {
@@ -174,6 +206,15 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
                     </div>
                 </div>
             </Section>
+
+            {/* COPY MODAL */}
+            <CopyTripModal
+                isOpen={isCopyModalOpen}
+                tripTitle={trip.title}
+                stops={allStops}
+                onConfirm={handleForkSubmit}
+                onCancel={() => setIsCopyModalOpen(false)}
+            />
         </TooltipProvider>
     );
 }
