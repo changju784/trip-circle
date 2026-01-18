@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { StopCategoryEnum, TripTagsEnum } from './const/TripConstants.js';
 
 // --- RECEIPT SUBSCHEMA ---
 const ReceiptSchema = new mongoose.Schema(
@@ -15,11 +16,6 @@ const ReceiptSchema = new mongoose.Schema(
 );
 
 // --- STOP SUBSCHEMA ---
-const StopCategoryEnum = [
-    'dining', 'lodging', 'sightseeing', 'activity',
-    'shopping', 'transit', 'nightlife', 'other', 'none'
-];
-
 const StopSchema = new mongoose.Schema(
     {
         id: { type: String, trim: true },              // frontend-generated id
@@ -49,13 +45,6 @@ const DaySchema = new mongoose.Schema(
 );
 
 // --- TRIP SCHEMA ---
-const TripTagsEnum = [
-    'spring', 'summer', 'fall', 'winter',           // season
-    'solo', 'couple', 'family', 'friends',          // group type
-    'budget', 'luxury', 'adventure',                // style
-    'nature', 'city break', 'beach', 'foodie',      // vibe
-    'relaxing', 'photography', 'hiking', 'historic' // activity
-];
 
 const TripSchema = new mongoose.Schema({
     members: [
