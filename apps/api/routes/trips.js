@@ -15,7 +15,8 @@ import {
 
 import {
   uploadDocument,
-  deleteDocument
+  deleteDocument,
+  parseDocument
 } from '../services/documentService.js';
 
 import {
@@ -168,6 +169,28 @@ router.delete('/:id/documents/:documentId', async (req, res) => {
 
   if (!trip) return res.status(404).json({ error: 'Not found' });
   res.json(trip);
+});
+
+/**
+ * @route POST /api/trips/:id/documents/:documentId/parse
+ * @desc Triggers the AI OCR + LLM parsing pipeline for an existing document
+ */
+router.post('/:id/documents/:documentId/parse', async (req, res) => {
+  try {
+    const { documentId } = req.params;
+
+    // Trigger the intelligent pipeline
+    const parsedDocument = await parseDocument(documentId);
+
+    // Return the document with the new 'extractedData' for the frontend modal
+    res.json(parsedDocument);
+  } catch (err) {
+    console.error("Parsing route error:", err);
+    res.status(500).json({
+      error: 'Failed to parse document',
+      details: err.message
+    });
+  }
 });
 
 export default router;
