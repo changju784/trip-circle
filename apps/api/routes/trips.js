@@ -14,8 +14,8 @@ import {
 } from '../services/tripService.js';
 
 import {
-  uploadReceipt,
-  deleteReceipt
+  uploadDocument,
+  deleteDocument
 } from '../services/documentService.js';
 
 import {
@@ -145,21 +145,25 @@ router.get('/:id', async (req, res) => {
   res.json(trip);
 });
 
-router.post('/:id/receipts', upload.single('receipt'), async (req, res) => {
-  const trip = await uploadReceipt({
-    tripId: req.params.id,
-    file: req.file,
-    dayDate: req.body.dayDate
-  });
+router.post('/:id/documents', upload.single('file'), async (req, res) => {
+  try {
+    const trip = await uploadDocument({
+      tripId: req.params.id,
+      userId: req.user.userId,
+      file: req.file
+    });
 
-  if (!trip) return res.status(404).json({ error: 'Trip not found' });
-  res.status(201).json(trip);
+    if (!trip) return res.status(404).json({ error: 'Trip not found' });
+    res.status(201).json(trip);
+  } catch (err) {
+    res.status(500).json({ error: 'Upload failed', details: err.message });
+  }
 });
 
-router.delete('/:id/receipts/:receiptId', async (req, res) => {
-  const trip = await deleteReceipt({
+router.delete('/:id/documents/:documentId', async (req, res) => {
+  const trip = await deleteDocument({
     tripId: req.params.id,
-    receiptId: req.params.receiptId
+    documentId: req.params.documentId
   });
 
   if (!trip) return res.status(404).json({ error: 'Not found' });

@@ -1,6 +1,7 @@
 import Trip from '../schema/TripSchema.js';
 import User from '../schema/UserSchema.js';
 import Post from '../schema/PostSchema.js';
+import Document from '../schema/DocumentSchema.js';
 import { generateDays } from '../utils/dateUtils.js';
 import {
     calculateDayPrice,
@@ -15,7 +16,7 @@ export async function getAllTrips() {
 }
 
 export async function getTripById(id) {
-    return Trip.findById(id);
+    return Trip.findById(id).populate('documents');
 }
 
 /* ---------- create ---------- */
@@ -49,7 +50,8 @@ export async function createTrip(payload) {
         startDate,
         endDate,
         members,
-        tags: tags || []
+        tags: tags || [],
+        documents: []
     });
 
     await trip.save();
@@ -147,7 +149,7 @@ export async function updateTrip(id, updates) {
     return Trip.findByIdAndUpdate(id, updates, {
         new: true,
         runValidators: true
-    });
+    }).populate('documents');
 }
 
 /* ---------- share ---------- */
@@ -206,11 +208,11 @@ export async function forkTrip(tripId, userId, payload) {
 
     // 1. Basic Metadata Overrides
     data.isPublic = false;
-    data.receipts = [];
     data.members = [userId];
     data.title = `${data.title} (Copy)`;
     data.startDate = startDate;
     data.endDate = endDate;
+    data.documents = [];
 
     // 2. Reconstruct the Days/Stops based on decisions
     // generateDays creates the skeleton (e.g., [{ date: '2025-01-01', stops: [] }, ...])
@@ -270,10 +272,14 @@ export async function deleteTrip(id) {
     const trip = await Trip.findByIdAndDelete(id);
     if (!trip) return null;
 
-    await User.updateMany(
-        { _id: { $in: trip.members } },
-        { $pull: { trips: id } }
-    );
+    await Promise.all([
+        User.updateMany(
+            { _id: { $in: trip.members } },
+            { $pull: { trips: id } }
+        ),
+        Document.deleteMany({ tripId: id }),
+        Post.findOneAndDelete({ tripId: id })
+    ]);
 
     return trip;
 }

@@ -1,20 +1,6 @@
 import mongoose from 'mongoose';
 import { StopCategoryEnum, TripTagsEnum } from './const/TripConstants.js';
 
-// --- RECEIPT SUBSCHEMA ---
-const ReceiptSchema = new mongoose.Schema(
-    {
-        id: { type: String, required: true },          // frontend-generated id
-        name: { type: String, required: true },        // file name
-        url: { type: String, required: true },         // Vercel Blob URL
-        contentType: { type: String, required: true }, // MIME type
-        size: { type: Number, required: true },        // file size in bytes
-        uploadedAt: { type: Date, default: Date.now },
-        dayDate: { type: Date }                        // optional: which day this receipt is for
-    },
-    { _id: false }
-);
-
 // --- STOP SUBSCHEMA ---
 const StopSchema = new mongoose.Schema(
     {
@@ -81,10 +67,11 @@ const TripSchema = new mongoose.Schema({
         default: []
     },
 
-    receipts: {
-        type: [ReceiptSchema],
+    documents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Document',
         default: []
-    },
+    }],
 
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
