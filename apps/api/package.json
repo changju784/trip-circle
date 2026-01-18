@@ -8,6 +8,7 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
+        "@google/generative-ai": "^0.24.1",
         "@vercel/blob": "^2.0.0",
         "axios": "^1.13.2",
         "bcrypt": "^6.0.0",

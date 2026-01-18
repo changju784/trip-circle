@@ -36,16 +36,17 @@ const DocumentSchema = new mongoose.Schema({
             enum: StopCategoryEnum,
             default: 'none'
         },
-        vendor: String,    // e.g. "Delta", "Starbucks"
+        vendor: String,
         amount: Number,
         currency: String,
-        date: Date,        // Extracted travel/purchase date
+        date: Date,
+        time: String,
         location: {
             name: String,
             address: String
         },
         description: String,
-        metadata: mongoose.Schema.Types.Mixed // For confirmation codes/flight numbers
+        metadata: mongoose.Schema.Types.Mixed
     },
 
     // --- UI/UX LOGIC ---
