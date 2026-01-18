@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { Trip, CreateTripInput } from "@/lib/trips/trips-api";
+import { Trip, CreateTripInput, TripDocument } from "@/lib/trips/trips-api";
 import { useTrips as useTripsApi } from "@/lib/trips/use-trips";
 import { useAuth } from "@/auth/hook/use-auth";
 
@@ -20,6 +20,9 @@ interface TripsContextValue {
             decisions: Record<string, string | "delete">
         }
     ) => Promise<Trip>;
+    uploadDocument: (tripId: string, file: File) => Promise<Trip>;
+    deleteDocument: (tripId: string, documentId: string) => Promise<Trip>;
+    parseDocument: (tripId: string, documentId: string) => Promise<TripDocument>;
 }
 
 const TripsContext = createContext<TripsContextValue | undefined>(undefined);
@@ -112,6 +115,24 @@ export function TripsProvider({ children }: { children: React.ReactNode }) {
         [tripsApi, refreshUserTrips]
     );
 
+    const uploadDocument = useCallback(async (tripId: string, file: File) => {
+        const trip = await tripsApi.uploadDocument(tripId, file);
+        await refreshUserTrips();
+        return trip;
+    }, [tripsApi, refreshUserTrips]);
+
+    const deleteDocument = useCallback(async (tripId: string, documentId: string) => {
+        const trip = await tripsApi.deleteDocument(tripId, documentId);
+        await refreshUserTrips();
+        return trip;
+    }, [tripsApi, refreshUserTrips]);
+
+    const parseDocument = useCallback(async (tripId: string, documentId: string) => {
+        const doc = await tripsApi.parseDocument(tripId, documentId);
+        await refreshUserTrips(); // Refresh to sync 'parsed' status globally
+        return doc;
+    }, [tripsApi, refreshUserTrips]);
+
     return (
         <TripsContext.Provider
             value={{
@@ -123,6 +144,9 @@ export function TripsProvider({ children }: { children: React.ReactNode }) {
                 updateTrip,
                 deleteTrip,
                 forkTrip,
+                uploadDocument,
+                deleteDocument,
+                parseDocument,
             }}
         >
             {children}
