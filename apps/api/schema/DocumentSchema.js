@@ -3,6 +3,7 @@ import { StopCategoryEnum } from './const/TripConstants.js';
 
 const DocumentSchema = new mongoose.Schema({
     // --- RELATIONSHIPS ---
+    id: { type: String },
     tripId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Trip',
