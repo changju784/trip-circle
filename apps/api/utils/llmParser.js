@@ -39,6 +39,10 @@ export async function parseDocumentText(rawText) {
             "address": "The full physical street address for Google Maps integration. If unavailable, return null."
         },
         "description": "A concise 1-sentence summary (e.g., 'Dinner at Momofuku' or 'Flight to London').",
+        "aiInsights": {
+            "matchScore": 0.0 to 1.0, 
+            "reasoning": "Explain if the date/location matches the trip context."
+        },
         "metadata": {
             "confNumber": "The confirmation, reservation, or ticket number.",
             "flightNumber": "For airlines: the flight number (e.g., AA123). Otherwise null.",

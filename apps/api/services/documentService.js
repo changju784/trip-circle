@@ -51,22 +51,28 @@ export async function deleteDocument({ tripId, documentId }) {
 /**
  * Main AI Pipeline: OCR -> LLM -> Structured Data
  */
+// services/documentService.js
 export async function parseDocument(documentId) {
-    const doc = await Document.findById(documentId);
+    // Populate tripId to get dates and destinations
+    const doc = await Document.findById(documentId).populate('tripId');
     if (!doc) throw new Error("Document not found");
 
-    // Set to processing to show spinner in UI
     doc.status = 'processing';
     await doc.save();
 
     try {
-        // 1. OCR Stage: Converts pixels/PDF to raw text string
         const rawText = await extractText(doc.url);
 
-        // 2. LLM Stage: Extracts categories, times, and locations using Gemini
-        const parsedResults = await parseDocumentText(rawText);
+        // Build the context object for the AI
+        const tripContext = {
+            startDate: doc.tripId.startDate,
+            endDate: doc.tripId.endDate,
+            destinations: doc.tripId.destinations
+        };
 
-        // 3. Persistence: Save the structured JSON for the 'Edit Stop' modal
+        // Pass context to the parser
+        const parsedResults = await parseDocumentText(rawText, tripContext);
+
         doc.extractedData = parsedResults;
         doc.status = 'parsed';
         doc.rawText = rawText;
@@ -74,7 +80,6 @@ export async function parseDocument(documentId) {
         await doc.save();
         return doc;
     } catch (err) {
-        console.error(`AI Parsing failed for doc ${documentId}:`, err);
         doc.status = 'failed';
         await doc.save();
         throw err;

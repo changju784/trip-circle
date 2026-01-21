@@ -46,7 +46,11 @@ const DocumentSchema = new mongoose.Schema({
             address: String
         },
         description: String,
-        metadata: mongoose.Schema.Types.Mixed
+        metadata: mongoose.Schema.Types.Mixed,
+        aiInsights: {
+            matchScore: { type: Number, default: 1 },
+            reasoning: { type: String, default: "" }
+        },
     },
 
     // --- UI/UX LOGIC ---
