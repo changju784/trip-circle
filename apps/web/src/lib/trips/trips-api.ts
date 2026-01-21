@@ -59,6 +59,10 @@ export interface TripDocument {
             address: string;
         };
         description?: string;
+        aiInsights?: {
+            matchScore: number;
+            reasoning: string;
+        };
         metadata?: any;
     };
 }
