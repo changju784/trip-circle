@@ -52,25 +52,25 @@ export async function deleteDocument({ tripId, documentId }) {
  * Main AI Pipeline: OCR -> LLM -> Structured Data
  */
 // services/documentService.js
+
 export async function parseDocument(documentId) {
-    // Populate tripId to get dates and destinations
     const doc = await Document.findById(documentId).populate('tripId');
     if (!doc) throw new Error("Document not found");
 
     doc.status = 'processing';
+    doc.extractedData = null; // Clear previous matchScore and reasoning
+    doc.rawText = "";         // Clear previous distorted OCR text
     await doc.save();
 
     try {
         const rawText = await extractText(doc.url);
 
-        // Build the context object for the AI
         const tripContext = {
             startDate: doc.tripId.startDate,
             endDate: doc.tripId.endDate,
             destinations: doc.tripId.destinations
         };
 
-        // Pass context to the parser
         const parsedResults = await parseDocumentText(rawText, tripContext);
 
         doc.extractedData = parsedResults;

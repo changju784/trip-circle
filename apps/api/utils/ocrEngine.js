@@ -1,3 +1,4 @@
+import { createWorker } from 'tesseract.js';
 export async function extractText(source) {
     const worker = await createWorker('eng');
 
