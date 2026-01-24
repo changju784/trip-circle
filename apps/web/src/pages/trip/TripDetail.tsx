@@ -251,6 +251,9 @@ export default function TripDetailPage() {
                     }}
                     onSubmit={handleAddStop}
                     initialStop={initialStop}
+                    initialDate={trip?.days?.[selectedDay]?.date ? new Date(trip.days[selectedDay].date).toISOString().split('T')[0] : ""}
+                    startDate={new Date(trip.startDate)}
+                    endDate={new Date(trip.endDate)}
                     readOnly={!isOwner}
                     cityContexts={trip?.destinations}
                 />
