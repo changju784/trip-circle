@@ -1,9 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { StopCategoryEnum } from '../schema/const/TripConstants.js';
+import dotenv from "dotenv";
 
-// Initialize the Gemini API
+dotenv.config();
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
+const MODEL_NAME = "gemini-2.5-flash";
 /**
  * Parses raw OCR text into a structured JSON object for TripCircle.
  * @param {string} rawText - The text extracted by Tesseract.
@@ -12,7 +14,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 export async function parseDocumentText(rawText) {
     // We use Gemini 1.5 Flash for speed and cost-efficiency
     const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: MODEL_NAME,
         // This forces the model to output a valid JSON string
         generationConfig: { responseMimeType: "application/json" }
     });
@@ -28,7 +30,7 @@ export async function parseDocumentText(rawText) {
 
     REQUIRED JSON STRUCTURE:
     {
-        "category": "Must be exactly one of: [${StopCategoryEnum.join(', ')}]",
+        "category": "Must be exactly one of: [${Object.values(StopCategoryEnum).join(', ')}]",
         "vendor": "Name of the provider (airline, hotel, restaurant). Use this as the 'Title' of the stop.",
         "amount": "The total cost as a Number. Omit all currency symbols and commas.",
         "currency": "The 3-letter ISO currency code (e.g., USD, KRW, EUR).",
