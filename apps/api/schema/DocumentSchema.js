@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import { StopCategoryEnum } from './const/TripConstants.js';
 
 const DocumentSchema = new mongoose.Schema({
-    // --- RELATIONSHIPS ---
     id: { type: String },
     tripId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -15,22 +14,17 @@ const DocumentSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    contentType: { type: String, required: true },
+    size: { type: Number, required: true },
 
-    // --- FILE METADATA (From your original ReceiptSchema) ---
-    name: { type: String, required: true },         // original file name
-    url: { type: String, required: true },          // Vercel Blob / S3 URL
-    contentType: { type: String, required: true },  // MIME type
-    size: { type: Number, required: true },         // file size in bytes
-    uploadedAt: { type: Date, default: Date.now },
-
-    // --- PARSING STATE ---
     status: {
         type: String,
         enum: ['uploaded', 'processing', 'parsed', 'failed'],
         default: 'uploaded'
     },
 
-    // --- EXTRACTED DATA (For AI Suggestions) ---
     extractedData: {
         category: {
             type: String,
@@ -41,7 +35,7 @@ const DocumentSchema = new mongoose.Schema({
         amount: Number,
         currency: String,
         date: Date,
-        time: String,
+        time: { type: String, default: '12:00' },
         location: {
             name: String,
             address: String
@@ -49,14 +43,12 @@ const DocumentSchema = new mongoose.Schema({
         description: String,
         metadata: mongoose.Schema.Types.Mixed,
         aiInsights: {
-            matchScore: { type: Number, default: 1 },
+            matchScore: { type: Number, default: 0 },
             reasoning: { type: String, default: "" }
         },
     },
 
-    // --- UI/UX LOGIC ---
-    isApplied: { type: Boolean, default: false }, // Has user approved this suggestion?
-    rawText: String, // Store OCR text for debugging/transparency
+    isApplied: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.model('Document', DocumentSchema);

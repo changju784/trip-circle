@@ -1,8 +1,6 @@
 import Trip from '../schema/TripSchema.js';
 import Document from '../schema/DocumentSchema.js';
 import { uploadToBlob, deleteFromBlob } from '../utils/blobStorage.js';
-// import { extractText } from '../utils/ocrEngine.js';
-// import { parseDocumentText } from '../utils/llmParser.js';
 import { parseDocumentVision } from '../utils/llmParser.js';
 
 export async function uploadDocument({ tripId, userId, file }) {
@@ -11,7 +9,6 @@ export async function uploadDocument({ tripId, userId, file }) {
 
     const timestamp = Date.now();
     const filename = `documents/${tripId}/${timestamp}-${file.originalname}`;
-
     const { url } = await uploadToBlob(file.buffer, filename, file.mimetype);
 
     const newDoc = await Document.create({
@@ -37,7 +34,6 @@ export async function deleteDocument({ tripId, documentId }) {
     const doc = await Document.findById(documentId);
     if (!doc) return false;
 
-    // Delete from storage and DB in parallel for speed
     await Promise.all([
         deleteFromBlob(doc.url).catch(err => console.error("Blob deletion failed:", err)),
         Document.findByIdAndDelete(documentId)
@@ -50,15 +46,13 @@ export async function deleteDocument({ tripId, documentId }) {
 }
 
 /**
- * Main AI Pipeline: multi modal document parsing using Gemini Vision.
+ * AI Pipeline: Direct multimodal parsing.
  */
 export async function parseDocument(documentId) {
     const doc = await Document.findById(documentId).populate('tripId');
     if (!doc) throw new Error("Document not found");
 
     doc.status = 'processing';
-    doc.extractedData = null;
-    doc.rawText = "";
     await doc.save();
 
     try {
@@ -69,12 +63,10 @@ export async function parseDocument(documentId) {
             destinations: doc.tripId.destinations
         };
 
-        // Call Vision Parser directly with the document URL
         const parsedResults = await parseDocumentVision(doc.url, tripContext);
 
         doc.extractedData = parsedResults;
         doc.status = 'parsed';
-        doc.rawText = "Parsed using Gemini Multimodal Vision";
 
         await doc.save();
         return doc;
