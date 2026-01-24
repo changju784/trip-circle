@@ -14,8 +14,9 @@ import {
 } from '../services/tripService.js';
 
 import {
-  uploadReceipt,
-  deleteReceipt
+  uploadDocument,
+  deleteDocument,
+  parseDocument
 } from '../services/documentService.js';
 
 import {
@@ -145,25 +146,51 @@ router.get('/:id', async (req, res) => {
   res.json(trip);
 });
 
-router.post('/:id/receipts', upload.single('receipt'), async (req, res) => {
-  const trip = await uploadReceipt({
-    tripId: req.params.id,
-    file: req.file,
-    dayDate: req.body.dayDate
-  });
+router.post('/:id/documents', upload.single('file'), async (req, res) => {
+  try {
+    const trip = await uploadDocument({
+      tripId: req.params.id,
+      userId: req.user.userId,
+      file: req.file
+    });
 
-  if (!trip) return res.status(404).json({ error: 'Trip not found' });
-  res.status(201).json(trip);
+    if (!trip) return res.status(404).json({ error: 'Trip not found' });
+    res.status(201).json(trip);
+  } catch (err) {
+    res.status(500).json({ error: 'Upload failed', details: err.message });
+  }
 });
 
-router.delete('/:id/receipts/:receiptId', async (req, res) => {
-  const trip = await deleteReceipt({
+router.delete('/:id/documents/:documentId', async (req, res) => {
+  const trip = await deleteDocument({
     tripId: req.params.id,
-    receiptId: req.params.receiptId
+    documentId: req.params.documentId
   });
 
   if (!trip) return res.status(404).json({ error: 'Not found' });
   res.json(trip);
+});
+
+/**
+ * @route POST /api/trips/:id/documents/:documentId/parse
+ * @desc Triggers the AI OCR + LLM parsing pipeline for an existing document
+ */
+router.post('/:id/documents/:documentId/parse', async (req, res) => {
+  try {
+    const { documentId } = req.params;
+
+    // Trigger the intelligent pipeline
+    const parsedDocument = await parseDocument(documentId);
+
+    // Return the document with the new 'extractedData' for the frontend modal
+    res.json(parsedDocument);
+  } catch (err) {
+    console.error("Parsing route error:", err);
+    res.status(500).json({
+      error: 'Failed to parse document',
+      details: err.message
+    });
+  }
 });
 
 export default router;

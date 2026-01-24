@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import { useTrips } from "@/lib/trips/use-trips";
@@ -6,7 +6,7 @@ import { useTripsContext } from "@/contexts/TripsContext";
 import { useAuth } from "@/auth/hook/use-auth";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { Trip } from "@/lib/trips/trips-api";
+import { Trip, TripDocument } from "@/lib/trips/trips-api";
 import { getPostByTrip, toggleLike, addComment, type Post } from "@/lib/posts/posts-api";
 
 import { TripOverviewSection } from "./sections/TripOverviewSection";
@@ -15,8 +15,8 @@ import { TripDiscussionSection } from "./sections/TripDiscussionSection";
 
 import StopDetailModal from "@/components/trip/StopDetailModal";
 import ShareTripModal from "@/components/trip/ShareTripModal";
-import Receipts from "@/components/trip/Receipts";
 import { Section } from "@/components/ui/Section";
+import Documents from "@/components/trip/Document";
 
 export default function TripDetailPage() {
     const { id } = useParams();
@@ -38,6 +38,9 @@ export default function TripDetailPage() {
     const [loadingPost, setLoadingPost] = useState(false);
     const [commentText, setCommentText] = useState("");
     const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+    // AI Suggestion State
+    const [suggestionDoc, setSuggestionDoc] = useState<TripDocument | null>(null);
 
     // ---------------- LOAD TRIP ----------------
     useEffect(() => {
@@ -83,16 +86,54 @@ export default function TripDetailPage() {
 
     // ---------------- HELPERS ----------------
     const isOwner = Boolean(user && trip?.members?.some((m: any) => String(m) === String(user.id)));
+
     const initialStop = useMemo(() => {
         if (!editingStop || !trip) return null;
+
+        // Handle AI Suggestion Mapping
+        if (editingStop.startsWith('suggestion-') && suggestionDoc?.extractedData) {
+            const data = suggestionDoc.extractedData;
+            return {
+                id: editingStop,
+                title: data.vendor || suggestionDoc.name,
+                category: data.category || 'activity',
+                time: data.time || '12:00',
+                locationName: data.location?.name || data.location?.address || '',
+                price: data.amount || 0,
+                description: data.description || ''
+            };
+        }
+
+        // Standard Edit Mapping
         for (const d of trip.days || []) {
             const s = d.stops.find((x: any) => x.id === editingStop);
             if (s) return s;
         }
         return null;
-    }, [editingStop, trip]);
+    }, [editingStop, trip, suggestionDoc]);
 
     // ---------------- HANDLERS ----------------
+
+    // Suggestion Handler
+    const handleSuggestionReview = useCallback((doc: TripDocument) => {
+        if (!doc.extractedData) return;
+
+        const data = doc.extractedData;
+
+        // Context-Aware Day Routing: Try to match document date to trip day
+        if (data.date && trip?.days) {
+            const docDate = new Date(data.date).toDateString();
+            const dayIdx = trip.days.findIndex(d => new Date(d.date).toDateString() === docDate);
+            if (dayIdx !== -1) {
+                setSelectedDay(dayIdx);
+            }
+        }
+
+        setSuggestionDoc(doc);
+        setEditingStop(`suggestion-${doc._id}`);
+        setOpenAdd(true);
+    }, [trip?.days]);
+
     const handleLikeToggle = async () => {
         if (!user?.id || !post?._id) return;
         try {
@@ -114,7 +155,9 @@ export default function TripDetailPage() {
     const handleAddStop = async (data: any, stopId?: string | null) => {
         if (!id || !trip) return;
         const days = JSON.parse(JSON.stringify(trip.days || []));
-        if (stopId) {
+
+        // Update or Add stop
+        if (stopId && !stopId.startsWith('suggestion-')) {
             for (const d of days) {
                 const idx = d.stops.findIndex((s: any) => s.id === stopId);
                 if (idx >= 0) { d.stops[idx] = { ...d.stops[idx], ...data }; break; }
@@ -123,10 +166,24 @@ export default function TripDetailPage() {
             if (!days[selectedDay]) days[selectedDay] = { stops: [] };
             days[selectedDay].stops.push({ id: Math.random().toString(36).slice(2, 9), ...data });
         }
-        await updateTrip(id, { days });
-        setRefreshKey(prev => prev + 1);
-        setEditingStop(null);
-        setOpenAdd(false);
+
+        try {
+            // 1. Update the trip itinerary
+            await updateTrip(id, { days });
+
+            // 2. If it was a suggestion, mark document as applied
+            if (suggestionDoc) {
+                // Assuming you've added an updateDocument function to your context/api
+                // Alternatively, refreshUserTrips via context handles this if backend marks applied on stop creation
+            }
+
+            setRefreshKey(prev => prev + 1);
+            setEditingStop(null);
+            setSuggestionDoc(null);
+            setOpenAdd(false);
+        } catch (err) {
+            setError("Failed to save changes to trip.");
+        }
     };
 
     const handleDeleteStop = async (stopId: string) => {
@@ -168,7 +225,12 @@ export default function TripDetailPage() {
 
                 {isOwner && (
                     <Section title="Documents & Receipts">
-                        <Receipts tripId={trip._id} receipts={trip.receipts || []} onReceiptsChange={(t) => setTrip(t)} />
+                        <Documents
+                            tripId={trip._id}
+                            documents={trip.documents || []}
+                            onDocumentsChange={(updatedTrip) => setTrip(updatedTrip)}
+                            onSuggestionReview={handleSuggestionReview}
+                        />
                     </Section>
                 )}
 
@@ -180,8 +242,24 @@ export default function TripDetailPage() {
                 />
 
                 {/* MODALS */}
-                <StopDetailModal open={openAdd} onClose={() => { setOpenAdd(false); setEditingStop(null); }} onSubmit={handleAddStop} initialStop={initialStop} readOnly={!isOwner} cityContexts={trip?.destinations} />
+                <StopDetailModal
+                    open={openAdd}
+                    onClose={() => {
+                        setOpenAdd(false);
+                        setEditingStop(null);
+                        setSuggestionDoc(null);
+                    }}
+                    onSubmit={handleAddStop}
+                    initialStop={initialStop}
+                    initialDate={trip?.days?.[selectedDay]?.date ? new Date(trip.days[selectedDay].date).toISOString().split('T')[0] : ""}
+                    startDate={new Date(trip.startDate)}
+                    endDate={new Date(trip.endDate)}
+                    readOnly={!isOwner}
+                    cityContexts={trip?.destinations}
+                />
+
                 <ShareTripModal open={shareOpen} onClose={() => setShareOpen(false)} onShare={async (email) => { await shareTrip(trip._id, email); setShareOpen(false); setRefreshKey(k => k + 1); }} />
+
                 <Modal title="Delete Trip?" isOpen={openDeleteModal} onClose={() => setOpenDeleteModal(false)}>
                     <div className="space-y-4">
                         <p className="text-sm text-gray-600">This action cannot be undone.</p>
