@@ -10,7 +10,7 @@ import {
     AlertCircle,
     RefreshCw
 } from "lucide-react";
-import { TripDocument, Trip } from "@/lib/trips/trips-api";
+import { TripDocument, Trip, getTrip } from "@/lib/trips/trips-api";
 import { useTripsContext } from "@/contexts/TripsContext";
 
 interface DocumentsProps {
@@ -26,7 +26,7 @@ export default function Documents({
     onDocumentsChange,
     onSuggestionReview
 }: DocumentsProps) {
-    const { uploadDocument, deleteDocument, parseDocument } = useTripsContext();
+    const { uploadDocument, deleteDocument, parseDocument, } = useTripsContext();
     const [uploading, setUploading] = useState(false);
     const [parsingId, setParsingId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -54,11 +54,14 @@ export default function Documents({
 
     const handleParse = async (docId: string) => {
         setParsingId(docId);
+        setError(null);
         try {
-            // This triggers the consolidated backend endpoint that resets and overwrites
             await parseDocument(tripId, docId);
+            const updatedTrip = await getTrip(tripId);
+            onDocumentsChange(updatedTrip);
+
         } catch (err) {
-            setError("AI parsing failed. Please try again.");
+            setError("AI parsing failed.");
         } finally {
             setParsingId(null);
         }
@@ -127,8 +130,8 @@ export default function Documents({
                                         {doc.name}
                                     </div>
                                     <div className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border ${doc.status === 'parsed' ? 'bg-green-50 text-green-600 border-green-100' :
-                                            doc.status === 'failed' ? 'bg-red-50 text-red-600 border-red-100' :
-                                                'bg-gray-50 text-gray-500 border-gray-100'
+                                        doc.status === 'failed' ? 'bg-red-50 text-red-600 border-red-100' :
+                                            'bg-gray-50 text-gray-500 border-gray-100'
                                         }`}>
                                         {doc.status}
                                     </div>
@@ -179,8 +182,8 @@ export default function Documents({
                                 <div className="mt-2 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/50 flex items-center justify-between animate-in fade-in slide-in-from-top-1">
                                     <div className="flex gap-2 items-start">
                                         <AlertCircle className={`w-4 h-4 mt-0.5 ${(doc.extractedData?.aiInsights?.matchScore ?? 0) < 0.6
-                                                ? 'text-amber-500'
-                                                : 'text-green-500'
+                                            ? 'text-amber-500'
+                                            : 'text-green-500'
                                             }`} />
                                         <div className="min-w-0">
                                             <p className="text-xs font-bold text-indigo-900 dark:text-indigo-200">
