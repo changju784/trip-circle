@@ -6,27 +6,31 @@ dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODEL_NAME = "gemini-2.5-flash";
+
 /**
- * Parses raw OCR text into a structured JSON object for TripCircle.
- * @param {string} rawText - The text extracted by Tesseract.
- * @returns {Promise<Object>} - Structured travel data.
+ * Parses a travel document directly from an image using Gemini Vision.
  */
-export async function parseDocumentText(rawText) {
-    // We use Gemini 1.5 Flash for speed and cost-efficiency
+export async function parseDocumentVision(imageUrl, tripContext) {
     const model = genAI.getGenerativeModel({
         model: MODEL_NAME,
-        // This forces the model to output a valid JSON string
         generationConfig: { responseMimeType: "application/json" }
     });
 
-    const prompt = `
+    try {
+        // 1. Fetch image and convert to Base64
+        const response = await fetch(imageUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const base64Data = Buffer.from(arrayBuffer).toString('base64');
+        const mimeType = response.headers.get("content-type") || "image/png";
+
+        // 2. Multimodal prompt (using your requested structure)
+        const prompt = `
     You are a specialized travel document parser for the 'TripCircle' app. 
     Your task is to transform messy OCR text into structured JSON that perfectly pre-fills a Trip Stop modal.
 
-    OCR TEXT TO PARSE:
-    """
-    ${rawText}
-    """
+    TRIP CONTEXT:
+    - Trip Title: ${tripContext.title}
+    - Destinations: ${tripContext.destinations.map(d => d.label).join(', ')}
 
     REQUIRED JSON STRUCTURE:
     {
@@ -65,15 +69,15 @@ export async function parseDocumentText(rawText) {
        - Return ONLY valid JSON. Do not include any conversational text or markdown blocks.
 `;
 
-    try {
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text();
+        // 3. Send multimodal request (Text + Image)
+        const result = await model.generateContent([
+            prompt,
+            { inlineData: { data: base64Data, mimeType } }
+        ]);
 
-        // Parse the string into a JavaScript object
-        return JSON.parse(responseText);
+        return JSON.parse(result.response.text());
     } catch (error) {
-        console.error("LLM Parsing Error:", error);
-        // Fallback: return an empty structure so the service doesn't crash
+        console.error("LLM Vision Parsing Error:", error);
         return {
             category: 'none',
             vendor: null,

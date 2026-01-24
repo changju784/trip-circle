@@ -1,8 +1,9 @@
 import Trip from '../schema/TripSchema.js';
 import Document from '../schema/DocumentSchema.js';
 import { uploadToBlob, deleteFromBlob } from '../utils/blobStorage.js';
-import { extractText } from '../utils/ocrEngine.js';
-import { parseDocumentText } from '../utils/llmParser.js';
+// import { extractText } from '../utils/ocrEngine.js';
+// import { parseDocumentText } from '../utils/llmParser.js';
+import { parseDocumentVision } from '../utils/llmParser.js';
 
 export async function uploadDocument({ tripId, userId, file }) {
     const trip = await Trip.findById(tripId);
@@ -49,33 +50,31 @@ export async function deleteDocument({ tripId, documentId }) {
 }
 
 /**
- * Main AI Pipeline: OCR -> LLM -> Structured Data
+ * Main AI Pipeline: multi modal document parsing using Gemini Vision.
  */
-// services/documentService.js
-
 export async function parseDocument(documentId) {
     const doc = await Document.findById(documentId).populate('tripId');
     if (!doc) throw new Error("Document not found");
 
     doc.status = 'processing';
-    doc.extractedData = null; // Clear previous matchScore and reasoning
-    doc.rawText = "";         // Clear previous distorted OCR text
+    doc.extractedData = null;
+    doc.rawText = "";
     await doc.save();
 
     try {
-        const rawText = await extractText(doc.url);
-
         const tripContext = {
+            title: doc.tripId.title,
             startDate: doc.tripId.startDate,
             endDate: doc.tripId.endDate,
             destinations: doc.tripId.destinations
         };
 
-        const parsedResults = await parseDocumentText(rawText, tripContext);
+        // Call Vision Parser directly with the document URL
+        const parsedResults = await parseDocumentVision(doc.url, tripContext);
 
         doc.extractedData = parsedResults;
         doc.status = 'parsed';
-        doc.rawText = rawText;
+        doc.rawText = "Parsed using Gemini Multimodal Vision";
 
         await doc.save();
         return doc;
