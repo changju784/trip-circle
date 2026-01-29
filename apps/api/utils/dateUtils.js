@@ -1,15 +1,19 @@
 export function generateDays(startDate, endDate) {
     const s = new Date(startDate);
     const e = new Date(endDate);
-    const days = [];
 
+    s.setUTCHours(0, 0, 0, 0);
+    e.setUTCHours(0, 0, 0, 0);
+
+    const days = [];
     const current = new Date(s);
+
     while (current <= e) {
         days.push({
-            date: current.toISOString(),
+            date: new Date(current).toISOString(),
             stops: []
         });
-        current.setDate(current.getDate() + 1);
+        current.setUTCDate(current.getUTCDate() + 1);
     }
 
     return days;

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { Trip, CreateTripInput } from "@/lib/trips/trips-api";
+import { Trip, CreateTripInput, TripDocument } from "@/lib/trips/trips-api";
 import { useTrips as useTripsApi } from "@/lib/trips/use-trips";
 import { useAuth } from "@/auth/hook/use-auth";
 
@@ -11,7 +11,18 @@ interface TripsContextValue {
     createTrip: (input: CreateTripInput) => Promise<Trip>;
     updateTrip: (tripId: string, updates: Partial<CreateTripInput>) => Promise<Trip>;
     deleteTrip: (tripId: string) => Promise<void>;
-    forkTrip: (tripId: string, userId: string) => Promise<Trip>;
+    forkTrip: (
+        tripId: string,
+        userId: string,
+        payload?: {
+            startDate: string;
+            endDate: string;
+            decisions: Record<string, string | "delete">
+        }
+    ) => Promise<Trip>;
+    uploadDocument: (tripId: string, file: File) => Promise<Trip>;
+    deleteDocument: (tripId: string, documentId: string) => Promise<Trip>;
+    parseDocument: (tripId: string, documentId: string) => Promise<TripDocument>;
 }
 
 const TripsContext = createContext<TripsContextValue | undefined>(undefined);
@@ -96,13 +107,31 @@ export function TripsProvider({ children }: { children: React.ReactNode }) {
 
     // Fork trip and refresh list
     const forkTrip = useCallback(
-        async (tripId: string, userId: string): Promise<Trip> => {
-            const trip = await tripsApi.forkTrip(tripId, userId);
-            await refreshUserTrips(); // Refresh to get updated list
+        async (tripId: string, userId: string, payload?: any): Promise<Trip> => {
+            const trip = await tripsApi.forkTrip(tripId, userId, payload); //
+            await refreshUserTrips();
             return trip;
         },
         [tripsApi, refreshUserTrips]
     );
+
+    const uploadDocument = useCallback(async (tripId: string, file: File) => {
+        const trip = await tripsApi.uploadDocument(tripId, file);
+        await refreshUserTrips();
+        return trip;
+    }, [tripsApi, refreshUserTrips]);
+
+    const deleteDocument = useCallback(async (tripId: string, documentId: string) => {
+        const trip = await tripsApi.deleteDocument(tripId, documentId);
+        await refreshUserTrips();
+        return trip;
+    }, [tripsApi, refreshUserTrips]);
+
+    const parseDocument = useCallback(async (tripId: string, documentId: string) => {
+        const doc = await tripsApi.parseDocument(tripId, documentId);
+        await refreshUserTrips(); // Refresh to sync 'parsed' status globally
+        return doc;
+    }, [tripsApi, refreshUserTrips]);
 
     return (
         <TripsContext.Provider
@@ -115,6 +144,9 @@ export function TripsProvider({ children }: { children: React.ReactNode }) {
                 updateTrip,
                 deleteTrip,
                 forkTrip,
+                uploadDocument,
+                deleteDocument,
+                parseDocument,
             }}
         >
             {children}

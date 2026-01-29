@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form"; // Added Controller
 import { Button } from "../ui/Button";
 import { Destination, Stop, StopCategory } from "@/lib/trips/trips-api";
 import { geocodeLocation, geocodeSearch } from "@/lib/geo/geo-api";
 import Select from "../ui/Select";
 import { STOP_CATEGORIES } from "@/lib/const/stop-categories";
+import { DatePicker } from "../ui/DatePicker"; // Added DatePicker import
+import { parseISO, format as formatDF } from "date-fns"; // Added date utilities
 
 type StopDetailModalProps = {
     open: boolean;
@@ -13,6 +15,7 @@ type StopDetailModalProps = {
     onSubmit: (data: {
         title: string;
         category?: StopCategory;
+        date?: string;
         time?: string;
         locationName?: string;
         lat?: number | null;
@@ -22,12 +25,16 @@ type StopDetailModalProps = {
     }, stopId?: string | null) => void;
     cityContexts?: Destination[];
     initialStop?: Stop | null;
+    initialDate?: string;
+    startDate: Date;
+    endDate: Date;
     readOnly?: boolean;
 };
 
 type FormData = {
     title: string;
     category: StopCategory;
+    date: Date; // Form state uses Date object for the DatePicker
     time?: string;
     locationName?: string;
     price?: number;
@@ -40,9 +47,12 @@ export default function StopDetailModal({
     onSubmit,
     cityContexts = [],
     initialStop = null,
+    initialDate = "",
+    startDate,
+    endDate,
     readOnly = false
 }: StopDetailModalProps) {
-    const { register, handleSubmit, reset, formState, setValue, watch } = useForm<FormData>({
+    const { register, handleSubmit, reset, formState, setValue, watch, control } = useForm<FormData>({
         defaultValues: {
             title: "",
             time: "",
@@ -51,7 +61,6 @@ export default function StopDetailModal({
         },
     });
 
-    // Destructure dirtyFields to track user interaction
     const { errors, dirtyFields } = formState;
     const [loading, setLoading] = useState(false);
     const [geoError, setGeoError] = useState("");
@@ -61,7 +70,6 @@ export default function StopDetailModal({
     const locationValue = watch("locationName");
     const categoryValue = watch("category");
 
-    // fetch suggestions as user types (debounced)
     useEffect(() => {
         let mounted = true;
         if (!locationValue || locationValue.length < 2 || !dirtyFields.locationName) {
@@ -89,6 +97,10 @@ export default function StopDetailModal({
             setValue("price", initialStop.price ?? undefined);
             setValue("category", (initialStop.category as StopCategory) || "none");
 
+            if (initialDate) {
+                setValue("date", parseISO(initialDate));
+            }
+
             if (initialStop.lat != null && initialStop.lng != null) {
                 setSelectedCoords({
                     lat: initialStop.lat,
@@ -102,8 +114,11 @@ export default function StopDetailModal({
             reset();
             setValue("category", "none");
             setSelectedCoords(null);
+            if (initialDate) {
+                setValue("date", parseISO(initialDate));
+            }
         }
-    }, [initialStop, setValue, reset]);
+    }, [initialStop, initialDate, setValue, reset]);
 
     const submit = async (data: FormData) => {
         setLoading(true);
@@ -128,6 +143,8 @@ export default function StopDetailModal({
         onSubmit({
             title: data.title,
             category: data.category,
+            // Format Date object back to string for the parent handler
+            date: data.date ? formatDF(data.date, 'yyyy-MM-dd') : initialDate,
             time: data.time,
             locationName: data.locationName,
             lat,
@@ -181,15 +198,38 @@ export default function StopDetailModal({
                     </div>
                 </div>
 
-                <div>
-                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Time *</label>
-                    <input
-                        {...register("time", { required: "This field is required" })}
-                        type="time"
-                        className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
-                        disabled={readOnly}
-                    />
-                    {errors.time && <div className="text-red-600 text-xs mt-1">{errors.time.message}</div>}
+                {/* Date & Time Row */}
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                        <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Date *</label>
+                        <div className="mt-1">
+                            <Controller
+                                control={control}
+                                name="date"
+                                rules={{ required: "Required" }}
+                                render={({ field }) => (
+                                    <DatePicker
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        minDate={startDate}
+                                        maxDate={endDate}
+                                        disabled={readOnly}
+                                    />
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex-1">
+                        <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Time *</label>
+                        <input
+                            {...register("time", { required: "This field is required" })}
+                            type="time"
+                            className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+                            disabled={readOnly}
+                        />
+                        {errors.time && <div className="text-red-600 text-xs mt-1">{errors.time.message}</div>}
+                    </div>
                 </div>
 
                 <div className="relative">
@@ -211,7 +251,7 @@ export default function StopDetailModal({
                                     key={`${s.lat}-${s.lng}-${i}`}
                                     className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-gray-100 text-sm border-b last:border-b-0 border-gray-100 dark:border-gray-700"
                                     onClick={() => {
-                                        setValue("locationName", s.displayName, { shouldDirty: false }); // Select should not trigger suggestions again
+                                        setValue("locationName", s.displayName, { shouldDirty: false });
                                         setSelectedCoords({ lat: s.lat, lng: s.lng, displayName: s.displayName });
                                         setSuggestions([]);
                                     }}

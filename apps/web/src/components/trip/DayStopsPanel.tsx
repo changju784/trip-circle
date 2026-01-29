@@ -8,16 +8,20 @@ import { reverseGeocode, RouteData } from "@/lib/geo/geo-api";
 import { Clock, ExternalLink, MapPin, Maximize2 } from "lucide-react";
 import FullMapView from "./FullMapView";
 import { useOpenInGoogleMaps } from "@/pages/trip/hooks/use-open-in-google-map";
+import { WeatherBadge } from "./WeatherBadge";
 
-export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: {
+interface DayStopsPanelProps {
     days: any[];
     selectedDay: number;
+    primaryCity: string;
     isOwner?: boolean;
     onOpenAdd: (dayIndex: number, prefilledData?: any) => void;
     onEditStop?: (stopId: string) => void;
     onDeleteStop?: (stopId: string) => void;
     onReorderStops?: (dayIndex: number, reorderedStops: any[]) => void;
-}) {
+}
+
+export default function DayStopsPanel({ days, selectedDay, primaryCity, isOwner, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: DayStopsPanelProps) {
     const day = days[selectedDay];
     const [activeRoute, setActiveRoute] = useState<RouteData | null>(null);
     const [isFullMapOpen, setIsFullMapOpen] = useState(false);
@@ -112,9 +116,15 @@ export default function DayStopsPanel({ days, selectedDay, isOwner, onOpenAdd, o
                                 </span>
                             </div>
                         )}
+                        {primaryCity && days[selectedDay]?.date && (
+                            <WeatherBadge
+                                city={primaryCity}
+                                date={days[selectedDay].date.split('T')[0]}
+                            />
+                        )}
                     </div>
                     {isOwner && (
-                        <Button variant="dark" size="sm" onClick={() => onOpenAdd(selectedDay)}>+ Add Stop</Button>
+                        <Button variant="primary" size="sm" onClick={() => onOpenAdd(selectedDay)}>+ Add Stop</Button>
                     )}
                 </div>
 

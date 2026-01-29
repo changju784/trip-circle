@@ -38,14 +38,33 @@ export interface Destination {
     label: string;
 }
 
-export interface Receipt {
-    id: string;
+export interface TripDocument {
+    _id: string;
     name: string;
     url: string;
     contentType: string;
     size: number;
     uploadedAt: string;
-    dayDate?: string;
+    status: 'uploaded' | 'processing' | 'parsed' | 'failed';
+    isApplied: boolean;
+    extractedData?: {
+        category: StopCategory;
+        vendor?: string;
+        amount?: number;
+        currency?: string;
+        date?: string;
+        time?: string;
+        location?: {
+            name: string;
+            address: string;
+        };
+        description?: string;
+        aiInsights?: {
+            matchScore: number;
+            reasoning: string;
+        };
+        metadata?: any;
+    };
 }
 
 export const TripTagsEnum = [
@@ -69,7 +88,7 @@ export interface Trip {
     totalPrice: number | null;
     budget: number | null;
     thumbnail: string | null;
-    receipts: Receipt[];
+    documents: TripDocument[];
     startDate: string;
     endDate: string;
     days: DayWithStops[];
@@ -125,8 +144,12 @@ export async function deleteTrip(tripId: string): Promise<{ message: string; id:
 /**
  * Fork a trip (create a copy with current user as member)
  */
-export async function forkTrip(tripId: string, userId: string): Promise<{ message: string; trip: Trip }> {
-    return apiPost(`/api/trips/fork`, { tripId, userId });
+export async function forkTrip(
+    tripId: string,
+    userId: string,
+    payload?: any // New parameter for dates/decisions
+): Promise<{ message: string; trip: Trip }> {
+    return apiPost(`/api/trips/fork`, { tripId, userId, ...payload }); //
 }
 
 /**
@@ -157,4 +180,27 @@ export async function getMyTrips(): Promise<Trip[]> {
  */
 export async function shareTrip(tripId: string, email: string): Promise<{ message: string }> {
     return apiPost(`/api/trips/share`, { tripId, email });
+}
+
+/**
+ * Upload a document
+ */
+export async function uploadDocument(tripId: string, file: File): Promise<Trip> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiPost<Trip>(`/api/trips/${tripId}/documents`, formData);
+}
+
+/**
+ * Delete a document
+ */
+export async function deleteDocument(tripId: string, documentId: string): Promise<Trip> {
+    return apiDelete<Trip>(`/api/trips/${tripId}/documents/${documentId}`);
+}
+
+/**
+ * Trigger AI Parsing
+ */
+export async function parseDocument(tripId: string, documentId: string): Promise<TripDocument> {
+    return apiPost<TripDocument>(`/api/trips/${tripId}/documents/${documentId}/parse`, {});
 }

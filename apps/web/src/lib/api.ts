@@ -40,9 +40,9 @@ export function setOnUnauthorizedCallback(callback: (() => void) | null) {
 function createAxiosInstance(): AxiosInstance {
     const instance = axios.create({
         baseURL: API_BASE_URL,
-        headers: {
-            "Content-Type": "application/json",
-        },
+        // headers: {
+        //     "Content-Type": "application/json",
+        // },
     });
 
     // Request interceptor: attach token

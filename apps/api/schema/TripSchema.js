@@ -1,25 +1,7 @@
 import mongoose from 'mongoose';
-
-// --- RECEIPT SUBSCHEMA ---
-const ReceiptSchema = new mongoose.Schema(
-    {
-        id: { type: String, required: true },          // frontend-generated id
-        name: { type: String, required: true },        // file name
-        url: { type: String, required: true },         // Vercel Blob URL
-        contentType: { type: String, required: true }, // MIME type
-        size: { type: Number, required: true },        // file size in bytes
-        uploadedAt: { type: Date, default: Date.now },
-        dayDate: { type: Date }                        // optional: which day this receipt is for
-    },
-    { _id: false }
-);
+import { StopCategoryEnum, TripTagsEnum } from './const/TripConstants.js';
 
 // --- STOP SUBSCHEMA ---
-const StopCategoryEnum = [
-    'dining', 'lodging', 'sightseeing', 'activity',
-    'shopping', 'transit', 'nightlife', 'other', 'none'
-];
-
 const StopSchema = new mongoose.Schema(
     {
         id: { type: String, trim: true },              // frontend-generated id
@@ -49,13 +31,6 @@ const DaySchema = new mongoose.Schema(
 );
 
 // --- TRIP SCHEMA ---
-const TripTagsEnum = [
-    'spring', 'summer', 'fall', 'winter',           // season
-    'solo', 'couple', 'family', 'friends',          // group type
-    'budget', 'luxury', 'adventure',                // style
-    'nature', 'city break', 'beach', 'foodie',      // vibe
-    'relaxing', 'photography', 'hiking', 'historic' // activity
-];
 
 const TripSchema = new mongoose.Schema({
     members: [
@@ -92,10 +67,11 @@ const TripSchema = new mongoose.Schema({
         default: []
     },
 
-    receipts: {
-        type: [ReceiptSchema],
+    documents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Document',
         default: []
-    },
+    }],
 
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
