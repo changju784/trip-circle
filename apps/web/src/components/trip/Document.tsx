@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { TripDocument, Trip, getTrip } from "@/lib/trips/trips-api";
 import { useTripsContext } from "@/contexts/TripsContext";
+import { useToast } from "@/components/hooks/use-toast";
 import { Badge } from "../ui/badge";
 import { CATEGORY_CONFIG } from "@/lib/const/stop-categories";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ export default function Documents({
     onSuggestionReview
 }: DocumentsProps) {
     const { uploadDocument, deleteDocument, parseDocument, } = useTripsContext();
+    const { toast } = useToast()
     const [uploading, setUploading] = useState(false);
     const [parsingId, setParsingId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -49,8 +51,18 @@ export default function Documents({
             const updatedTrip = await uploadDocument(tripId, file);
             onDocumentsChange(updatedTrip);
             event.target.value = "";
+
+            toast({
+                title: "Upload successful",
+                description: `${file.name} has been added to your trip documents.`
+            });
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to upload document");
+            toast({
+                variant: "destructive",
+                title: "Upload failed",
+                description: error
+            });
         } finally {
             setUploading(false);
         }
@@ -59,13 +71,27 @@ export default function Documents({
     const handleParse = async (docId: string) => {
         setParsingId(docId);
         setError(null);
+
+        toast({
+            title: "AI parsing started",
+            description: "We're extracting details from your document...",
+        });
         try {
             await parseDocument(tripId, docId);
             const updatedTrip = await getTrip(tripId);
             onDocumentsChange(updatedTrip);
 
+            toast({
+                title: "AI parsing completed",
+                description: "Document details have been successfully extracted.",
+            });
         } catch (err) {
             setError("AI parsing failed.");
+            toast({
+                variant: "destructive",
+                title: "Parsing error",
+                description: "AI was unable to read this document. Please check the image quality."
+            });
         } finally {
             setParsingId(null);
         }
@@ -76,8 +102,18 @@ export default function Documents({
         try {
             const updatedTrip = await deleteDocument(tripId, docId);
             onDocumentsChange(updatedTrip);
+
+            toast({
+                title: "Document deleted",
+                description: "The document has been removed from your trip.",
+            });
         } catch (err) {
             setError("Failed to delete document");
+            toast({
+                variant: "destructive",
+                title: "Deletion error",
+                description: error
+            });
         }
     };
 

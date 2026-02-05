@@ -13,6 +13,7 @@
         "@radix-ui/react-slot": "^1.2.4",
         "@radix-ui/react-switch": "^1.2.6",
         "@radix-ui/react-tabs": "^1.1.13",
+        "@radix-ui/react-toast": "^1.2.15",
         "@radix-ui/react-tooltip": "^1.2.8",
         "@testing-library/dom": "^10.4.1",
         "@testing-library/jest-dom": "^6.9.1",
@@ -40,6 +41,8 @@
     "devDependencies": {
         "@craco/craco": "^7.0.0",
         "autoprefixer": "^10.4.22",
+        "baseline-browser-mapping": "^2.9.19",
+        "cross-env": "^10.1.0",
         "postcss": "^8.5.6",
         "sass": "^1.94.2",
         "typescript": "4.9.5"
@@ -47,7 +50,7 @@
     "scripts": {
         "dev": "craco start",
         "start": "craco start",
-        "build": "craco build",
+        "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' craco build",
         "test": "craco test",
         "eject": "react-scripts eject"
     },

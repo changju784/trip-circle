@@ -22,6 +22,7 @@ import RootRedirect from "./components/RootDirect";
 import MainLayout from "./MainLayout";
 import MyTripsSection from "./pages/dashboard/MyTripsSection";
 import ExploreSection from "./pages/dashboard/ExploreSection";
+import { Toaster } from "./components/ui/toaster";
 
 function App() {
     return (
@@ -68,6 +69,7 @@ function App() {
                         {/* Fallback */}
                         <Route path="*" element={<Navigate to="/trip-circle" replace />} />
                     </Routes>
+                    <Toaster />
                 </TripsProvider>
             </AuthProvider>
         </BrowserRouter>
