@@ -13,17 +13,25 @@ module.exports = {
                 // 2. Remove the heavy Type-Checking plugin during the build
                 // This offloads memory but remember to run `tsc` separately!
                 webpackConfig.plugins = webpackConfig.plugins.filter(
-                    (plugin) => plugin.constructor.name !== 'ForkTsCheckerWebpackPlugin'
+                    (plugin) => {
+                        const name = plugin.constructor.name;
+                        return name !== 'ForkTsCheckerWebpackPlugin' &&
+                            name !== 'ESLintWebpackPlugin';
+                    }
                 );
 
-                // 3. (Optional) Optimize Terser (the minifier)
-                // If you still crash, we can disable minification to test, 
-                // though it's not recommended for production.
+                // 3. Optimize Terser (the minifier)
                 const terserPlugin = webpackConfig.optimization.minimizer.find(
                     (m) => m.constructor.name === 'TerserPlugin'
                 );
                 if (terserPlugin) {
                     terserPlugin.options.parallel = true; // Use multi-core
+                    terserPlugin.options.terserOptions = {
+                        compress: {
+                            drop_console: true,
+                        },
+                        mangle: true,
+                    };
                 }
             }
             return webpackConfig;
