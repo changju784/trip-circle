@@ -8,6 +8,7 @@ import { useAuth } from "@/auth/hook/use-auth";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Trip, TripDocument } from "@/lib/trips/trips-api";
+import { TripLoader } from "@/components/trip/TripLoader";
 import { getPostByTrip, toggleLike, addComment, type Post } from "@/lib/posts/posts-api";
 
 import { TripOverviewSection } from "./sections/TripOverviewSection";
@@ -230,7 +231,7 @@ export default function TripDetailPage() {
         updateTrip(id, { days: updatedDays }).catch(console.error);
     };
 
-    if (loadingTrip) return <div className="min-h-screen p-10 text-center text-gray-600">Loading trip...</div>;
+    if (loadingTrip) return <TripLoader />;
     if (error || !trip) return <div className="min-h-screen p-10 text-center text-red-600">{error || "Trip not found"}</div>;
 
     return (

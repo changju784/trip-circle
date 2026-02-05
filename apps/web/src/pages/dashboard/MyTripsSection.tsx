@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 import { useTripsContext } from "@/contexts/TripsContext";
 import { TripCard } from "@/components/trip/TripCard";
+import { TripLoader } from "@/components/trip/TripLoader";
 import { HeroTripCard } from "@/components/trip/HeroTripCard";
 import { AuthContext } from "@/components/auth/AuthProvider";
 import { getPostByTrip, toggleLike, Post } from "@/lib/posts/posts-api";
@@ -59,7 +60,7 @@ export default function MyTripsSection() {
         }
     };
 
-    if (isLoading) return <div className="p-20 text-center opacity-50 font-black uppercase tracking-widest text-xs">Loading adventures...</div>;
+    if (isLoading) return <TripLoader />;
     if (error) return <div className="p-20 text-center text-red-500 font-bold uppercase text-xs">Error: {error}</div>;
 
     const renderTripCard = (trip: any) => {
