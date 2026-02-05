@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTrips } from "@/lib/trips/use-trips";
+import { useToast } from "@/components/hooks/use-toast";
 import TripForm, { TripFormValues } from "@/components/trip/TripForm";
 import ReconcileStopsModal from "@/components/trip/ReconcileStopsModal";
 import { generateNewDaysArray, getMismatchedStops } from "@/lib/trips/util";
@@ -9,6 +10,7 @@ export default function EditTripPage() {
     const navigate = useNavigate();
     const { id } = useParams();
     const { getTrip, updateTrip, isLoading: apiLoading } = useTrips();
+    const { toast } = useToast();
 
     const [trip, setTrip] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
@@ -80,10 +82,19 @@ export default function EditTripPage() {
                 destinations,
                 ...(finalDays && { days: finalDays })
             });
+            toast({
+                title: "Trip updated",
+                description: "Your trip has been successfully updated.",
+            });
 
             navigate(`/trip-circle/trip/${id}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to update trip");
+            toast({
+                title: "Error",
+                description: "There was an error updating your trip.",
+                variant: "destructive",
+            })
         }
     };
 

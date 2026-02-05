@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import { useAuth } from "@/auth/hook/use-auth";
 import { useTripsContext } from "@/contexts/TripsContext";
+import { useToast } from "@/components/hooks/use-toast";
 import TripForm, { TripFormValues } from "@/components/trip/TripForm";
 
 export default function NewTripPage() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { createTrip: createTripApi, isLoading } = useTripsContext();
+    const { toast } = useToast();
     const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (data: TripFormValues) => {
@@ -38,9 +40,19 @@ export default function NewTripPage() {
                 members: [user.id],
             });
 
+            toast({
+                title: "Trip created",
+                description: "Your trip has been successfully created.",
+            });
+
             navigate(`/trip-circle/trip/${trip._id}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to create trip");
+            toast({
+                title: "Error",
+                description: "There was an error creating your trip.",
+                variant: "destructive",
+            })
         }
     };
 
