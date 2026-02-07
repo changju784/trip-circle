@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Post from '../schema/PostSchema.js';
 import Trip from '../schema/TripSchema.js';
+import { updateUserGamification } from '../services/gamificationService.js';
 import { exploreTrips } from '../services/tripSearchService.js';
 
 const router = express.Router();
@@ -146,6 +147,9 @@ router.post('/:id/like', async (req, res) => {
     }
 
     await post.save();
+
+    // Update gamification stats for the post author (trip owner)
+    await updateUserGamification(post.userId);
 
     const updatedPost = await Post.findById(postId)
       .populate('userId', 'username email')

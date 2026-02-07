@@ -1,7 +1,7 @@
 import Trip from '../schema/TripSchema.js';
 import User from '../schema/UserSchema.js';
 import Post from '../schema/PostSchema.js';
-import Document from '../schema/DocumentSchema.js';
+import { updateUserGamification } from './gamificationService.js';
 import { generateDays } from '../utils/dateUtils.js';
 import {
     calculateDayPrice,
@@ -77,6 +77,7 @@ export async function createTrip(payload) {
         } catch { }
     }
 
+    await updateUserGamification(members[0]);
     return trip;
 }
 
@@ -146,10 +147,22 @@ export async function updateTrip(id, updates) {
         updates.totalPrice = calculateTripPrice(updates.days);
     }
 
-    return Trip.findByIdAndUpdate(id, updates, {
+    const updatedTrip = await Trip.findByIdAndUpdate(id, updates, {
         new: true,
         runValidators: true
-    }).populate('documents');
+    });
+
+    if (updates.days !== undefined && updatedTrip) {
+        // Stops might have changed, update gamification for owners
+        const owners = updatedTrip.members;
+        if (owners && owners.length > 0) {
+            for (const ownerId of owners) {
+                await updateUserGamification(ownerId);
+            }
+        }
+    }
+
+    return updatedTrip;
 }
 
 /* ---------- share ---------- */
@@ -262,6 +275,14 @@ export async function forkTrip(tripId, userId, payload) {
         { tripId },
         { $inc: { forkCount: 1 } }
     );
+
+    // Update stats for the user who forked (new trip created/stops added)
+    await updateUserGamification(userId);
+
+    // Update stats for the original creator (trip forked)
+    if (originalTrip.members && originalTrip.members.length > 0) {
+        await updateUserGamification(originalTrip.members[0]);
+    }
 
     return newTrip;
 }

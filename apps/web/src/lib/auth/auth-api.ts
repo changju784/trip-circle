@@ -44,7 +44,7 @@ export async function loginUser(
  * Redirects user to backend Google OAuth endpoint
  */
 export function loginWithGoogle(): void {
-    const backendUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const backendUrl = process.env.REACT_APP_API_URL || "http://localhost:5001";
     window.location.href = `${backendUrl}/api/auth/google`;
 }
 
