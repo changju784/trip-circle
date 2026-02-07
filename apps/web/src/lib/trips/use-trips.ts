@@ -13,6 +13,10 @@ import {
     forkTrip as forkTripApi,
     exploreTrips as exploreTripsApi,
     shareTrip as shareTripApi,
+    uploadDocument as uploadDocumentApi,
+    deleteDocument as deleteDocumentApi,
+    parseDocument as parseDocumentApi,
+    TripDocument,
     Trip,
     CreateTripInput,
 } from "@/lib/trips/trips-api";
@@ -142,20 +146,97 @@ export function useTrips() {
         }
     }, []);
 
-    const forkTrip = useCallback(async (tripId: string, userId: string): Promise<Trip> => {
+    const forkTrip = useCallback(async (
+        tripId: string,
+        userId: string,
+        payload?: {
+            startDate: string;
+            endDate: string;
+            decisions: Record<string, string | "delete">
+        }
+    ): Promise<Trip> => {
         try {
             setState((prev) => ({ ...prev, isLoading: true, error: null }));
-            const result = await forkTripApi(tripId, userId);
+
+            const result = await forkTripApi(tripId, userId, payload);
             const newTrip = result.trip;
+
             tripCache.set(newTrip._id, newTrip);
+
             setState((prev) => ({
                 ...prev,
                 trips: new Map(tripCache),
                 isLoading: false,
             }));
+
             return newTrip;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to fork trip";
+            setState((prev) => ({ ...prev, isLoading: false, error: errorMessage }));
+            throw error;
+        }
+    }, []);
+
+    const uploadDocument = useCallback(async (tripId: string, file: File): Promise<Trip> => {
+        try {
+            setState((prev) => ({ ...prev, isLoading: true, error: null }));
+            const updatedTrip = await uploadDocumentApi(tripId, file);
+
+            tripCache.set(updatedTrip._id, updatedTrip);
+            setState((prev) => ({
+                ...prev,
+                trips: new Map(tripCache),
+                isLoading: false,
+            }));
+            return updatedTrip;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to upload document";
+            setState((prev) => ({ ...prev, isLoading: false, error: errorMessage }));
+            throw error;
+        }
+    }, []);
+
+    const deleteDocument = useCallback(async (tripId: string, documentId: string): Promise<Trip> => {
+        try {
+            setState((prev) => ({ ...prev, isLoading: true, error: null }));
+            const updatedTrip = await deleteDocumentApi(tripId, documentId);
+
+            tripCache.set(updatedTrip._id, updatedTrip);
+            setState((prev) => ({
+                ...prev,
+                trips: new Map(tripCache),
+                isLoading: false,
+            }));
+            return updatedTrip;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to delete document";
+            setState((prev) => ({ ...prev, isLoading: false, error: errorMessage }));
+            throw error;
+        }
+    }, []);
+
+    const parseDocument = useCallback(async (tripId: string, documentId: string): Promise<TripDocument> => {
+        try {
+            setState((prev) => ({ ...prev, isLoading: true, error: null }));
+            const parsedDoc = await parseDocumentApi(tripId, documentId);
+
+            const trip = tripCache.get(tripId);
+            if (trip) {
+                const updatedDocuments = trip.documents.map(d =>
+                    d._id === documentId ? parsedDoc : d
+                );
+                const updatedTrip = { ...trip, documents: updatedDocuments };
+                tripCache.set(tripId, updatedTrip);
+            }
+
+            setState((prev) => ({
+                ...prev,
+                trips: new Map(tripCache),
+                isLoading: false,
+            }));
+            return parsedDoc;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to parse document";
             setState((prev) => ({ ...prev, isLoading: false, error: errorMessage }));
             throw error;
         }
@@ -170,5 +251,8 @@ export function useTrips() {
         exploreTrips,
         shareTrip,
         forkTrip,
+        uploadDocument,
+        deleteDocument,
+        parseDocument,
     };
 }

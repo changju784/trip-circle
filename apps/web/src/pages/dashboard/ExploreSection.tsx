@@ -10,6 +10,7 @@ import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 import { useSplashThumbnails } from "@/lib/splash/use-splash-thumbnails";
 import { getPosts, toggleLike, searchPosts, Post } from "@/lib/posts/posts-api";
 import { AuthContext } from "@/components/auth/AuthProvider";
+import { TripLoader } from "@/components/trip/TripLoader";
 import { TRIP_TAGS } from "@/lib/const/trip-tags";
 import { cn } from "@/lib/utils";
 import type { Option } from "@/components/ui/Select";
@@ -22,13 +23,13 @@ const SORT_OPTIONS: Option[] = [
     { id: "name", label: "Name (A-Z)" },
 ];
 
-const getCurrentSeason = () => {
-    const month = new Date().getMonth();
-    if (month >= 2 && month <= 4) return "spring";
-    if (month >= 5 && month <= 7) return "summer";
-    if (month >= 8 && month <= 10) return "fall";
-    return "winter";
-};
+// const getCurrentSeason = () => {
+//     const month = new Date().getMonth();
+//     if (month >= 2 && month <= 4) return "spring";
+//     if (month >= 5 && month <= 7) return "summer";
+//     if (month >= 8 && month <= 10) return "fall";
+//     return "winter";
+// };
 
 export default function ExploreSection() {
     const navigate = useNavigate();
@@ -60,7 +61,7 @@ export default function ExploreSection() {
         }
         loadPosts();
         return () => { cancelled = true; };
-    }, [query, activeTags]);
+    }, [query, activeTags, isFiltering]);
 
     const handleSortUpdate = (id: string) => {
         const selected = SORT_OPTIONS.find(o => o.id === id)!;
@@ -134,7 +135,7 @@ export default function ExploreSection() {
     };
 
     if (isLoading && posts.length === 0) {
-        return <div className="p-20 text-center opacity-50 font-black uppercase tracking-widest text-xs dark:text-white text-zinc-500">Loading...</div>;
+        return <TripLoader />;
     }
 
     return (

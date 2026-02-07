@@ -16,7 +16,7 @@ export async function getAllTrips() {
 }
 
 export async function getTripById(id) {
-    return Trip.findById(id);
+    return Trip.findById(id).populate('documents');
 }
 
 /* ---------- create ---------- */
@@ -50,7 +50,8 @@ export async function createTrip(payload) {
         startDate,
         endDate,
         members,
-        tags: tags || []
+        tags: tags || [],
+        documents: []
     });
 
     await trip.save();
@@ -86,6 +87,7 @@ export async function updateTrip(id, updates) {
     const oldTrip = await Trip.findById(id);
     if (!oldTrip) return null;
 
+    // 1. Handle Member Updates
     if (updates.members !== undefined) {
         const oldMembers = oldTrip.members.map(String);
         const newMembers = updates.members.map(String);
@@ -101,9 +103,9 @@ export async function updateTrip(id, updates) {
         );
     }
 
+    // 2. Handle Public/Post Visibility 
     if (updates.isPublic !== undefined && updates.isPublic !== oldTrip.isPublic) {
         const members = updates.members || oldTrip.members;
-
         if (updates.isPublic && members.length) {
             const exists = await Post.findOne({ tripId: id });
             if (!exists) {
@@ -122,31 +124,25 @@ export async function updateTrip(id, updates) {
         }
     }
 
-    /* ---------- deep-mapping days and stops ---------- */
-    if (updates.days !== undefined) {
+    // SYNC LOGIC: If 'days' are provided, they dictate the startDate and endDate
+    if (updates.days !== undefined && updates.days.length > 0) {
         updates.days = updates.days.map(day => {
-            const processedStops = (day.stops || []).map(stop => ({
-                id: stop.id,
-                title: stop.title,
-                time: stop.time,
-                category: stop.category || 'none',
-                locationName: stop.locationName,
-                lat: stop.lat,
-                lng: stop.lng,
-                price: stop.price,
-                description: stop.description
-            }));
-
             const updatedDay = {
                 ...day,
-                stops: processedStops
+                stops: (day.stops || []).map(stop => ({
+                    ...stop,
+                    category: stop.category || 'none',
+                    price: stop.price || 0
+                }))
             };
-
             return {
                 ...updatedDay,
                 pricePerDay: calculateDayPrice(updatedDay)
             };
         });
+
+        updates.startDate = updates.days[0].date;
+        updates.endDate = updates.days[updates.days.length - 1].date;
 
         updates.totalPrice = calculateTripPrice(updates.days);
     }
@@ -215,18 +211,59 @@ export async function shareTrip({ tripId, email, resendApiKey }) {
 
 /* ---------- fork ---------- */
 
-export async function forkTrip(tripId, userId) {
+export async function forkTrip(tripId, userId, payload) {
+    const { startDate, endDate, decisions } = payload;
+
     const originalTrip = await Trip.findById(tripId);
     if (!originalTrip) return null;
 
     const data = originalTrip.toObject();
-    delete data._id;
 
+    // 1. Basic Metadata Overrides
     data.isPublic = false;
-    data.receipts = [];
     data.members = [userId];
     data.title = `${data.title} (Copy)`;
+    data.startDate = startDate;
+    data.endDate = endDate;
+    data.documents = [];
 
+    // 2. Reconstruct the Days/Stops based on decisions
+    // generateDays creates the skeleton (e.g., [{ date: '2025-01-01', stops: [] }, ...])
+    const newDays = generateDays(startDate, endDate).map(day => ({
+        ...day,
+        pricePerDay: 0,
+        stops: []
+    }));
+
+    // 3. Map original stops into their new dates
+    // decisions looks like: { "original_stop_id": "2025-06-01" OR "delete" }
+    originalTrip.days.forEach(oldDay => {
+        oldDay.stops.forEach(stop => {
+            const decision = decisions[stop._id.toString()];
+
+            if (decision && decision !== 'delete') {
+                // Find the day in our new range that matches the chosen date
+                const targetDay = newDays.find(d => d.date === decision);
+                if (targetDay) {
+                    // Clone the stop and push it into the new day
+                    targetDay.stops.push({
+                        ...stop,
+                        _id: new mongoose.Types.ObjectId() // Give it a fresh ID
+                    });
+                }
+            }
+        });
+    });
+
+    // 4. Recalculate prices for the new structure
+    data.days = newDays.map(day => ({
+        ...day,
+        pricePerDay: calculateDayPrice(day)
+    }));
+    data.totalPrice = calculateTripPrice(data.days);
+
+    // 5. Save and Cleanup
+    delete data._id;
     const newTrip = await Trip.create(data);
 
     await User.findByIdAndUpdate(
@@ -256,10 +293,14 @@ export async function deleteTrip(id) {
     const trip = await Trip.findByIdAndDelete(id);
     if (!trip) return null;
 
-    await User.updateMany(
-        { _id: { $in: trip.members } },
-        { $pull: { trips: id } }
-    );
+    await Promise.all([
+        User.updateMany(
+            { _id: { $in: trip.members } },
+            { $pull: { trips: id } }
+        ),
+        Document.deleteMany({ tripId: id }),
+        Post.findOneAndDelete({ tripId: id })
+    ]);
 
     return trip;
 }
