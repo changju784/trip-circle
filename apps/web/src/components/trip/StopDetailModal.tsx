@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
-import { useForm, Controller } from "react-hook-form"; // Added Controller
+import { useForm, Controller } from "react-hook-form";
+import { useToast } from "@/components/hooks/use-toast";
 import { Button } from "../ui/Button";
 import { Destination, Stop, StopCategory } from "@/lib/trips/trips-api";
 import { geocodeLocation, geocodeSearch } from "@/lib/geo/geo-api";
 import Select from "../ui/Select";
 import { STOP_CATEGORIES } from "@/lib/const/stop-categories";
-import { DatePicker } from "../ui/DatePicker"; // Added DatePicker import
-import { parseISO, format as formatDF } from "date-fns"; // Added date utilities
+import { DatePicker } from "../ui/DatePicker";
+import { parseISO, format as formatDF } from "date-fns";
 
 type StopDetailModalProps = {
     open: boolean;
@@ -60,6 +61,7 @@ export default function StopDetailModal({
             description: "",
         },
     });
+    const { toast } = useToast();
 
     const { errors, dirtyFields } = formState;
     const [loading, setLoading] = useState(false);
@@ -153,6 +155,10 @@ export default function StopDetailModal({
             description: data.description,
         }, initialStop?.id ?? null);
 
+        toast({
+            title: initialStop ? "Stop updated" : "Stop added",
+            description: initialStop ? "The stop has been updated successfully." : "The stop has been added successfully.",
+        });
         setLoading(false);
         setSuggestions([]);
         reset();

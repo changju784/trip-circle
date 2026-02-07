@@ -3,10 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { BackToDashboardButton } from "@/pages/dashboard/BackToDashboardButton";
 import { useTrips } from "@/lib/trips/use-trips";
 import { useTripsContext } from "@/contexts/TripsContext";
+import { useToast } from "@/components/hooks/use-toast";
 import { useAuth } from "@/auth/hook/use-auth";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Trip, TripDocument } from "@/lib/trips/trips-api";
+import { TripLoader } from "@/components/trip/TripLoader";
 import { getPostByTrip, toggleLike, addComment, type Post } from "@/lib/posts/posts-api";
 
 import { TripOverviewSection } from "./sections/TripOverviewSection";
@@ -23,6 +25,7 @@ export default function TripDetailPage() {
     const navigate = useNavigate();
     const { getTrip, updateTrip, shareTrip } = useTrips();
     const { deleteTrip } = useTripsContext();
+    const { toast } = useToast();
     const { user } = useAuth();
 
     const [trip, setTrip] = useState<Trip | null>(null);
@@ -186,11 +189,38 @@ export default function TripDetailPage() {
         }
     };
 
+    const handleDeleteTrip = async () => {
+        if (!trip?._id) return;
+
+        try {
+            await deleteTrip(trip._id);
+
+            // Success Toast
+            toast({
+                title: "Trip deleted",
+                description: `"${trip.title}" has been successfully removed.`,
+            });
+
+            navigate("/trip-circle/dashboard");
+        } catch (err) {
+            // Error Toast
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to delete the trip. Please try again.",
+            });
+        }
+    };
+
     const handleDeleteStop = async (stopId: string) => {
         if (!id || !trip) return;
         const days = trip.days.map((d: any) => ({ ...d, stops: d.stops.filter((s: any) => s.id !== stopId) }));
         await updateTrip(id, { days });
         setRefreshKey(prev => prev + 1);
+        toast({
+            title: "Stop deleted",
+            description: "The stop has been removed from your itinerary.",
+        });
     };
 
     const handleReorderStops = async (dayIndex: number, reorderedStops: any[]) => {
@@ -201,7 +231,7 @@ export default function TripDetailPage() {
         updateTrip(id, { days: updatedDays }).catch(console.error);
     };
 
-    if (loadingTrip) return <div className="min-h-screen p-10 text-center text-gray-600">Loading trip...</div>;
+    if (loadingTrip) return <TripLoader />;
     if (error || !trip) return <div className="min-h-screen p-10 text-center text-red-600">{error || "Trip not found"}</div>;
 
     return (
@@ -265,7 +295,12 @@ export default function TripDetailPage() {
                         <p className="text-sm text-gray-600">This action cannot be undone.</p>
                         <div className="flex justify-end gap-3">
                             <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>Cancel</Button>
-                            <Button variant="destructive" onClick={async () => { await deleteTrip(trip._id); navigate("/trip-circle/dashboard"); }}>Delete</Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleDeleteTrip}
+                            >
+                                Delete
+                            </Button>
                         </div>
                     </div>
                 </Modal>
