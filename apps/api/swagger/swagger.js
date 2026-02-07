@@ -1,13 +1,28 @@
+// swagger.js
 import swaggerAutogen from 'swagger-autogen';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const doc = {
     info: {
         title: 'TripCircle API',
         description: 'Automated documentation for TripCircle endpoints',
     },
-    host: process.env.BACKEND_URL ? process.env.BACKEND_URL.replace('https://', '') : 'localhost:5000',
-    basePath: "/",
-    schemes: ['https', 'http'],
+    servers: [
+        {
+            url: process.env.BACKEND_URL || 'http://localhost:5000',
+            description: process.env.NODE_ENV === 'production' ? 'Production Server' : 'Local Development'
+        }
+    ],
+    components: {
+        securitySchemes: {
+            bearerAuth: {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'JWT',
+            }
+        }
+    }
 };
 
 const outputFile = './swagger/swagger-output.json';
