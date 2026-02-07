@@ -16,6 +16,7 @@ import AuthCallbackPage from "./pages/auth/AuthCallback";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { TripsProvider } from "./contexts/TripsContext";
+import { AIProvider } from "./contexts/AIContext";
 import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
 import RootRedirect from "./components/RootDirect";
@@ -28,46 +29,48 @@ function App() {
         <BrowserRouter>
             <AuthProvider>
                 <TripsProvider>
-                    <Routes>
-                        <Route path="/trip-circle">
+                    <AIProvider>
+                        <Routes>
+                            <Route path="/trip-circle">
 
-                            {/* --- PUBLIC ROUTES --- */}
-                            <Route index element={<RootRedirect />} />
+                                {/* --- PUBLIC ROUTES --- */}
+                                <Route index element={<RootRedirect />} />
 
-                            <Route path="auth" element={
-                                <AuthLayout>
-                                    <AuthTabs />
-                                </AuthLayout>
-                            } />
+                                <Route path="auth" element={
+                                    <AuthLayout>
+                                        <AuthTabs />
+                                    </AuthLayout>
+                                } />
 
-                            <Route path="auth/callback" element={<AuthCallbackPage />} />
+                                <Route path="auth/callback" element={<AuthCallbackPage />} />
 
-                            {/* --- PROTECTED APP ROUTES (With Navbar & Footer) --- */}
-                            {/* We wrap these routes in ProtectedRoute AND MainLayout.
+                                {/* --- PROTECTED APP ROUTES (With Navbar & Footer) --- */}
+                                {/* We wrap these routes in ProtectedRoute AND MainLayout.
                             This applies the Navbar/Footer to all of them automatically.
                         */}
-                            <Route element={
-                                <ProtectedRoute>
-                                    <MainLayout />
-                                </ProtectedRoute>
-                            }>
-                                <Route path="dashboard" element={<Dashboard />}>
-                                    <Route index element={<MyTripsSection />} />
+                                <Route element={
+                                    <ProtectedRoute>
+                                        <MainLayout />
+                                    </ProtectedRoute>
+                                }>
+                                    <Route path="dashboard" element={<Dashboard />}>
+                                        <Route index element={<MyTripsSection />} />
 
-                                    <Route path="explore" element={<ExploreSection />} />
+                                        <Route path="explore" element={<ExploreSection />} />
+                                    </Route>
+                                    <Route path="profile" element={<ProfilePage />} />
+                                    <Route path="trip/new" element={<NewTripPage />} />
+                                    <Route path="trip/:id" element={<TripDetailPage />} />
+                                    <Route path="trip/:id/edit" element={<EditTripPage />} />
+                                    <Route path="setup-username" element={<UsernameSetup />} />
                                 </Route>
-                                <Route path="profile" element={<ProfilePage />} />
-                                <Route path="trip/new" element={<NewTripPage />} />
-                                <Route path="trip/:id" element={<TripDetailPage />} />
-                                <Route path="trip/:id/edit" element={<EditTripPage />} />
-                                <Route path="setup-username" element={<UsernameSetup />} />
+
                             </Route>
 
-                        </Route>
-
-                        {/* Fallback */}
-                        <Route path="*" element={<Navigate to="/trip-circle" replace />} />
-                    </Routes>
+                            {/* Fallback */}
+                            <Route path="*" element={<Navigate to="/trip-circle" replace />} />
+                        </Routes>
+                    </AIProvider>
                 </TripsProvider>
             </AuthProvider>
         </BrowserRouter>

@@ -17,6 +17,7 @@ import tripRoutes from './routes/trips.js';
 import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js';
 import geoRoutes from './routes/geo.js';
+import aiRoutes from './routes/ai.js';
 
 dotenv.config();
 
@@ -59,6 +60,7 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/geo', geoRoutes);
+app.use('/api/ai', aiRoutes);
 
 // --- 5. Server Start ---
 app.listen(PORT, () => {
