@@ -64,12 +64,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // --- 3. Public Routes ---
-// const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css";
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
-//     customCssUrl: CSS_URL,
-//     customSiteTitle: "TripCircle API Docs"
-// }));
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css";
+const JS_URLS = [
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui-bundle.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui-standalone-preset.js"
+];
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+    customCssUrl: CSS_URL,
+    customJs: JS_URLS, // This force-loads the correct JS from the CDN
+    customSiteTitle: "TripCircle API Docs"
+}));
 
 app.get('/api', (req, res) => {
     res.json({
