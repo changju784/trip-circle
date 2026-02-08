@@ -13,6 +13,9 @@ const router = express.Router();
  * Register a new user with email and password
  */
 router.post("/register", async (req, res) => {
+    // #swagger.tags = ['Authentication']
+    // #swagger.summary = 'Register a new user'
+    // #swagger.description = 'Creates a new user account with email, password, and name.'
     const { email, password, name } = req.body;
 
     // Validate required fields
@@ -74,6 +77,9 @@ router.post("/register", async (req, res) => {
  * Login with email and password
  */
 router.post("/login", async (req, res) => {
+    // #swagger.tags = ['Authentication']
+    // #swagger.summary = 'Login with credentials'
+    // #swagger.description = 'Authenticates a user and returns a JWT token.'
     const { email, password } = req.body;
 
     // Validate required fields
@@ -132,6 +138,9 @@ router.post("/login", async (req, res) => {
  * Redirect to Google OAuth login
  */
 router.get("/google", (req, res) => {
+    // #swagger.tags = ['Authentication']
+    // #swagger.summary = 'Initiate Google OAuth'
+    // #swagger.description = 'Redirects the user to Google login page.'
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const googleClientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
     const redirectUri = `${process.env.BACKEND_URL || "http://localhost:5000"}/api/auth/google/callback`;
@@ -156,6 +165,9 @@ router.get("/google", (req, res) => {
  * Handle Google OAuth callback
  */
 router.get("/google/callback", async (req, res) => {
+    // #swagger.tags = ['Authentication']
+    // #swagger.summary = 'Google OAuth Callback'
+    // #swagger.description = 'Handles the redirection back from Google and issues a JWT.'
     const { code, error } = req.query;
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 

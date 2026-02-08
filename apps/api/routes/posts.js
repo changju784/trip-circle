@@ -8,6 +8,9 @@ const router = express.Router();
 
 // GET /api/posts - Get all posts (for explore feed)
 router.get('/', async (req, res) => {
+  // #swagger.tags = ['Social']
+  // #swagger.summary = 'Get explore feed'
+  // #swagger.description = 'Fetches a list of public trip posts with optional filters.'
   try {
     const { limit = 20, skip = 0, sort = 'recent', tags } = req.query;
     const tagArray = tags ? String(tags).split(',').filter(Boolean) : [];
@@ -48,6 +51,9 @@ router.get('/', async (req, res) => {
 
 // GET /api/posts/search?q=... - Search posts via associated trip fields and tags
 router.get('/search', async (req, res) => {
+  // #swagger.tags = ['Social']
+  // #swagger.summary = 'Search posts'
+  // #swagger.description = 'Searches for posts via trip titles, tags, and keywords.'
   try {
     const { q, tags, limit = 20, skip = 0 } = req.query;
     const limitNum = parseInt(String(limit));
@@ -91,6 +97,9 @@ router.get('/search', async (req, res) => {
 
 // GET /api/posts/:id - Get single post by ID
 router.get('/:id', async (req, res) => {
+  // #swagger.tags = ['Social']
+  // #swagger.summary = 'Get a single post by ID'
+  // #swagger.description = 'Fetches a specific post by its ID, including associated user and trip data.'
   try {
     const post = await Post.findById(req.params.id)
       .populate('userId', 'username email')
@@ -107,6 +116,9 @@ router.get('/:id', async (req, res) => {
 
 // GET /api/posts/trip/:tripId - Get post by trip ID
 router.get('/trip/:tripId', async (req, res) => {
+  // #swagger.tags = ['Social']
+  // #swagger.summary = 'Get post by trip ID'
+  // #swagger.description = 'Fetches a post associated with a specific trip ID.'
   try {
     const post = await Post.findOne({ tripId: req.params.tripId })
       .populate('userId', 'username email')
@@ -123,6 +135,9 @@ router.get('/trip/:tripId', async (req, res) => {
 
 // POST /api/posts/:id/like - Toggle like on a post
 router.post('/:id/like', async (req, res) => {
+  // #swagger.tags = ['Social']
+  // #swagger.summary = 'Toggle like on a post'
+  // #swagger.description = 'Allows a user to like or unlike a post. The request body should contain the userId.'
   try {
     const postId = req.params.id;
     const { userId } = req.body;
@@ -161,6 +176,9 @@ router.post('/:id/like', async (req, res) => {
 
 // POST /api/posts/:id/comments - Add a comment
 router.post('/:id/comments', async (req, res) => {
+  // #swagger.tags = ['Social']
+  // #swagger.summary = 'Add a comment to a post'
+  // #swagger.description = 'Allows a user to add a comment to a post. The request body should contain the userId and commentText.'
   try {
     const postId = req.params.id;
     const { userId, commentText } = req.body;
@@ -196,6 +214,9 @@ router.post('/:id/comments', async (req, res) => {
 
 // DELETE /api/posts/:id/comments/:commentId - Delete a comment
 router.delete('/:id/comments/:commentId', async (req, res) => {
+  // #swagger.tags = ['Social']
+  // #swagger.summary = 'Delete a comment from a post'
+  // #swagger.description = 'Allows a user to delete their own comment from a post. The request body should contain the userId for authorization.'
   try {
     const { id: postId, commentId } = req.params;
     const { userId } = req.body;

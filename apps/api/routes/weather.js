@@ -12,6 +12,9 @@ router.use(weatherRateLimiter);
  * Query Params: city (string), date (YYYY-MM-DD)
  */
 router.get('/', async (req, res) => {
+    // #swagger.tags = ['External Services']
+    // #swagger.summary = 'Get weather for a trip'
+    // #swagger.description = 'Fetches weather data for a specific city and date.'
     let { city, date } = req.query;
 
     // 1. Validation & Sanitization

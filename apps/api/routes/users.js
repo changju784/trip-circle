@@ -16,6 +16,8 @@ const sanitizeUser = (user) => {
 
 
 router.get('/', async (req, res) => {
+  // #swagger.tags = ['Users']
+  // #swagger.summary = 'List all users'
   try {
     const users = await User.find().select('-password').sort({ dateCreated: -1 });
     res.json(users);
@@ -26,6 +28,9 @@ router.get('/', async (req, res) => {
 
 
 router.get('/:id', async (req, res) => {
+  // #swagger.tags = ['Users']
+  // #swagger.summary = 'Get user by ID'
+  // #swagger.description = 'Fetches a user\'s details by their unique ID. The response excludes the password field.'
 
   const id = String(req.params.id);
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -43,6 +48,8 @@ router.get('/:id', async (req, res) => {
 
 
 router.post('/', async (req, res) => {
+  // #swagger.tags = ['Users']
+  // #swagger.summary = 'Create a new user'
   const { username, email, password } = req.body;
 
   if (!email || !password || !username) {
