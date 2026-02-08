@@ -51,7 +51,17 @@ const connectDB = async () => {
 connectDB();
 
 // --- 2. Global Middleware ---
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            "style-src": ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+            "img-src": ["'self'", "data:", "https://validator.swagger.io"],
+            "connect-src": ["'self'", "*"]
+        },
+    },
+}));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(mongoSanitize());
