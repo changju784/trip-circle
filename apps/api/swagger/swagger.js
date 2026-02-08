@@ -10,7 +10,7 @@ const doc = {
     },
     servers: [
         {
-            url: process.env.BACKEND_URL || 'http://localhost:5000',
+            url: '/',
             description: process.env.NODE_ENV === 'production' ? 'Production Server' : 'Local Development'
         }
     ],
