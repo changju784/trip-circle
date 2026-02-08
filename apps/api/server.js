@@ -19,11 +19,18 @@ import postRoutes from './routes/posts.js';
 import geoRoutes from './routes/geo.js';
 import weatherRoutes from './routes/weather.js';
 
-// Swagger Documentation Setup
 import swaggerUi from 'swagger-ui-express';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const swaggerDocument = require('./swagger/swagger-output.json');
+const SWAGGER_OPTIONS = {
+    customCssUrl: "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css",
+    customJs: [
+        "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui-bundle.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui-standalone-preset.js"
+    ],
+    customSiteTitle: "TripCircle API Documentation"
+};
 
 dotenv.config();
 
@@ -44,7 +51,17 @@ const connectDB = async () => {
 connectDB();
 
 // --- 2. Global Middleware ---
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            "style-src": ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+            "img-src": ["'self'", "data:", "https://validator.swagger.io"],
+            "connect-src": ["'self'", "*"]
+        },
+    },
+}));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(mongoSanitize());
@@ -52,7 +69,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // --- 3. Public Routes ---
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, SWAGGER_OPTIONS));
 
 app.get('/api', (req, res) => {
     res.json({
@@ -62,7 +79,7 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/login', loginRoutes); // Legacy redirect
+app.use('/api/login', loginRoutes);
 
 // --- 4. Protected Routes (Auth Guard) ---
 app.use(authMiddleware);

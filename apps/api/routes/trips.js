@@ -49,10 +49,15 @@ const upload = multer({
 /* ---------- routes ---------- */
 
 router.get('/', async (_, res) => {
+  // #swagger.tags = ['Trips']
+  // #swagger.summary = 'Get all user trips'
   res.json(await getAllTrips());
 });
 
 router.get('/explore', async (req, res) => {
+  // #swagger.tags = ['Trips']
+  // #swagger.summary = 'Explore trips with search and filters'
+  // #swagger.description = 'Fetches a list of public trips with optional search query and filters. Supports pagination and sorting.'
   const { q, limit = 20, skip = 0 } = req.query;
   const trips = await exploreTrips({
     q,
@@ -67,6 +72,9 @@ router.get('/search/autocomplete', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
+  // #swagger.tags = ['Trips']
+  // #swagger.summary = 'Create a new trip'
+  // #swagger.description = 'Creates a new trip with the provided details. Required fields: title, startDate, endDate.'
   if (!req.body.title || !req.body.startDate || !req.body.endDate) {
     return res.status(400).json({ error: 'missing required fields' });
   }
@@ -74,6 +82,9 @@ router.post('/', async (req, res) => {
 });
 
 router.post('/share', async (req, res) => {
+  // #swagger.tags = ['Trips']
+  // #swagger.summary = 'Share a trip with another user'
+  // #swagger.description = 'Shares a trip with another user by email. The request body should contain the tripId and the recipient email.'
   const { tripId, email } = req.body;
 
   if (!tripId || !email) {
@@ -109,6 +120,9 @@ router.post('/share', async (req, res) => {
 });
 
 router.post('/fork', async (req, res) => {
+  // #swagger.tags = ['Trips']
+  // #swagger.summary = 'Fork a trip'
+  // #swagger.description = 'Creates a copy of an existing trip under the user\'s account. The request body should contain the tripId of the trip to fork.'
   const trip = await forkTrip(req.body.tripId, req.user.userId, req.body);
   if (!trip) return res.status(404).json({ error: 'Trip not found' });
   res.status(201).json({ message: 'Trip forked successfully', trip });
@@ -147,6 +161,9 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/:id/documents', upload.single('file'), async (req, res) => {
+  // #swagger.tags = ['Trips']
+  // #swagger.summary = 'Upload trip document'
+  // #swagger.description = 'Uploads an image or PDF (max 10MB) to the trip.'
   try {
     const trip = await uploadDocument({
       tripId: req.params.id,
@@ -176,6 +193,9 @@ router.delete('/:id/documents/:documentId', async (req, res) => {
  * @desc Triggers the AI OCR + LLM parsing pipeline for an existing document
  */
 router.post('/:id/documents/:documentId/parse', async (req, res) => {
+  // #swagger.tags = ['Trips']
+  // #swagger.summary = 'AI Document Parsing'
+  // #swagger.description = 'Triggers the AI OCR pipeline to extract data from a document.'
   try {
     const { documentId } = req.params;
 

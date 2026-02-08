@@ -2,12 +2,35 @@
   "openapi": "3.0.0",
   "info": {
     "title": "TripCircle API",
-    "description": "Automated documentation for TripCircle endpoints",
+    "description": "Comprehensive API documentation for the TripCircle travel platform.",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://localhost:5000/"
+      "url": "/",
+      "description": "Local Development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User registration and login endpoints"
+    },
+    {
+      "name": "Trips",
+      "description": "Core trip management and planning"
+    },
+    {
+      "name": "Social",
+      "description": "User posts, likes, and comments"
+    },
+    {
+      "name": "External Services",
+      "description": "Weather and Geocoding integrations"
+    },
+    {
+      "name": "Users",
+      "description": "User profile management"
     }
   ],
   "paths": {
@@ -23,7 +46,11 @@
     },
     "/api/auth/register": {
       "post": {
-        "description": "",
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register a new user",
+        "description": "Creates a new user account with email, password, and name.",
         "responses": {
           "201": {
             "description": "Created"
@@ -62,7 +89,11 @@
     },
     "/api/auth/login": {
       "post": {
-        "description": "",
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login with credentials",
+        "description": "Authenticates a user and returns a JWT token.",
         "responses": {
           "200": {
             "description": "OK"
@@ -98,7 +129,11 @@
     },
     "/api/auth/google": {
       "get": {
-        "description": "",
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Initiate Google OAuth",
+        "description": "Redirects the user to Google login page.",
         "responses": {
           "500": {
             "description": "Internal Server Error"
@@ -108,7 +143,11 @@
     },
     "/api/auth/google/callback": {
       "get": {
-        "description": "",
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Google OAuth Callback",
+        "description": "Handles the redirection back from Google and issues a JWT.",
         "parameters": [
           {
             "name": "code",
@@ -144,6 +183,10 @@
     },
     "/api/trips/": {
       "get": {
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Get all user trips",
         "description": "",
         "responses": {
           "200": {
@@ -152,7 +195,11 @@
         }
       },
       "post": {
-        "description": "",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Create a new trip",
+        "description": "Creates a new trip with the provided details. Required fields: title, startDate, endDate.",
         "responses": {
           "201": {
             "description": "Created"
@@ -185,7 +232,11 @@
     },
     "/api/trips/explore": {
       "get": {
-        "description": "",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Explore trips with search and filters",
+        "description": "Fetches a list of public trips with optional search query and filters. Supports pagination and sorting.",
         "parameters": [
           {
             "name": "q",
@@ -237,7 +288,11 @@
     },
     "/api/trips/share": {
       "post": {
-        "description": "",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Share a trip with another user",
+        "description": "Shares a trip with another user by email. The request body should contain the tripId and the recipient email.",
         "responses": {
           "200": {
             "description": "OK"
@@ -273,7 +328,11 @@
     },
     "/api/trips/fork": {
       "post": {
-        "description": "",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Fork a trip",
+        "description": "Creates a copy of an existing trip under the user\\'s account. The request body should contain the tripId of the trip to fork.",
         "responses": {
           "201": {
             "description": "Created"
@@ -381,7 +440,11 @@
     },
     "/api/trips/{id}/documents": {
       "post": {
-        "description": "",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Upload trip document",
+        "description": "Uploads an image or PDF (max 10MB) to the trip.",
         "parameters": [
           {
             "name": "id",
@@ -438,7 +501,11 @@
     },
     "/api/trips/{id}/documents/{documentId}/parse": {
       "post": {
-        "description": "",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "AI Document Parsing",
+        "description": "Triggers the AI OCR pipeline to extract data from a document.",
         "parameters": [
           {
             "name": "id",
@@ -469,6 +536,10 @@
     },
     "/api/users/": {
       "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "List all users",
         "description": "",
         "responses": {
           "200": {
@@ -480,6 +551,10 @@
         }
       },
       "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a new user",
         "description": "",
         "responses": {
           "201": {
@@ -519,7 +594,11 @@
     },
     "/api/users/{id}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user by ID",
+        "description": "Fetches a user\\'s details by their unique ID. The response excludes the password field.",
         "parameters": [
           {
             "name": "id",
@@ -657,7 +736,11 @@
     },
     "/api/posts/": {
       "get": {
-        "description": "",
+        "tags": [
+          "Social"
+        ],
+        "summary": "Get explore feed",
+        "description": "Fetches a list of public trip posts with optional filters.",
         "parameters": [
           {
             "name": "limit",
@@ -700,7 +783,11 @@
     },
     "/api/posts/search": {
       "get": {
-        "description": "",
+        "tags": [
+          "Social"
+        ],
+        "summary": "Search posts",
+        "description": "Searches for posts via trip titles, tags, and keywords.",
         "parameters": [
           {
             "name": "q",
@@ -743,7 +830,11 @@
     },
     "/api/posts/{id}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Social"
+        ],
+        "summary": "Get a single post by ID",
+        "description": "Fetches a specific post by its ID, including associated user and trip data.",
         "parameters": [
           {
             "name": "id",
@@ -769,7 +860,11 @@
     },
     "/api/posts/trip/{tripId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Social"
+        ],
+        "summary": "Get post by trip ID",
+        "description": "Fetches a post associated with a specific trip ID.",
         "parameters": [
           {
             "name": "tripId",
@@ -795,7 +890,11 @@
     },
     "/api/posts/{id}/like": {
       "post": {
-        "description": "",
+        "tags": [
+          "Social"
+        ],
+        "summary": "Toggle like on a post",
+        "description": "Allows a user to like or unlike a post. The request body should contain the userId.",
         "parameters": [
           {
             "name": "id",
@@ -838,7 +937,11 @@
     },
     "/api/posts/{id}/comments": {
       "post": {
-        "description": "",
+        "tags": [
+          "Social"
+        ],
+        "summary": "Add a comment to a post",
+        "description": "Allows a user to add a comment to a post. The request body should contain the userId and commentText.",
         "parameters": [
           {
             "name": "id",
@@ -884,7 +987,11 @@
     },
     "/api/posts/{id}/comments/{commentId}": {
       "delete": {
-        "description": "",
+        "tags": [
+          "Social"
+        ],
+        "summary": "Delete a comment from a post",
+        "description": "Allows a user to delete their own comment from a post. The request body should contain the userId for authorization.",
         "parameters": [
           {
             "name": "id",
@@ -938,7 +1045,11 @@
     },
     "/api/geo/search": {
       "get": {
-        "description": "",
+        "tags": [
+          "External Services"
+        ],
+        "summary": "Search for locations or cities",
+        "description": "Fetches location data from GeoDB (cities) or Photon (locations).",
         "parameters": [
           {
             "name": "q",
@@ -977,7 +1088,11 @@
     },
     "/api/geo/reverse": {
       "get": {
-        "description": "",
+        "tags": [
+          "External Services"
+        ],
+        "summary": "Reverse Geocoding",
+        "description": "Converts latitude and longitude into a human-readable address.",
         "parameters": [
           {
             "name": "lat",
@@ -1012,7 +1127,11 @@
     },
     "/api/geo/route": {
       "post": {
-        "description": "",
+        "tags": [
+          "External Services"
+        ],
+        "summary": "Calculate Map Route",
+        "description": "Generates routing data for a sequence of stops.",
         "responses": {
           "200": {
             "description": "OK"
@@ -1045,7 +1164,11 @@
     },
     "/api/weather/": {
       "get": {
-        "description": "",
+        "tags": [
+          "External Services"
+        ],
+        "summary": "Get weather for a trip",
+        "description": "Fetches weather data for a specific city and date.",
         "parameters": [
           {
             "name": "city",
@@ -1076,6 +1199,15 @@
             "description": "Bad Gateway"
           }
         }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   }

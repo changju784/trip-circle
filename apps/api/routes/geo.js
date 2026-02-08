@@ -5,6 +5,9 @@ import { mapRouteService } from '../services/mapRouteService.js';
 const router = express.Router();
 
 router.get('/search', async (req, res) => {
+    // #swagger.tags = ['External Services']
+    // #swagger.summary = 'Search for locations or cities'
+    // #swagger.description = 'Fetches location data from GeoDB (cities) or Photon (locations).'
     const { q, type, destinations } = req.query;
 
     if (!q) return res.status(400).json({ error: 'Query required' });
@@ -35,6 +38,9 @@ router.get('/search', async (req, res) => {
 });
 
 router.get('/reverse', async (req, res) => {
+    // #swagger.tags = ['External Services']
+    // #swagger.summary = 'Reverse Geocoding'
+    // #swagger.description = 'Converts latitude and longitude into a human-readable address.'
     const { lat, lng } = req.query;
 
     if (!lat || !lng) {
@@ -53,8 +59,10 @@ router.get('/reverse', async (req, res) => {
     }
 });
 
-// map route endpoint
 router.post('/route', async (req, res) => {
+    // #swagger.tags = ['External Services']
+    // #swagger.summary = 'Calculate Map Route'
+    // #swagger.description = 'Generates routing data for a sequence of stops.
     try {
         const { stops, mode } = req.body;
 
