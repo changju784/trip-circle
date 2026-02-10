@@ -170,19 +170,8 @@
         /* DYNAMIC BACKGROUND COLOR */
         background-color: var(--background);
 
-        /* DEFAULT (LIGHT) WALLPAPER */
-        background-image: url("/assets/airplane-trails.svg");
-        background-repeat: repeat;
-        background-size: 120px 120px;
-        background-attachment: fixed;
-
         /* Smooth transition when toggling */
         transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    /* DARK MODE WALLPAPER OVERRIDE */
-    :root.dark body {
-        background-image: url("/assets/airplane-trails-dark.svg");
     }
 
     :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
