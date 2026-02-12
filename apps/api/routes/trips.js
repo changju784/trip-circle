@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import multer from 'multer';
 import dotenv from 'dotenv';
+import authMiddleware from '../middleware/auth.js';
 
 import {
   getAllTrips,
@@ -71,7 +72,7 @@ router.get('/search/autocomplete', async (req, res) => {
   res.json(await autocompleteTrips(String(req.query.q || '').trim()));
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   // #swagger.tags = ['Trips']
   // #swagger.summary = 'Create a new trip'
   // #swagger.description = 'Creates a new trip with the provided details. Required fields: title, startDate, endDate.'
@@ -81,7 +82,7 @@ router.post('/', async (req, res) => {
   res.status(201).json(await createTrip(req.body));
 });
 
-router.post('/share', async (req, res) => {
+router.post('/share', authMiddleware, async (req, res) => {
   // #swagger.tags = ['Trips']
   // #swagger.summary = 'Share a trip with another user'
   // #swagger.description = 'Shares a trip with another user by email. The request body should contain the tripId and the recipient email.'
@@ -119,7 +120,7 @@ router.post('/share', async (req, res) => {
   }
 });
 
-router.post('/fork', async (req, res) => {
+router.post('/fork', authMiddleware, async (req, res) => {
   // #swagger.tags = ['Trips']
   // #swagger.summary = 'Fork a trip'
   // #swagger.description = 'Creates a copy of an existing trip under the user\'s account. The request body should contain the tripId of the trip to fork.'
@@ -128,11 +129,11 @@ router.post('/fork', async (req, res) => {
   res.status(201).json({ message: 'Trip forked successfully', trip });
 });
 
-router.post('/backfill-posts', async (_, res) => {
+router.post('/backfill-posts', authMiddleware, async (_, res) => {
   res.json(await backfillPosts());
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   const id = String(req.params.id);
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: 'Invalid trip id' });
@@ -143,7 +144,7 @@ router.put('/:id', async (req, res) => {
   res.json(trip);
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   const id = String(req.params.id);
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: 'Invalid trip id' });
@@ -154,13 +155,13 @@ router.delete('/:id', async (req, res) => {
   res.json({ message: 'Trip deleted', id: trip._id });
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', authMiddleware, async (req, res) => {
   const trip = await getTripById(req.params.id);
   if (!trip) return res.status(404).json({ error: 'Trip not found' });
   res.json(trip);
 });
 
-router.post('/:id/documents', upload.single('file'), async (req, res) => {
+router.post('/:id/documents', authMiddleware, upload.single('file'), async (req, res) => {
   // #swagger.tags = ['Trips']
   // #swagger.summary = 'Upload trip document'
   // #swagger.description = 'Uploads an image or PDF (max 10MB) to the trip.'
@@ -178,7 +179,7 @@ router.post('/:id/documents', upload.single('file'), async (req, res) => {
   }
 });
 
-router.delete('/:id/documents/:documentId', async (req, res) => {
+router.delete('/:id/documents/:documentId', authMiddleware, async (req, res) => {
   const trip = await deleteDocument({
     tripId: req.params.id,
     documentId: req.params.documentId
@@ -192,7 +193,7 @@ router.delete('/:id/documents/:documentId', async (req, res) => {
  * @route POST /api/trips/:id/documents/:documentId/parse
  * @desc Triggers the AI OCR + LLM parsing pipeline for an existing document
  */
-router.post('/:id/documents/:documentId/parse', async (req, res) => {
+router.post('/:id/documents/:documentId/parse', authMiddleware, async (req, res) => {
   // #swagger.tags = ['Trips']
   // #swagger.summary = 'AI Document Parsing'
   // #swagger.description = 'Triggers the AI OCR pipeline to extract data from a document.'
