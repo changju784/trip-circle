@@ -133,6 +133,12 @@ router.post('/backfill-posts', authMiddleware, async (_, res) => {
   res.json(await backfillPosts());
 });
 
+router.get('/:id', async (req, res) => {
+  const trip = await getTripById(req.params.id);
+  if (!trip) return res.status(404).json({ error: 'Trip not found' });
+  res.json(trip);
+});
+
 router.put('/:id', authMiddleware, async (req, res) => {
   const id = String(req.params.id);
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -153,12 +159,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   const trip = await deleteTrip(id);
   if (!trip) return res.status(404).json({ error: 'Trip not found' });
   res.json({ message: 'Trip deleted', id: trip._id });
-});
-
-router.get('/:id', authMiddleware, async (req, res) => {
-  const trip = await getTripById(req.params.id);
-  if (!trip) return res.status(404).json({ error: 'Trip not found' });
-  res.json(trip);
 });
 
 router.post('/:id/documents', authMiddleware, upload.single('file'), async (req, res) => {

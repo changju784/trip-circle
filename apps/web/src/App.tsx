@@ -18,7 +18,6 @@ import { AuthProvider } from "./components/auth/AuthProvider";
 import { TripsProvider } from "./contexts/TripsContext";
 import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
-import RootRedirect from "./components/RootDirect";
 import MainLayout from "./MainLayout";
 import MyTripsSection from "./pages/dashboard/MyTripsSection";
 import ExploreSection from "./pages/dashboard/ExploreSection";
