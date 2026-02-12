@@ -37,17 +37,16 @@ export default function DashboardTabs({ onNewTrip }: DashboardTabsProps) {
                 {/* 1. Tabs Toggle */}
                 <Tabs
                     value={activeTab}
-                    onValueChange={(val) => navigate(val === "explore" ? "explore" : "")}
+                    onValueChange={(val) => navigate(val === "explore" ? "explore" : "my-trips")}
                     className="w-auto"
                 >
                     <TabsList className="bg-muted/30 p-1 h-12 rounded-full border border-border/50 backdrop-blur-sm">
-                        {/* Only show "My Trips" if logged in, or keep it and redirect to /auth? */}
-                        {user && (
-                            <TabsTrigger value="mytrips" className="rounded-full px-6 h-full flex gap-2 items-center font-bold">
-                                <Plane size={18} className={activeTab === "mytrips" ? "text-blue-500" : "text-muted-foreground"} />
-                                <span>My Trips</span>
-                            </TabsTrigger>
-                        )}
+
+                        <TabsTrigger value="mytrips" className="rounded-full px-6 h-full flex gap-2 items-center font-bold">
+                            <Plane size={18} className={activeTab === "mytrips" ? "text-blue-500" : "text-muted-foreground"} />
+                            <span>My Trips</span>
+                        </TabsTrigger>
+
                         <TabsTrigger value="explore" className="rounded-full px-6 h-full flex gap-2 items-center font-bold">
                             <Compass size={18} className={activeTab === "explore" ? "text-blue-500" : "text-muted-foreground"} />
                             <span>Explore</span>

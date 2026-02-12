@@ -10,7 +10,7 @@ import { AuthContext } from "@/components/auth/AuthProvider";
 import { getPostByTrip, toggleLike, Post } from "@/lib/posts/posts-api";
 import { PostActivitySummary } from "@/components/post/PostActivitySummary";
 import { useGetHeroTrip } from "../trip/hooks/use-get-hero-trip";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 
 export default function MyTripsSection() {
     const navigate = useNavigate();
@@ -96,27 +96,50 @@ export default function MyTripsSection() {
     };
 
     return (
-        <section className="space-y-12">
-            {/* HERO SECTION */}
-            {!isExpanded && (
-                <div className="space-y-4">
-                    <div className="px-2">
-                        <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Up Next</h2>
-                        <p className="text-black/60 dark:text-white/40 text-sm">
-                            {trips.length > 0 ? "Your most imminent travel plan" : "Your world is waiting"}
-                        </p>
+        <section className="relative space-y-12">
+
+            {/* 1. AUTH GUARD OVERLAY */}
+            {!user && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-6 bg-white/5 dark:bg-black/5 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl animate-in fade-in duration-700">
+                    <div className="bg-white dark:bg-zinc-900 p-4 rounded-full shadow-xl mb-6 border border-zinc-200 dark:border-zinc-800">
+                        <Lock className="w-8 h-8 text-blue-500" />
                     </div>
-                    <HeroTripCard
-                        trip={heroTrip ? {
-                            ...heroTrip,
-                            thumbnail: heroTrip.thumbnail || thumbnails[heroTrip._id] || null
-                        } : undefined}
-                    />
+                    <h3 className="text-3xl font-black tracking-tight mb-2 text-black dark:text-white">Your Dashboard Awaits</h3>
+                    <p className="text-zinc-600 dark:text-zinc-400 max-w-sm mb-8 font-medium">
+                        Sign in to sync your trips, manage itineraries, and share your adventures with the world.
+                    </p>
+                    <Button
+                        size="lg"
+                        onClick={() => navigate('/trip-circle/auth')}
+                        className="rounded-full px-10 h-14 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95"
+                    >
+                        Sign In to Manage Dashboard
+                    </Button>
                 </div>
             )}
 
-            {/* LIBRARY SECTION */}
-            {trips.length > 0 && (
+            {/* 2. MAIN CONTENT */}
+            <div className={`space-y-12 transition-all duration-700 ${!user ? "blur-md pointer-events-none select-none grayscale-[30%]" : ""}`}>
+
+                {/* HERO SECTION */}
+                {!isExpanded && (
+                    <div className="space-y-4">
+                        <div className="px-2">
+                            <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Up Next</h2>
+                            <p className="text-black/60 dark:text-white/40 text-sm">
+                                {trips.length > 0 ? "Your most imminent travel plan" : "Your world is waiting"}
+                            </p>
+                        </div>
+                        <HeroTripCard
+                            trip={heroTrip ? {
+                                ...heroTrip,
+                                thumbnail: heroTrip.thumbnail || thumbnails[heroTrip._id] || null
+                            } : undefined}
+                        />
+                    </div>
+                )}
+
+                {/* LIBRARY SECTION */}
                 <div className="space-y-6">
                     <div className="flex justify-between items-end px-2">
                         <div>
@@ -141,10 +164,16 @@ export default function MyTripsSection() {
                             ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3"
                             : "flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x px-2"
                     }>
-                        {(isExpanded ? sortedAllTrips : sortedGridTrips).map(renderTripCard)}
+                        {trips.length === 0 && !user ? (
+                            [1, 2, 3].map((i) => (
+                                <div key={i} className="min-w-[350px] h-[400px] bg-zinc-200 dark:bg-zinc-800/50 rounded-3xl border border-border/50" />
+                            ))
+                        ) : (
+                            (isExpanded ? sortedAllTrips : sortedGridTrips).map(renderTripCard)
+                        )}
                     </div>
                 </div>
-            )}
+            </div>
         </section>
     );
 }
