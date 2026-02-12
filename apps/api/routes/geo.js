@@ -1,10 +1,11 @@
 import express from 'express';
 import { searchLocations, searchCities } from '../services/geoService.js';
 import { mapRouteService } from '../services/mapRouteService.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/search', async (req, res) => {
+router.get('/search', authMiddleware, async (req, res) => {
     // #swagger.tags = ['External Services']
     // #swagger.summary = 'Search for locations or cities'
     // #swagger.description = 'Fetches location data from GeoDB (cities) or Photon (locations).'
@@ -37,7 +38,7 @@ router.get('/search', async (req, res) => {
     }
 });
 
-router.get('/reverse', async (req, res) => {
+router.get('/reverse', authMiddleware, async (req, res) => {
     // #swagger.tags = ['External Services']
     // #swagger.summary = 'Reverse Geocoding'
     // #swagger.description = 'Converts latitude and longitude into a human-readable address.'
