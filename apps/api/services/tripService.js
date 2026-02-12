@@ -12,7 +12,15 @@ import {
 /* ---------- reads ---------- */
 
 export async function getAllTrips() {
-    return Trip.find().sort({ dateCreated: -1 });
+    const query = !user
+        ? { isPublic: true } // Unauthenticated users see only public trips
+        : {
+            $or: [
+                { isPublic: true }, // Authenticated users see public trips...
+                { members: user.userId } // ...and their own trips
+            ]
+        };
+    return Trip.find(query).sort({ dateCreated: -1 });
 }
 
 export async function getTripById(id) {

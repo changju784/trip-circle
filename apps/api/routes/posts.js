@@ -4,6 +4,7 @@ import Post from '../schema/PostSchema.js';
 import Trip from '../schema/TripSchema.js';
 import { updateUserGamification } from '../services/gamificationService.js';
 import { exploreTrips } from '../services/tripSearchService.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -135,7 +136,7 @@ router.get('/trip/:tripId', async (req, res) => {
 });
 
 // POST /api/posts/:id/like - Toggle like on a post
-router.post('/:id/like', async (req, res) => {
+router.post('/:id/like', authMiddleware, async (req, res) => {
   // #swagger.tags = ['Social']
   // #swagger.summary = 'Toggle like on a post'
   // #swagger.description = 'Allows a user to like or unlike a post. The request body should contain the userId.'
@@ -179,7 +180,7 @@ router.post('/:id/like', async (req, res) => {
 });
 
 // POST /api/posts/:id/comments - Add a comment
-router.post('/:id/comments', async (req, res) => {
+router.post('/:id/comments', authMiddleware, async (req, res) => {
   // #swagger.tags = ['Social']
   // #swagger.summary = 'Add a comment to a post'
   // #swagger.description = 'Allows a user to add a comment to a post. The request body should contain the userId and commentText.'
@@ -217,7 +218,7 @@ router.post('/:id/comments', async (req, res) => {
 });
 
 // DELETE /api/posts/:id/comments/:commentId - Delete a comment
-router.delete('/:id/comments/:commentId', async (req, res) => {
+router.delete('/:id/comments/:commentId', authMiddleware, async (req, res) => {
   // #swagger.tags = ['Social']
   // #swagger.summary = 'Delete a comment from a post'
   // #swagger.description = 'Allows a user to delete their own comment from a post. The request body should contain the userId for authorization.'

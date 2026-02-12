@@ -18,7 +18,6 @@ import { AuthProvider } from "./components/auth/AuthProvider";
 import { TripsProvider } from "./contexts/TripsContext";
 import AuthLayout from "./components/auth/AuthLayout";
 import AuthTabs from "./components/auth/AuthTabs";
-import RootRedirect from "./components/RootDirect";
 import MainLayout from "./MainLayout";
 import MyTripsSection from "./pages/dashboard/MyTripsSection";
 import ExploreSection from "./pages/dashboard/ExploreSection";
@@ -31,35 +30,25 @@ function App() {
                 <TripsProvider>
                     <Routes>
                         <Route path="/trip-circle">
+                            {/* PUBLIC ROUTES */}
+                            <Route element={<MainLayout />}>
+                                <Route path="auth" element={<AuthLayout><AuthTabs /></AuthLayout>} />
+                                <Route path="auth/callback" element={<AuthCallbackPage />} />
+                                <Route index element={<Navigate to="dashboard/explore" replace />} />
 
-                            {/* --- PUBLIC ROUTES --- */}
-                            <Route index element={<RootRedirect />} />
-
-                            <Route path="auth" element={
-                                <AuthLayout>
-                                    <AuthTabs />
-                                </AuthLayout>
-                            } />
-
-                            <Route path="auth/callback" element={<AuthCallbackPage />} />
-
-                            {/* --- PROTECTED APP ROUTES (With Navbar & Footer) --- */}
-                            {/* We wrap these routes in ProtectedRoute AND MainLayout.
-                            This applies the Navbar/Footer to all of them automatically.
-                        */}
-                            <Route element={
-                                <ProtectedRoute>
-                                    <MainLayout />
-                                </ProtectedRoute>
-                            }>
                                 <Route path="dashboard" element={<Dashboard />}>
-                                    <Route index element={<MyTripsSection />} />
-
                                     <Route path="explore" element={<ExploreSection />} />
+                                    <Route path="my-trips" element={<MyTripsSection />} />
+                                    <Route index element={<Navigate to="explore" replace />} />
                                 </Route>
+
+                                <Route path="trip/:id" element={<TripDetailPage />} />
+                            </Route>
+
+                            {/* PROTECTED ROUTES */}
+                            <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                                 <Route path="profile" element={<ProfilePage />} />
                                 <Route path="trip/new" element={<NewTripPage />} />
-                                <Route path="trip/:id" element={<TripDetailPage />} />
                                 <Route path="trip/:id/edit" element={<EditTripPage />} />
                                 <Route path="setup-username" element={<UsernameSetup />} />
                             </Route>

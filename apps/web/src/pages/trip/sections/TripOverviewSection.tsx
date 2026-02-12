@@ -147,6 +147,7 @@ export function TripOverviewSection({ trip, isOwner, user, post, onShare, onDele
 
                         {trip.isPublic && (
                             <PostActivitySummary
+                                user={user}
                                 likeCount={post?.likeCount} forkCount={post?.forkCount} commentCount={post?.commentCount}
                                 isLiked={post?.likes.includes(user?.id || "")} onLike={onLikeToggle}
                             />

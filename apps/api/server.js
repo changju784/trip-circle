@@ -81,9 +81,7 @@ app.get('/api', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/login', loginRoutes);
 
-// --- 4. Protected Routes (Auth Guard) ---
-app.use(authMiddleware);
-
+// --- 4. Feature Routes (containing internal protection) ---
 app.use('/api/trips', tripRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
