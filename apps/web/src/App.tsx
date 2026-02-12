@@ -32,34 +32,30 @@ function App() {
                     <Routes>
                         <Route path="/trip-circle">
 
-                            {/* --- PUBLIC ROUTES --- */}
-                            <Route index element={<RootRedirect />} />
-
-                            <Route path="auth" element={
-                                <AuthLayout>
-                                    <AuthTabs />
-                                </AuthLayout>
-                            } />
-
+                            {/* 1. AUTH ROUTES (No Navbar) */}
+                            <Route path="auth" element={<AuthLayout><AuthTabs /></AuthLayout>} />
                             <Route path="auth/callback" element={<AuthCallbackPage />} />
 
-                            {/* --- PROTECTED APP ROUTES (With Navbar & Footer) --- */}
-                            {/* We wrap these routes in ProtectedRoute AND MainLayout.
-                            This applies the Navbar/Footer to all of them automatically.
-                        */}
-                            <Route element={
-                                <ProtectedRoute>
-                                    <MainLayout />
-                                </ProtectedRoute>
-                            }>
-                                <Route path="dashboard" element={<Dashboard />}>
-                                    <Route index element={<MyTripsSection />} />
+                            {/* 2. SEMI-PUBLIC ROUTES (Navbar visible, Guest allowed) */}
+                            <Route element={<MainLayout />}>
+                                {/* Default landing is now Explore */}
+                                <Route index element={<Navigate to="dashboard/explore" replace />} />
 
+                                <Route path="dashboard" element={<Dashboard />}>
                                     <Route path="explore" element={<ExploreSection />} />
+                                    {/* Redirect /dashboard to /explore if guest, or MyTrips if auth (handled in component) */}
+                                    <Route index element={<Navigate to="explore" replace />} />
                                 </Route>
+
+                                {/* Guests can see details, but cannot edit */}
+                                <Route path="trip/:id" element={<TripDetailPage />} />
+                            </Route>
+
+                            {/* 3. STRICTLY PROTECTED ROUTES */}
+                            <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                                <Route path="dashboard/my-trips" element={<MyTripsSection />} />
                                 <Route path="profile" element={<ProfilePage />} />
                                 <Route path="trip/new" element={<NewTripPage />} />
-                                <Route path="trip/:id" element={<TripDetailPage />} />
                                 <Route path="trip/:id/edit" element={<EditTripPage />} />
                                 <Route path="setup-username" element={<UsernameSetup />} />
                             </Route>
