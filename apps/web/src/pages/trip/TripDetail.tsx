@@ -280,6 +280,7 @@ export default function TripDetailPage() {
                         setSuggestionDoc(null);
                     }}
                     onSubmit={handleAddStop}
+                    isOwner={isOwner}
                     initialStop={initialStop}
                     initialDate={trip?.days?.[selectedDay]?.date ? new Date(trip.days[selectedDay].date).toISOString().split('T')[0] : ""}
                     startDate={new Date(trip.startDate)}

@@ -24,6 +24,7 @@ type StopDetailModalProps = {
         price?: number | null;
         description?: string;
     }, stopId?: string | null) => void;
+    isOwner: boolean;
     cityContexts?: Destination[];
     initialStop?: Stop | null;
     initialDate?: string;
@@ -51,7 +52,8 @@ export default function StopDetailModal({
     initialDate = "",
     startDate,
     endDate,
-    readOnly = false
+    readOnly = false,
+    isOwner = false
 }: StopDetailModalProps) {
     const { register, handleSubmit, reset, formState, setValue, watch, control } = useForm<FormData>({
         defaultValues: {
@@ -205,38 +207,40 @@ export default function StopDetailModal({
                 </div>
 
                 {/* Date & Time Row */}
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1">
-                        <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Date *</label>
-                        <div className="mt-1">
-                            <Controller
-                                control={control}
-                                name="date"
-                                rules={{ required: "Required" }}
-                                render={({ field }) => (
-                                    <DatePicker
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                        minDate={startDate}
-                                        maxDate={endDate}
-                                        disabled={readOnly}
-                                    />
-                                )}
+                {isOwner && (
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-1">
+                            <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Date *</label>
+                            <div className="mt-1">
+                                <Controller
+                                    control={control}
+                                    name="date"
+                                    rules={{ required: "Required" }}
+                                    render={({ field }) => (
+                                        <DatePicker
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            minDate={startDate}
+                                            maxDate={endDate}
+                                            disabled={readOnly}
+                                        />
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex-1">
+                            <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Time *</label>
+                            <input
+                                {...register("time", { required: "This field is required" })}
+                                type="time"
+                                className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+                                disabled={readOnly}
                             />
+                            {errors.time && <div className="text-red-600 text-xs mt-1">{errors.time.message}</div>}
                         </div>
                     </div>
-
-                    <div className="flex-1">
-                        <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Time *</label>
-                        <input
-                            {...register("time", { required: "This field is required" })}
-                            type="time"
-                            className={`w-full mt-1 px-3 py-2 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.time ? "border-red-600 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
-                            disabled={readOnly}
-                        />
-                        {errors.time && <div className="text-red-600 text-xs mt-1">{errors.time.message}</div>}
-                    </div>
-                </div>
+                )}
 
                 <div className="relative">
                     <label className="text-sm font-medium text-gray-800 dark:text-gray-200">Location *</label>
