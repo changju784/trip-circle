@@ -57,7 +57,7 @@ export default function Navbar({ showLinks = true }: { showLinks?: boolean }) {
             {/* Mobile Dropdown */}
             {mobileOpen && showLinks && (
                 <div className="sm:hidden border-t border-slate-200 bg-background p-4 animate-in fade-in slide-in-from-top-2">
-                    <NavbarActions mobile onItemClick={() => setMobileOpen(false)} />
+                    <NavbarActions mobile user={user} onItemClick={() => setMobileOpen(false)} />
                 </div>
             )}
         </nav>
