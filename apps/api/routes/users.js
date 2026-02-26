@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../schema/UserSchema.js';
 import Trip from '../schema/TripSchema.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
@@ -197,6 +198,110 @@ router.get('/search/:query', async (req, res) => {
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+// POST /api/users/:id/follow — Follow a user
+router.post('/:id/follow', authMiddleware, async (req, res) => {
+  // #swagger.tags = ['Users']
+  // #swagger.summary = 'Follow a user'
+  const targetId = String(req.params.id);
+  const currentUserId = String(req.user.userId);
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  if (targetId === currentUserId) {
+    return res.status(400).json({ error: 'You cannot follow yourself' });
+  }
+
+  try {
+    const target = await User.findById(targetId);
+    if (!target) return res.status(404).json({ error: 'User not found' });
+
+    if (target.followers.map(String).includes(currentUserId)) {
+      return res.status(409).json({ error: 'Already following this user' });
+    }
+
+    await User.findByIdAndUpdate(targetId, { $addToSet: { followers: currentUserId } });
+    await User.findByIdAndUpdate(currentUserId, { $addToSet: { following: targetId } });
+
+    res.json({ message: 'Followed successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+// DELETE /api/users/:id/follow — Unfollow a user
+router.delete('/:id/follow', authMiddleware, async (req, res) => {
+  // #swagger.tags = ['Users']
+  // #swagger.summary = 'Unfollow a user'
+  const targetId = String(req.params.id);
+  const currentUserId = String(req.user.userId);
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  if (targetId === currentUserId) {
+    return res.status(400).json({ error: 'You cannot unfollow yourself' });
+  }
+
+  try {
+    const target = await User.findById(targetId);
+    if (!target) return res.status(404).json({ error: 'User not found' });
+
+    if (!target.followers.map(String).includes(currentUserId)) {
+      return res.status(409).json({ error: 'You are not following this user' });
+    }
+
+    await User.findByIdAndUpdate(targetId, { $pull: { followers: currentUserId } });
+    await User.findByIdAndUpdate(currentUserId, { $pull: { following: targetId } });
+
+    res.json({ message: 'Unfollowed successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+// GET /api/users/:id/followers — Get a user's followers
+router.get('/:id/followers', async (req, res) => {
+  // #swagger.tags = ['Users']
+  // #swagger.summary = 'Get followers of a user'
+  const id = String(req.params.id);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  try {
+    const user = await User.findById(id).populate('followers', 'username name email');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user.followers);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+// GET /api/users/:id/following — Get users that a user follows
+router.get('/:id/following', async (req, res) => {
+  // #swagger.tags = ['Users']
+  // #swagger.summary = 'Get users followed by a user'
+  const id = String(req.params.id);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+
+  try {
+    const user = await User.findById(id).populate('following', 'username name email');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user.following);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
