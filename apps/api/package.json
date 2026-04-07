@@ -27,6 +27,7 @@
         "mongoose": "^8.20.1",
         "morgan": "^1.10.1",
         "multer": "^2.0.2",
+        "openai": "^6.33.0",
         "resend": "^6.5.2",
         "swagger-autogen": "^2.23.7",
         "swagger-ui-express": "^5.0.1",
