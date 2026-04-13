@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const MODEL_NAME = "gemini-2.0-flash";
+const MODEL_NAME = "gemini-2.5-flash";
 
 const SYSTEM_INSTRUCTION = `You are TripCircle AI, a friendly travel planning assistant embedded in the TripCircle platform.
 
