@@ -1,0 +1,96 @@
+import ChatSession from '../schema/ChatSchema.js';
+import { sendChatMessage } from '../utils/aiChat.js';
+
+/**
+ * Creates a new empty chat session for a user.
+ */
+export async function createSession(userId) {
+    const session = await ChatSession.create({
+        userId,
+        title: 'New Chat',
+        messages: [],
+        context: { referencedTripIds: [], createdTripIds: [] }
+    });
+    return session;
+}
+
+/**
+ * Returns all chat sessions for a user (summary only, no messages).
+ */
+export async function getSessions(userId) {
+    return ChatSession.find({ userId })
+        .sort({ updatedAt: -1 })
+        .select('title context createdAt updatedAt')
+        .lean();
+}
+
+/**
+ * Returns a single chat session including full message history.
+ */
+export async function getSession(sessionId, userId) {
+    return ChatSession.findOne({ _id: sessionId, userId }).lean();
+}
+
+/**
+ * Sends a user message in a session, runs the Gemini agentic loop,
+ * persists the full history delta, and returns the assistant's response.
+ *
+ * @returns {{ sessionId, responseText, toolsUsed, createdTripIds }}
+ */
+export async function sendMessage(sessionId, userId, userMessage) {
+    const session = await ChatSession.findOne({ _id: sessionId, userId });
+    if (!session) return null;
+
+    // Build Gemini-compatible history from stored messages.
+    // Strip the per-message timestamp (not a Gemini field) before passing in.
+    const history = session.messages.map(({ role, parts }) => ({ role, parts }));
+
+    const { responseText, toolsUsed, createdTripIds, suggestedTrips, historyDelta } =
+        await sendChatMessage(history, userMessage, userId.toString());
+
+    // Auto-title the session from the first user message (truncated to 60 chars)
+    if (session.messages.length === 0 && session.title === 'New Chat') {
+        session.title = userMessage.slice(0, 60).trim();
+    }
+
+    // Persist all new turns with timestamps
+    const now = new Date();
+    for (const entry of historyDelta) {
+        session.messages.push({ ...entry, timestamp: now });
+    }
+
+    // Track trip IDs touched during this turn
+    if (createdTripIds.length > 0) {
+        session.context.createdTripIds.push(...createdTripIds);
+    }
+
+    // Collect trip IDs returned by search/detail tools
+    const referencedIds = toolsUsed
+        .flatMap(t => {
+            if (t.name === 'get_trip_details') return [t.args.tripId];
+            return [];
+        })
+        .filter(Boolean);
+
+    if (referencedIds.length > 0) {
+        session.context.referencedTripIds.push(...referencedIds);
+    }
+
+    await session.save();
+
+    return {
+        sessionId: session._id,
+        responseText,
+        toolsUsed,
+        createdTripIds,
+        suggestedTrips
+    };
+}
+
+/**
+ * Deletes a chat session owned by the user.
+ */
+export async function deleteSession(sessionId, userId) {
+    const result = await ChatSession.findOneAndDelete({ _id: sessionId, userId });
+    return result !== null;
+}
