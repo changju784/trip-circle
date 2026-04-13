@@ -132,6 +132,20 @@ router.post('/sessions/:id/messages', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('[Chat] sendMessage error:', error);
+
+        if (error.status === 429) {
+            const retryInfo = error.errorDetails?.find(d =>
+                d['@type']?.includes('RetryInfo')
+            );
+            const retryAfterSeconds = retryInfo?.retryDelay
+                ? parseInt(retryInfo.retryDelay, 10)
+                : 60;
+            return res.status(429).json({
+                message: 'The AI is rate limited. Please try again shortly.',
+                retryAfterSeconds
+            });
+        }
+
         res.status(500).json({ message: 'Failed to process message' });
     }
 });

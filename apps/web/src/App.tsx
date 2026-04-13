@@ -21,6 +21,7 @@ import AuthTabs from "./components/auth/AuthTabs";
 import MainLayout from "./MainLayout";
 import MyTripsSection from "./pages/dashboard/MyTripsSection";
 import ExploreSection from "./pages/dashboard/ExploreSection";
+import ChatSection from "./pages/dashboard/ChatSection";
 import { Toaster } from "./components/ui/toaster";
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
                                 <Route path="dashboard" element={<Dashboard />}>
                                     <Route path="explore" element={<ExploreSection />} />
                                     <Route path="my-trips" element={<MyTripsSection />} />
+                                    <Route path="chat" element={<ProtectedRoute><ChatSection /></ProtectedRoute>} />
                                     <Route index element={<Navigate to="explore" replace />} />
                                 </Route>
 
