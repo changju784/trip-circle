@@ -1,13 +1,15 @@
 import mongoose from 'mongoose';
 
-// Stores a single Gemini-compatible history entry (user text, model text,
-// function call, or function response). The 'parts' array matches the
-// Content.parts format expected by the Gemini SDK so the full history can
-// be reconstructed exactly for each new turn.
+// Stores a single OpenAI-compatible history entry.
+// - user messages:      { role: 'user', content: string }
+// - assistant messages: { role: 'assistant', content: string|null, tool_calls?: [...] }
+// - tool results:       { role: 'tool', tool_call_id: string, content: string }
 const ChatMessageSchema = new mongoose.Schema(
     {
-        role: { type: String, enum: ['user', 'model'], required: true },
-        parts: { type: [mongoose.Schema.Types.Mixed], required: true },
+        role: { type: String, enum: ['user', 'assistant', 'tool'], required: true },
+        content: { type: mongoose.Schema.Types.Mixed, default: null },
+        tool_calls: { type: [mongoose.Schema.Types.Mixed] },
+        tool_call_id: { type: String },
         timestamp: { type: Date, default: Date.now }
     },
     { _id: false }

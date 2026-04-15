@@ -41,9 +41,14 @@ export async function sendMessage(sessionId, userId, userMessage) {
     const session = await ChatSession.findOne({ _id: sessionId, userId });
     if (!session) return null;
 
-    // Build Gemini-compatible history from stored messages.
-    // Strip the per-message timestamp (not a Gemini field) before passing in.
-    const history = session.messages.map(({ role, parts }) => ({ role, parts }));
+    // Build OpenAI-compatible history from stored messages.
+    // Strip the per-message timestamp (not an OpenAI field) before passing in.
+    const history = session.messages.map(({ role, content, tool_calls, tool_call_id }) => {
+        const msg = { role, content: content ?? null };
+        if (tool_calls?.length) msg.tool_calls = tool_calls;
+        if (tool_call_id) msg.tool_call_id = tool_call_id;
+        return msg;
+    });
 
     const { responseText, toolsUsed, createdTripIds, suggestedTrips, historyDelta } =
         await sendChatMessage(history, userMessage, userId.toString());
