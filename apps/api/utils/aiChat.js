@@ -213,8 +213,16 @@ async function executeTool(toolName, args, userId) {
             });
             return {
                 success: true,
+                id: trip._id,
                 tripId: trip._id,
-                title: trip.title
+                title: trip.title,
+                description: trip.description ?? null,
+                destinations: trip.destinations ?? [],
+                startDate: trip.startDate ?? null,
+                endDate: trip.endDate ?? null,
+                tags: trip.tags ?? [],
+                thumbnail: trip.thumbnail ?? null,
+                isPublic: trip.isPublic ?? false
             };
         }
 
@@ -316,6 +324,8 @@ export async function sendChatMessage(history, userMessage, userId) {
             // Collect trip cards from tool results
             if (toolCall.function.name === 'create_trip' && toolResult.success) {
                 createdTripIds.push(toolResult.tripId.toString());
+                const card = toTripCard(toolResult);
+                if (card.id) suggestedTripsMap.set(card.id, card);
             }
 
             if (
