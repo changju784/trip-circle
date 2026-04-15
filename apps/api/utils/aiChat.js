@@ -204,13 +204,30 @@ async function executeTool(toolName, args, userId) {
         }
 
         case 'create_trip': {
+            // Validate required fields
+            if (!args.title?.trim()) {
+                return { error: 'title is required to create a trip.' };
+            }
+
+            const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+            if (!ISO_DATE.test(args.startDate) || !ISO_DATE.test(args.endDate)) {
+                return { error: 'startDate and endDate must be in YYYY-MM-DD format.' };
+            }
+
+            if (new Date(args.endDate) < new Date(args.startDate)) {
+                return { error: 'endDate must be on or after startDate.' };
+            }
+
+            // Strip any tags the model hallucinated that aren't in the allowed list
+            const safeTags = (args.tags || []).filter(t => TripTagsEnum.includes(t));
+
             const trip = await createTrip({
-                title: args.title,
+                title: args.title.trim(),
                 description: args.description || '',
                 destinations: args.destinations || [],
                 startDate: args.startDate,
                 endDate: args.endDate,
-                tags: args.tags || [],
+                tags: safeTags,
                 isPublic: args.isPublic ?? false,
                 members: [userId]
             });
@@ -294,7 +311,14 @@ export async function sendChatMessage(history, userMessage, userId) {
 
         for (const call of calls) {
             toolsUsed.push({ name: call.name, args: call.args });
-            const toolResult = await executeTool(call.name, call.args, userId);
+
+            let toolResult;
+            try {
+                toolResult = await executeTool(call.name, call.args, userId);
+            } catch (err) {
+                console.error(`[aiChat] Tool "${call.name}" threw an error:`, err.message);
+                toolResult = { error: `Tool "${call.name}" failed: ${err.message}` };
+            }
 
             // --- Collect trip cards from tool results ---
             if (call.name === 'create_trip' && toolResult.success) {
