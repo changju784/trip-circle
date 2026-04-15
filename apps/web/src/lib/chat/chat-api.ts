@@ -13,15 +13,11 @@ export interface SuggestedTrip {
     isPublic?: boolean | null;
 }
 
-export interface ChatMessagePart {
-    text?: string;
-    functionCall?: { name: string; args: Record<string, unknown> };
-    functionResponse?: { name: string; response: unknown };
-}
-
 export interface ChatMessage {
-    role: "user" | "model";
-    parts: ChatMessagePart[];
+    role: "user" | "assistant" | "tool";
+    content?: string | null;
+    tool_calls?: unknown[];
+    tool_call_id?: string;
     timestamp?: string;
 }
 
@@ -39,6 +35,7 @@ export interface ChatSession {
 
 export interface SendMessageResponse {
     sessionId: string;
+    title: string;
     responseText: string;
     toolsUsed: { name: string; args: Record<string, unknown> }[];
     createdTripIds: string[];

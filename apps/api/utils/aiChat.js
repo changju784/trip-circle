@@ -260,6 +260,27 @@ function toTripCard(trip) {
 }
 
 /**
+ * Generates a concise 4-7 word title for a chat session based on the first exchange.
+ */
+export async function generateSessionTitle(userMessage, responseText) {
+    const response = await openai.chat.completions.create({
+        model: MODEL_NAME,
+        messages: [
+            {
+                role: 'system',
+                content: 'Generate a concise 4-7 word title for a travel planning chat session based on the first exchange. Return only the title text — no quotes, no punctuation at the end.'
+            },
+            {
+                role: 'user',
+                content: `User: "${userMessage}"\nAssistant: "${responseText.slice(0, 300)}"`
+            }
+        ],
+        max_tokens: 20
+    });
+    return response.choices[0].message.content.trim();
+}
+
+/**
  * Sends a user message in a multi-turn chat, runs the agentic tool-call loop,
  * and returns the final text response plus a historyDelta to persist in the DB.
  *
