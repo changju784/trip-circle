@@ -3,28 +3,13 @@ import { exploreTrips } from '../services/tripSearchService.js';
 import { createTrip } from '../services/tripService.js';
 import Trip from '../schema/TripSchema.js';
 import { TripTagsEnum } from '../schema/const/TripConstants.js';
+import { SYSTEM_PROMPT } from './chatPrompt.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const openai = new OpenAI({ apiKey: process.env.OPEN_AI_API_KEY });
 const MODEL_NAME = "gpt-5.4-mini";
-
-const SYSTEM_INSTRUCTION = `You are TripCircle AI, a friendly travel planning assistant embedded in the TripCircle platform.
-
-Your capabilities:
-1. Search the platform for public travel plans that match the user's interests or destination
-2. Show detailed itineraries of specific trips
-3. List the user's own saved trips
-4. Create new trips for the user as an agentic action
-
-Guidelines:
-- Always call a search or lookup tool before presenting trip options — never invent trips.
-- When creating a trip, confirm key details (title, destination, dates) with the user before calling create_trip.
-- Present search results in a clean, readable format with title, destination, and dates.
-- Be concise, helpful, and travel-savvy.
-- If you cannot find relevant trips, suggest creating a new one.
-- Valid trip tags are: ${TripTagsEnum.join(', ')}.`;
 
 const tools = [
     {
@@ -291,7 +276,7 @@ export async function generateSessionTitle(userMessage, responseText) {
  */
 export async function sendChatMessage(history, userMessage, userId) {
     const messages = [
-        { role: 'system', content: SYSTEM_INSTRUCTION },
+        { role: 'system', content: SYSTEM_PROMPT },
         ...history,
         { role: 'user', content: userMessage }
     ];
