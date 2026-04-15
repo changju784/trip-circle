@@ -192,6 +192,10 @@ export default function ChatSection() {
         else sessionStorage.removeItem("chat_active_session");
     }, []);
 
+    // When set to a session ID, the next activeSessionId effect will skip loading
+    // from DB (used when we've already added optimistic messages locally).
+    const skipLoadRef = useRef<string | null>(null);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -215,36 +219,51 @@ export default function ChatSection() {
         if (countdownRef.current) clearInterval(countdownRef.current);
     }, []);
 
-    // Load session list on mount; if a session was previously active, restore it
+    // Load session list on mount; validate the restored session still exists
     useEffect(() => {
-        const restoredId = sessionStorage.getItem("chat_active_session");
         getSessions().then((fetched) => {
             setSessions(fetched);
-            if (restoredId && fetched.some((s) => s._id === restoredId)) {
-                setActiveSessionId(restoredId);
-                getSession(restoredId)
-                    .then((session) => setMessages(extractTextFromSession(session)))
-                    .catch(() => setMessages([]));
+            const restoredId = sessionStorage.getItem("chat_active_session");
+            if (restoredId && !fetched.some((s) => s._id === restoredId)) {
+                // Session was deleted — clear the stale reference
+                setActiveSession(null);
             }
         }).finally(() => setIsSessionsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Whenever the active session changes, load its messages from the server.
+    // Skip the load if handleSend already has optimistic messages in flight.
+    useEffect(() => {
+        if (!activeSessionId) {
+            setMessages([]);
+            return;
+        }
+        if (skipLoadRef.current === activeSessionId) {
+            skipLoadRef.current = null;
+            return;
+        }
+        let cancelled = false;
+        setMessages([]);
+        getSession(activeSessionId)
+            .then((session) => {
+                if (!cancelled) setMessages(extractTextFromSession(session));
+            })
+            .catch(() => {
+                if (!cancelled) setMessages([]);
+            });
+        return () => { cancelled = true; };
+    }, [activeSessionId]);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isAiLoading]);
 
-    const handleSelectSession = async (sessionId: string) => {
+    const handleSelectSession = (sessionId: string) => {
         if (sessionId === activeSessionId) return;
         setActiveSession(sessionId);
-        setMessages([]);
-        try {
-            const session = await getSession(sessionId);
-            setMessages(extractTextFromSession(session));
-        } catch {
-            setMessages([]);
-        }
+        // The activeSessionId effect will load messages
         inputRef.current?.focus();
     };
 
@@ -252,6 +271,8 @@ export default function ChatSection() {
         try {
             const session = await createSession();
             setSessions((prev) => [session, ...prev]);
+            // New sessions are empty — skip the DB load, just clear messages
+            skipLoadRef.current = session._id;
             setActiveSession(session._id);
             setMessages([]);
             inputRef.current?.focus();
@@ -284,6 +305,7 @@ export default function ChatSection() {
             try {
                 const session = await createSession();
                 setSessions((prev) => [session, ...prev]);
+                skipLoadRef.current = session._id;
                 setActiveSession(session._id);
                 sessionId = session._id;
             } catch {
