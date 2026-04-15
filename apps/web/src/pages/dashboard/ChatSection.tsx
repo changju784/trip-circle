@@ -23,7 +23,7 @@ import {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DisplayMessage {
-    role: "user" | "model";
+    role: "user" | "assistant";
     text: string;
     timestamp?: string;
     suggestedTrips?: SuggestedTrip[];
@@ -162,10 +162,10 @@ function MessageBubble({ msg, onTripClick }: {
 
 function extractTextFromSession(session: ChatSession): DisplayMessage[] {
     return (session.messages ?? [])
-        .filter((m) => m.parts.some((p) => p.text))
+        .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim() !== "")
         .map((m) => ({
-            role: m.role,
-            text: m.parts.find((p) => p.text)?.text ?? "",
+            role: m.role as "user" | "assistant",
+            text: m.content as string,
             timestamp: m.timestamp,
         }));
 }
@@ -176,13 +176,25 @@ export default function ChatSection() {
     const navigate = useNavigate();
 
     const [sessions, setSessions] = useState<ChatSession[]>([]);
-    const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+    const [activeSessionId, setActiveSessionId] = useState<string | null>(
+        () => sessionStorage.getItem("chat_active_session")
+    );
     const [messages, setMessages] = useState<DisplayMessage[]>([]);
     const [inputText, setInputText] = useState("");
     const [isAiLoading, setIsAiLoading] = useState(false);
     const [isSessionsLoading, setIsSessionsLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [rateLimitCountdown, setRateLimitCountdown] = useState(0);
+
+    const setActiveSession = useCallback((id: string | null) => {
+        setActiveSessionId(id);
+        if (id) sessionStorage.setItem("chat_active_session", id);
+        else sessionStorage.removeItem("chat_active_session");
+    }, []);
+
+    // When set to a session ID, the next activeSessionId effect will skip loading
+    // from DB (used when we've already added optimistic messages locally).
+    const skipLoadRef = useRef<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -207,28 +219,51 @@ export default function ChatSection() {
         if (countdownRef.current) clearInterval(countdownRef.current);
     }, []);
 
-    // Load session list on mount
+    // Load session list on mount; validate the restored session still exists
     useEffect(() => {
-        getSessions()
-            .then(setSessions)
-            .finally(() => setIsSessionsLoading(false));
+        getSessions().then((fetched) => {
+            setSessions(fetched);
+            const restoredId = sessionStorage.getItem("chat_active_session");
+            if (restoredId && !fetched.some((s) => s._id === restoredId)) {
+                // Session was deleted — clear the stale reference
+                setActiveSession(null);
+            }
+        }).finally(() => setIsSessionsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Whenever the active session changes, load its messages from the server.
+    // Skip the load if handleSend already has optimistic messages in flight.
+    useEffect(() => {
+        if (!activeSessionId) {
+            setMessages([]);
+            return;
+        }
+        if (skipLoadRef.current === activeSessionId) {
+            skipLoadRef.current = null;
+            return;
+        }
+        let cancelled = false;
+        setMessages([]);
+        getSession(activeSessionId)
+            .then((session) => {
+                if (!cancelled) setMessages(extractTextFromSession(session));
+            })
+            .catch(() => {
+                if (!cancelled) setMessages([]);
+            });
+        return () => { cancelled = true; };
+    }, [activeSessionId]);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isAiLoading]);
 
-    const handleSelectSession = async (sessionId: string) => {
+    const handleSelectSession = (sessionId: string) => {
         if (sessionId === activeSessionId) return;
-        setActiveSessionId(sessionId);
-        setMessages([]);
-        try {
-            const session = await getSession(sessionId);
-            setMessages(extractTextFromSession(session));
-        } catch {
-            setMessages([]);
-        }
+        setActiveSession(sessionId);
+        // The activeSessionId effect will load messages
         inputRef.current?.focus();
     };
 
@@ -236,7 +271,9 @@ export default function ChatSection() {
         try {
             const session = await createSession();
             setSessions((prev) => [session, ...prev]);
-            setActiveSessionId(session._id);
+            // New sessions are empty — skip the DB load, just clear messages
+            skipLoadRef.current = session._id;
+            setActiveSession(session._id);
             setMessages([]);
             inputRef.current?.focus();
         } catch (err) {
@@ -250,7 +287,7 @@ export default function ChatSection() {
             await deleteSession(sessionId);
             setSessions((prev) => prev.filter((s) => s._id !== sessionId));
             if (activeSessionId === sessionId) {
-                setActiveSessionId(null);
+                setActiveSession(null);
                 setMessages([]);
             }
         } catch (err) {
@@ -268,7 +305,8 @@ export default function ChatSection() {
             try {
                 const session = await createSession();
                 setSessions((prev) => [session, ...prev]);
-                setActiveSessionId(session._id);
+                skipLoadRef.current = session._id;
+                setActiveSession(session._id);
                 sessionId = session._id;
             } catch {
                 return;
@@ -283,19 +321,17 @@ export default function ChatSection() {
         try {
             const result = await sendMessage(sessionId, text);
 
-            // Update session title in sidebar after first message
+            // Update session title in sidebar with the AI-generated title
             setSessions((prev) =>
                 prev.map((s) =>
-                    s._id === sessionId
-                        ? { ...s, title: text.slice(0, 60) }
-                        : s
+                    s._id === sessionId ? { ...s, title: result.title } : s
                 )
             );
 
             setMessages((prev) => [
                 ...prev,
                 {
-                    role: "model",
+                    role: "assistant",
                     text: result.responseText,
                     suggestedTrips:
                         result.suggestedTrips.length > 0 ? result.suggestedTrips : undefined,
@@ -312,7 +348,7 @@ export default function ChatSection() {
                 setMessages((prev) => [
                     ...prev,
                     {
-                        role: "model",
+                        role: "assistant",
                         text: `The AI is currently rate limited. You can send another message in ${seconds} seconds.`,
                     },
                 ]);
@@ -320,7 +356,7 @@ export default function ChatSection() {
                 setMessages((prev) => [
                     ...prev,
                     {
-                        role: "model",
+                        role: "assistant",
                         text: "Sorry, something went wrong. Please try again.",
                     },
                 ]);
