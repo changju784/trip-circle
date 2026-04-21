@@ -2,7 +2,7 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Input } from "@/components/ui/Input";
-import { Compass, Plane, Plus, Search } from "lucide-react";
+import { Bot, Compass, Plane, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../auth/hook/use-auth";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,7 +19,11 @@ export default function DashboardTabs({ onNewTrip }: DashboardTabsProps) {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [localQuery, setLocalQuery] = useState(searchParams.get("q") || "");
-    const activeTab = location.pathname.endsWith("explore") ? "explore" : "mytrips";
+    const activeTab = location.pathname.endsWith("explore")
+        ? "explore"
+        : location.pathname.endsWith("chat")
+        ? "chat"
+        : "mytrips";
 
     const handleSearch = (val: string) => {
         setLocalQuery(val);
@@ -37,7 +41,14 @@ export default function DashboardTabs({ onNewTrip }: DashboardTabsProps) {
                 {/* 1. Tabs Toggle */}
                 <Tabs
                     value={activeTab}
-                    onValueChange={(val) => navigate(val === "explore" ? "explore" : "my-trips")}
+                    onValueChange={(val) => {
+                        if (val === "explore") navigate("explore");
+                        else if (val === "mytrips") navigate("my-trips");
+                        else if (val === "chat") {
+                            if (!user) navigate("/trip-circle/auth");
+                            else navigate("chat");
+                        }
+                    }}
                     className="w-auto"
                 >
                     <TabsList className="bg-muted/30 p-1 h-12 rounded-full border border-border/50 backdrop-blur-sm">
@@ -51,6 +62,35 @@ export default function DashboardTabs({ onNewTrip }: DashboardTabsProps) {
                             <Compass size={18} className={activeTab === "explore" ? "text-blue-500" : "text-muted-foreground"} />
                             <span>Explore</span>
                         </TabsTrigger>
+
+                        <TooltipProvider>
+                            <Tooltip delayDuration={0}>
+                                <TooltipTrigger asChild>
+                                    <div className={!user ? "cursor-not-allowed" : ""}>
+                                        <TabsTrigger
+                                            value="chat"
+                                            disabled={!user}
+                                            className={cn(
+                                                "rounded-full px-6 h-full flex gap-2 items-center font-bold",
+                                                !user && "opacity-50 pointer-events-none"
+                                            )}
+                                        >
+                                            <Bot size={18} className={activeTab === "chat" ? "text-blue-500" : "text-muted-foreground"} />
+                                            <span>AI Chat</span>
+                                        </TabsTrigger>
+                                    </div>
+                                </TooltipTrigger>
+                                {!user && (
+                                    <TooltipContent
+                                        side="top"
+                                        className="bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-none font-bold shadow-2xl"
+                                    >
+                                        <p>Sign in to use AI Chat</p>
+                                    </TooltipContent>
+                                )}
+                            </Tooltip>
+                        </TooltipProvider>
+
                     </TabsList>
                 </Tabs>
 
