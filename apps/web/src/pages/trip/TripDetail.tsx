@@ -44,6 +44,8 @@ export default function TripDetailPage() {
 
     // AI Suggestion State
     const [suggestionDoc, setSuggestionDoc] = useState<TripDocument | null>(null);
+    // OTM place suggestion prefill for StopDetailModal
+    const [otmPrefill, setOtmPrefill] = useState<any | null>(null);
 
     // ---------------- LOAD TRIP ----------------
     useEffect(() => {
@@ -91,6 +93,9 @@ export default function TripDetailPage() {
     const isOwner = Boolean(user && trip?.members?.some((m: any) => String(m) === String(user.id)));
 
     const initialStop = useMemo(() => {
+        // OTM place suggestion prefill (new stop, no editingStop)
+        if (!editingStop && otmPrefill) return otmPrefill;
+
         if (!editingStop || !trip) return null;
 
         // Handle AI Suggestion Mapping
@@ -113,7 +118,7 @@ export default function TripDetailPage() {
             if (s) return s;
         }
         return null;
-    }, [editingStop, trip, suggestionDoc]);
+    }, [editingStop, trip, suggestionDoc, otmPrefill]);
 
     // ---------------- HANDLERS ----------------
 
@@ -183,6 +188,7 @@ export default function TripDetailPage() {
             setRefreshKey(prev => prev + 1);
             setEditingStop(null);
             setSuggestionDoc(null);
+            setOtmPrefill(null);
             setOpenAdd(false);
         } catch (err) {
             setError("Failed to save changes to trip.");
@@ -247,7 +253,7 @@ export default function TripDetailPage() {
 
                 <TripItinerarySection
                     trip={trip} isOwner={isOwner} selectedDay={selectedDay} setSelectedDay={setSelectedDay}
-                    onOpenAdd={(idx) => { setSelectedDay(idx); setEditingStop(null); setOpenAdd(true); }}
+                    onOpenAdd={(idx, prefilledData) => { setSelectedDay(idx); setEditingStop(null); setOtmPrefill(prefilledData ?? null); setOpenAdd(true); }}
                     onEditStop={(sId) => { setEditingStop(sId); setOpenAdd(true); }}
                     onDeleteStop={handleDeleteStop}
                     onReorderStops={handleReorderStops}
@@ -278,6 +284,7 @@ export default function TripDetailPage() {
                         setOpenAdd(false);
                         setEditingStop(null);
                         setSuggestionDoc(null);
+                        setOtmPrefill(null);
                     }}
                     onSubmit={handleAddStop}
                     isOwner={isOwner}

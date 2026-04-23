@@ -22,6 +22,24 @@ function mapKindsToCategory(kinds) {
     return 'other';
 }
 
+// Geocodes a city label to lat/lng using Photon (same service as geoService)
+async function geocodeCityLabel(label) {
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(label)}&limit=1`;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const feature = data.features?.[0];
+        if (!feature) return null;
+        return {
+            lat: feature.geometry.coordinates[1],
+            lng: feature.geometry.coordinates[0],
+        };
+    } catch {
+        return null;
+    }
+}
+
 // Fetches place details for a single xid
 async function fetchPlaceDetail(xid) {
     const url = `${OTM_BASE}/xid/${xid}?apikey=${API_KEY}`;
@@ -31,19 +49,32 @@ async function fetchPlaceDetail(xid) {
 }
 
 /**
- * Returns POI suggestions near a coordinate.
- * @param {number} lat
- * @param {number} lng
+ * Returns POI suggestions near a coordinate or city name.
+ * @param {number|null} lat
+ * @param {number|null} lng
+ * @param {string|null} city  - fallback city label when no lat/lng
  * @param {number} radius - meters (default 5000)
  * @param {number} limit  - max results (capped at 20)
- * @param {string} kinds  - comma-separated OpenTripMap kinds (optional)
+ * @param {string} kinds  - comma-separated OpenTripMap kinds
  */
-export async function getSuggestions({ lat, lng, radius = 5000, limit = 10, kinds = 'interesting_places' }) {
+export async function getSuggestions({ lat, lng, city, radius = 5000, limit = 10, kinds = 'interesting_places' }) {
     if (!API_KEY) throw new Error('OPENTRIPMAP_API_KEY is not set');
+
+    let resolvedLat = lat != null ? Number(lat) : null;
+    let resolvedLng = lng != null ? Number(lng) : null;
+
+    // Fallback: geocode from city label if no coordinates provided
+    if (resolvedLat == null || resolvedLng == null || isNaN(resolvedLat) || isNaN(resolvedLng)) {
+        if (!city) throw new Error('Either lat/lng or city is required');
+        const coords = await geocodeCityLabel(city);
+        if (!coords) throw new Error(`Could not geocode city: ${city}`);
+        resolvedLat = coords.lat;
+        resolvedLng = coords.lng;
+    }
 
     const cap = Math.min(Number(limit), 20);
 
-    const listUrl = `${OTM_BASE}/radius?radius=${radius}&lon=${lng}&lat=${lat}&kinds=${kinds}&rate=2&limit=${cap}&format=json&apikey=${API_KEY}`;
+    const listUrl = `${OTM_BASE}/radius?radius=${radius}&lon=${resolvedLng}&lat=${resolvedLat}&kinds=${kinds}&rate=2&limit=${cap}&format=json&apikey=${API_KEY}`;
     const listRes = await fetch(listUrl);
 
     if (!listRes.ok) {
@@ -64,12 +95,11 @@ export async function getSuggestions({ lat, lng, radius = 5000, limit = 10, kind
         const detail = details[i].status === 'fulfilled' ? details[i].value : null;
 
         const name = detail?.name || place.name || '';
-        const kinds = detail?.kinds || place.kinds || '';
-        const category = mapKindsToCategory(kinds);
-        const lat = detail?.point?.lat ?? place.point?.lat;
-        const lng = detail?.point?.lon ?? place.point?.lon;
+        const placeKinds = detail?.kinds || place.kinds || '';
+        const category = mapKindsToCategory(placeKinds);
+        const placeLat = detail?.point?.lat ?? place.point?.lat;
+        const placeLng = detail?.point?.lon ?? place.point?.lon;
 
-        // Build location string from address if available
         const addressParts = detail?.address
             ? [
                 detail.address.road,
@@ -84,8 +114,8 @@ export async function getSuggestions({ lat, lng, radius = 5000, limit = 10, kind
             title: name,
             category,
             locationName,
-            lat,
-            lng,
+            lat: placeLat,
+            lng: placeLng,
             description: detail?.wikipedia_extracts?.text?.slice(0, 300) || detail?.info?.descr || '',
             imageUrl: detail?.preview?.source || null,
             rate: place.rate ?? null,
