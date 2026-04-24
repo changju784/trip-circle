@@ -35,8 +35,12 @@ router.get('/', authMiddleware, async (req, res) => {
 
         res.json({ suggestions });
     } catch (error) {
-        console.error('Suggestion route error:', error.message);
-        res.status(500).json({ error: 'Failed to fetch suggestions' });
+        console.error('Suggestion route error:', error.message, error.stack);
+        const status = error.status === 429 ? 429 : 500;
+        const message = status === 429 ? 'Too many requests to suggestions API, please try again shortly' : 'Failed to fetch suggestions';
+        const body = { error: message };
+        if (process.env.NODE_ENV !== 'production') body.detail = error.message;
+        res.status(status).json(body);
     }
 });
 

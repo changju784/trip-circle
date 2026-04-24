@@ -4,6 +4,20 @@ dotenv.config();
 const OTM_BASE = 'https://api.opentripmap.com/0.1/en/places';
 const API_KEY = process.env.OPENTRIPMAP_API_KEY;
 
+// In-memory cache: key → { data, expiresAt }
+const cache = new Map();
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+function getCached(key) {
+    const entry = cache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) { cache.delete(key); return null; }
+    return entry.data;
+}
+function setCached(key, data) {
+    cache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
 // Maps OpenTripMap kinds string to our StopCategoryEnum
 function mapKindsToCategory(kinds) {
     if (!kinds) return 'other';
@@ -48,6 +62,17 @@ async function fetchPlaceDetail(xid) {
     return res.json();
 }
 
+// Runs async tasks in batches to avoid hammering rate limits
+async function batchSettled(items, fn, batchSize = 5) {
+    const results = [];
+    for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const settled = await Promise.allSettled(batch.map(fn));
+        results.push(...settled);
+    }
+    return results;
+}
+
 /**
  * Returns POI suggestions near a coordinate or city name.
  * @param {number|null} lat
@@ -73,25 +98,28 @@ export async function getSuggestions({ lat, lng, city, radius = 5000, limit = 10
     }
 
     const cap = Math.min(Number(limit), 20);
+    const cacheKey = `${city || `${resolvedLat},${resolvedLng}`}|${radius}|${cap}|${kinds}`;
+    const cached = getCached(cacheKey);
+    if (cached) return cached;
 
     const listUrl = `${OTM_BASE}/radius?radius=${radius}&lon=${resolvedLng}&lat=${resolvedLat}&kinds=${kinds}&rate=2&limit=${cap}&format=json&apikey=${API_KEY}`;
     const listRes = await fetch(listUrl);
 
     if (!listRes.ok) {
-        const msg = await listRes.text();
-        throw new Error(`OpenTripMap list error ${listRes.status}: ${msg}`);
+        const errBody = await listRes.text();
+        const err = new Error(`OpenTripMap list error ${listRes.status}: ${errBody}`);
+        err.status = listRes.status;
+        throw err;
     }
 
     const places = await listRes.json();
 
     if (!Array.isArray(places) || places.length === 0) return [];
 
-    // Fetch details in parallel (batch)
-    const details = await Promise.allSettled(
-        places.map(p => fetchPlaceDetail(p.xid))
-    );
+    // Fetch details in batches of 5 to stay within OTM rate limits
+    const details = await batchSettled(places, p => fetchPlaceDetail(p.xid), 5);
 
-    return places.map((place, i) => {
+    const result = places.map((place, i) => {
         const detail = details[i].status === 'fulfilled' ? details[i].value : null;
 
         const name = detail?.name || place.name || '';
@@ -121,4 +149,7 @@ export async function getSuggestions({ lat, lng, city, radius = 5000, limit = 10
             rate: place.rate ?? null,
         };
     }).filter(s => s.title && s.lat != null && s.lng != null);
+
+    setCached(cacheKey, result);
+    return result;
 }
