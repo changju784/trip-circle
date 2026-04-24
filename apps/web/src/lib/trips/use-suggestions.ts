@@ -27,10 +27,10 @@ export function useSuggestions(destinations: Destination[]) {
                 if (cancelled) return;
                 setAllSuggestions(raw);
 
-                // Fetch images: prefer OTM imageUrl, fall back to Unsplash
+                // OTM returns Wikipedia URLs which Wikimedia blocks cross-origin — use Unsplash instead
                 for (const s of raw.slice(0, 5)) {
                     if (cancelled) return;
-                    const url = s.imageUrl ?? await fetchSplashImage(s.title);
+                    const url = await fetchSplashImage(s.title);
                     if (url && !cancelled) {
                         setImages(prev => ({ ...prev, [s.xid]: url }));
                     }
