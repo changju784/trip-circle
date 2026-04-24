@@ -36,6 +36,20 @@ export interface DayWithStops {
 export interface Destination {
     id: string;
     label: string;
+    lat?: number;
+    lng?: number;
+}
+
+export interface PlaceSuggestion {
+    xid: string;
+    title: string;
+    category: StopCategory;
+    locationName: string;
+    lat: number;
+    lng: number;
+    description: string;
+    imageUrl: string | null;
+    rate: number | null;
 }
 
 export interface TripDocument {
@@ -203,4 +217,23 @@ export async function deleteDocument(tripId: string, documentId: string): Promis
  */
 export async function parseDocument(tripId: string, documentId: string): Promise<TripDocument> {
     return apiPost<TripDocument>(`/api/trips/${tripId}/documents/${documentId}/parse`, {});
+}
+
+/**
+ * Get place suggestions near coordinates
+ */
+export async function getSuggestions(
+    lat: number | null,
+    lng: number | null,
+    options?: { radius?: number; limit?: number; kinds?: string; city?: string }
+): Promise<PlaceSuggestion[]> {
+    const params = new URLSearchParams();
+    if (lat != null) params.set("lat", lat.toString());
+    if (lng != null) params.set("lng", lng.toString());
+    if (options?.city) params.set("city", options.city);
+    if (options?.radius != null) params.set("radius", options.radius.toString());
+    if (options?.limit != null) params.set("limit", options.limit.toString());
+    if (options?.kinds) params.set("kinds", options.kinds);
+    const res = await apiGet<{ suggestions: PlaceSuggestion[] }>(`/api/suggestions?${params}`);
+    return res.suggestions;
 }

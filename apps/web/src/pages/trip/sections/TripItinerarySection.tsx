@@ -9,7 +9,7 @@ interface TripItinerarySectionProps {
     isOwner: boolean;
     selectedDay: number;
     setSelectedDay: (idx: number) => void;
-    onOpenAdd: (idx: number) => void;
+    onOpenAdd: (idx: number, prefilledData?: any) => void;
     onEditStop: (sId: string) => void;
     onDeleteStop: (sId: string) => void;
     onReorderStops: (dayIdx: number, stops: any[]) => void;
@@ -28,7 +28,8 @@ export function TripItinerarySection({
                         <DayStopsPanel
                             days={trip.days} selectedDay={i} isOwner={isOwner}
                             primaryCity={primaryCity}
-                            onOpenAdd={() => onOpenAdd(i)}
+                            destinations={trip.destinations}
+                            onOpenAdd={(dayIdx, prefilledData) => onOpenAdd(dayIdx, prefilledData)}
                             onEditStop={onEditStop}
                             onDeleteStop={onDeleteStop}
                             onReorderStops={onReorderStops}

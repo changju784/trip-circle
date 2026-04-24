@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 
-export type Option = { id: string; label: string; icon?: LucideIcon; color?: string };
+export type Option = { id: string; label: string; icon?: LucideIcon; color?: string; lat?: number; lng?: number; [key: string]: any };
 
 type SelectProps = {
     value?: Option | Option[] | null;

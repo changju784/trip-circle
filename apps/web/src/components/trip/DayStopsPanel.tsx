@@ -1,19 +1,23 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import StopItem from "./StopItem";
 import MapPreview from "./MapPreview";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "../ui/Button";
 import { reverseGeocode, RouteData } from "@/lib/geo/geo-api";
-import { Clock, ExternalLink, MapPin, Maximize2 } from "lucide-react";
+import { Clock, ExternalLink, MapPin, Maximize2, Sparkles } from "lucide-react";
 import FullMapView from "./FullMapView";
 import { useOpenInGoogleMaps } from "@/pages/trip/hooks/use-open-in-google-map";
 import { WeatherBadge } from "./WeatherBadge";
+import { Destination } from "@/lib/trips/trips-api";
+import { useSuggestions } from "@/lib/trips/use-suggestions";
+import SuggestionCard from "./SuggestionCard";
 
 interface DayStopsPanelProps {
     days: any[];
     selectedDay: number;
     primaryCity: string;
+    destinations?: Destination[];
     isOwner?: boolean;
     onOpenAdd: (dayIndex: number, prefilledData?: any) => void;
     onEditStop?: (stopId: string) => void;
@@ -21,11 +25,30 @@ interface DayStopsPanelProps {
     onReorderStops?: (dayIndex: number, reorderedStops: any[]) => void;
 }
 
-export default function DayStopsPanel({ days, selectedDay, primaryCity, isOwner, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: DayStopsPanelProps) {
+export default function DayStopsPanel({ days, selectedDay, primaryCity, destinations = [], isOwner, onOpenAdd, onEditStop, onDeleteStop, onReorderStops }: DayStopsPanelProps) {
     const day = days[selectedDay];
     const [activeRoute, setActiveRoute] = useState<RouteData | null>(null);
     const [isFullMapOpen, setIsFullMapOpen] = useState(false);
     const { openDirections } = useOpenInGoogleMaps();
+
+    // Collect all existing stop titles across all days for deduplication
+    const existingTitles = useMemo(() => {
+        const titles = new Set<string>();
+        for (const d of days) {
+            for (const s of d.stops ?? []) {
+                if (s.title) titles.add(s.title.toLowerCase());
+            }
+        }
+        return titles;
+    }, [days]);
+
+    const { allSuggestions, images, loading: suggestionsLoading } = useSuggestions(destinations);
+
+    // Filter out already-added stops, cap at 3
+    const suggestions = useMemo(() =>
+        allSuggestions.filter(s => !existingTitles.has(s.title.toLowerCase())).slice(0, 3),
+        [allSuggestions, existingTitles]
+    );
 
     const dailyPriceTotal = day.stops.reduce((sum: number, stop: any) => {
         return sum + (Number(stop.price) || 0);
@@ -188,6 +211,58 @@ export default function DayStopsPanel({ days, selectedDay, primaryCity, isOwner,
                     </DndContext>
                 )}
             </div>
+        {/* Suggestions section (owners only, when trip has at least one destination) */}
+        {isOwner && destinations.length > 0 && (
+            <div className="bg-white dark:bg-gray-700 text-black dark:text-gray-100 rounded-lg p-5">
+                <div className="flex items-center gap-2 mb-3">
+                    <Sparkles size={15} className="text-indigo-500" />
+                    <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Suggested Places Nearby</h3>
+                    {suggestionsLoading && (
+                        <span className="text-[11px] text-muted-foreground animate-pulse">Loading…</span>
+                    )}
+                </div>
+
+                {!suggestionsLoading && suggestions.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No suggestions available for this destination.</p>
+                )}
+
+                {suggestions.length > 0 && (
+                    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-thin">
+                        {suggestions.map(s => (
+                            <SuggestionCard
+                                key={s.xid}
+                                suggestion={s}
+                                imageUrl={images[s.xid]}
+                                onAdd={() => onOpenAdd(selectedDay, {
+                                    title: s.title,
+                                    category: s.category,
+                                    locationName: s.locationName,
+                                    lat: s.lat,
+                                    lng: s.lng,
+                                    description: s.description,
+                                })}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {suggestionsLoading && (
+                    <div className="flex gap-3 overflow-x-auto pb-1">
+                        {[0, 1, 2].map(i => (
+                            <div key={i} className="flex flex-col w-48 shrink-0 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 animate-pulse">
+                                <div className="h-28 bg-gray-200 dark:bg-gray-600" />
+                                <div className="p-3 space-y-2">
+                                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4" />
+                                    <div className="h-2.5 bg-gray-100 dark:bg-gray-700 rounded w-1/2" />
+                                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded w-full" />
+                                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded w-4/5" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        )}
         </div>
     );
 }
