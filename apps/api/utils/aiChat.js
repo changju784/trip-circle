@@ -114,6 +114,10 @@ const tools = [
                     isPublic: {
                         type: 'boolean',
                         description: 'Whether to share this trip publicly on the platform (default false)'
+                    },
+                    budget: {
+                        type: 'number',
+                        description: 'Total planned budget for the trip in USD (e.g. 1500). Set this whenever the user mentions a budget amount.'
                     }
                 },
                 required: ['title', 'startDate', 'endDate']
@@ -226,6 +230,7 @@ async function executeTool(toolName, args, userId) {
                 endDate: args.endDate,
                 tags: safeTags,
                 isPublic: args.isPublic ?? false,
+                budget: typeof args.budget === 'number' ? args.budget : 0,
                 members: [userId]
             });
             return {
