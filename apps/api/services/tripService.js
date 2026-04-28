@@ -39,7 +39,9 @@ export async function createTrip(payload) {
         startDate,
         endDate,
         members,
-        tags
+        tags,
+        budget,
+        totalPrice
     } = payload;
 
     const days = generateDays(startDate, endDate).map(day => ({
@@ -54,7 +56,8 @@ export async function createTrip(payload) {
         isPublic: isPublic ?? false,
         thumbnail: thumbnail || null,
         days,
-        totalPrice: 0,
+        totalPrice: totalPrice || 0,
+        budget: budget || 0,
         startDate,
         endDate,
         members,
